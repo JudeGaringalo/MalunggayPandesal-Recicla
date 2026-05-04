@@ -1,1 +1,2 @@
 npm install @tensorflow/tfjs @teachablemachine/image
+npm install @tensorflow/tfjs@latest --legacy-peer-deps
