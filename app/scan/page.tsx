@@ -19,7 +19,7 @@ export default function ARScannerApp() {
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
     const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
-    const [isZooming, setIsZooming] = useState(false); 
+    const [isZooming, setIsZooming] = useState(false); // NEW: Tracks if the user is actively sliding
 
     const zoomValueRef = useRef<number>(1);
     const sliderRef = useRef<HTMLDivElement>(null);
@@ -142,9 +142,10 @@ export default function ARScannerApp() {
         setZoomValue(newValue);
         zoomValueRef.current = newValue;
 
-        // Throttled Hardware Update (75ms for fast, stable response)
+        // NEW: Throttled Hardware Update
+        // Only ask the physical lens to move if 200ms have passed since the last request
         const now = Date.now();
-        if (now - lastHardwareUpdateTime.current > 75) {
+        if (now - lastHardwareUpdateTime.current > 200) {
             applyHardwareZoom();
             lastHardwareUpdateTime.current = now;
         }
@@ -455,11 +456,10 @@ export default function ARScannerApp() {
                             <img
                                 src={flyAnim.src}
                                 alt="Captured frame"
-                                className={`fixed z-50 object-cover border-2 border-white/50 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${
-                                    flyAnim.active
+                                className={`fixed z-50 object-cover border-2 border-white/50 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${flyAnim.active
                                         ? 'w-12 h-12 bottom-12 md:bottom-20 left-10 opacity-0 rounded-lg scale-50'
                                         : 'w-[80vw] h-[60vh] top-[20vh] left-[10vw] opacity-100 rounded-3xl scale-100'
-                                }`}
+                                    }`}
                             />
                         )}
                     </>
