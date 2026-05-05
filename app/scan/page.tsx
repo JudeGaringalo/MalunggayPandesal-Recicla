@@ -19,6 +19,11 @@ export default function ARScannerApp() {
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
     const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
+    
+    // NEW: We use a ref to hold the absolute latest zoom value for the hardware constraints 
+    // so it doesn't get caught in a stale React closure when you lift your finger.
+    const zoomValueRef = useRef<number>(1);
+    const sliderRef = useRef<HTMLDivElement>(null);
 
     // --- Gallery & Screenshot States ---
     const [capturedImages, setCapturedImages] = useState<string[]>([]);
@@ -82,7 +87,6 @@ export default function ARScannerApp() {
             const [track] = stream.getVideoTracks();
             const capabilities = track.getCapabilities() as any;
             
-            // Check for Hardware Zoom first
             if (capabilities.zoom) {
                 setZoomType('hardware');
                 setZoomRange({
@@ -91,12 +95,14 @@ export default function ARScannerApp() {
                     step: capabilities.zoom.step || 0.1
                 });
                 const settings = track.getSettings() as any;
-                setZoomValue(settings.zoom || capabilities.zoom.min || 1);
+                const initialZoom = settings.zoom || capabilities.zoom.min || 1;
+                setZoomValue(initialZoom);
+                zoomValueRef.current = initialZoom;
             } else {
-                // Fallback to Software Zoom if camera lacks physical zoom lens
                 setZoomType('software');
                 setZoomRange({ min: 1, max: 3, step: 0.1 });
                 setZoomValue(1);
+                zoomValueRef.current = 1;
             }
 
         } catch (err) {
@@ -124,18 +130,25 @@ export default function ARScannerApp() {
         setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
 
-    // --- ZOOM LOGIC ---
-    // 1. Instantly update the UI value for a smooth slider and software zoom
-    const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setZoomValue(parseFloat(e.target.value));
+    // --- NEW: CUSTOM SMOOTH ZOOM LOGIC ---
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!sliderRef.current || !zoomRange) return;
+        
+        const rect = sliderRef.current.getBoundingClientRect();
+        // Calculate Y position relative to the track's height (0 at bottom, 1 at top)
+        const y = rect.bottom - e.clientY; 
+        const percentage = Math.max(0, Math.min(1, y / rect.height));
+        
+        const newValue = zoomRange.min + percentage * (zoomRange.max - zoomRange.min);
+        setZoomValue(newValue);
+        zoomValueRef.current = newValue; // Store instantly for hardware update later
     };
 
-    // 2. Only apply the physical lens adjustment when the user lets go
     const applyHardwareZoom = async () => {
         if (zoomType === 'hardware' && streamRef.current) {
             const track = streamRef.current.getVideoTracks()[0];
             try {
-                await track.applyConstraints({ advanced: [{ zoom: zoomValue }] } as any);
+                await track.applyConstraints({ advanced: [{ zoom: zoomValueRef.current }] } as any);
             } catch (err) {
                 console.error("Zoom apply failed", err);
             }
@@ -353,7 +366,7 @@ export default function ARScannerApp() {
                             className="absolute inset-0 w-full h-full"
                             style={{ 
                                 transform: zoomType === 'software' ? `scale(${zoomValue})` : 'scale(1)',
-                                transition: 'transform 0.15s ease-out',
+                                transition: 'transform 0.1s linear',
                                 transformOrigin: 'center center'
                             }}
                         >
@@ -373,21 +386,45 @@ export default function ARScannerApp() {
                         </div>
 
                         {zoomRange && (
-                            <div className="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center bg-black/40 backdrop-blur-md rounded-full py-4 px-2 border border-white/20 h-48 md:h-64 shadow-xl pointer-events-auto">
+                            <div className="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center bg-black/40 backdrop-blur-md rounded-full py-6 px-3 border border-white/20 shadow-xl pointer-events-auto">
                                 <span className="text-white text-xs font-bold mb-4 drop-shadow-md">{zoomValue.toFixed(1)}x</span>
-                                <div className="relative flex-1 w-full flex items-center justify-center">
-                                    <input
-                                        type="range"
-                                        min={zoomRange.min}
-                                        max={zoomRange.max}
-                                        step={zoomRange.step}
-                                        value={zoomValue}
-                                        onChange={handleZoomChange}
-                                        onPointerUp={applyHardwareZoom}
-                                        onTouchEnd={applyHardwareZoom}
-                                        className="absolute w-28 md:w-40 h-6 bg-white/30 rounded-full appearance-none cursor-pointer outline-none -rotate-90 origin-center accent-emerald-500 touch-none shadow-inner"
+                                
+                                {/* NEW: Fully Custom Touch-Driven Vertical Slider */}
+                                <div 
+                                    ref={sliderRef}
+                                    className="relative w-3 h-32 md:h-48 bg-white/20 rounded-full cursor-pointer touch-none shadow-inner"
+                                    onPointerDown={(e) => {
+                                        sliderRef.current?.setPointerCapture(e.pointerId);
+                                        handlePointerMove(e);
+                                    }}
+                                    onPointerMove={(e) => {
+                                        // e.buttons > 0 ensures it only follows while the user is actually pressing/dragging
+                                        if (e.buttons > 0) handlePointerMove(e);
+                                    }}
+                                    onPointerUp={(e) => {
+                                        sliderRef.current?.releasePointerCapture(e.pointerId);
+                                        applyHardwareZoom();
+                                    }}
+                                >
+                                    {/* The Green Fill Track */}
+                                    <div 
+                                        className="absolute bottom-0 left-0 w-full bg-emerald-500 rounded-full transition-all duration-75 ease-out"
+                                        style={{ 
+                                            height: `${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}%` 
+                                        }}
                                     />
+                                    
+                                    {/* The Draggable Thumb */}
+                                    <div 
+                                        className="absolute left-1/2 w-8 h-8 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none transition-all duration-75 ease-out"
+                                        style={{ 
+                                            bottom: `calc(${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}% - 16px)`
+                                        }}
+                                    >
+                                        <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                                    </div>
                                 </div>
+
                                 <span className="text-white/50 text-[10px] font-bold mt-4 drop-shadow-md">1x</span>
                             </div>
                         )}
