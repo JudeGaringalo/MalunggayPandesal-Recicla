@@ -203,10 +203,10 @@ export default function LandingPage(): React.JSX.Element {
             {/* Forced grid-cols-4 for all screen sizes */}
             <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
               {[
-                { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
-                { name: "Jude", role: "Full-Stack Developer", img: "/images/Team/Jude.jpg" },
-                { name: "Volt", role: "UI / UX Designer", img: "/images/Team/Ruy.jpg" },
-                { name: "Sai", role: "Project Manager", img: "/images/Team/Sai.jpg" }
+                { name: "Bam", role: "AI Engineer", img: "/images/team/Bam.jpg" },
+                { name: "Jude", role: "Full-Stack Developer", img: "/images/team/Jude.jpg" },
+                { name: "Volt", role: "UI / UX Designer", img: "/images/team/Ruy.jpg" },
+                { name: "Sai", role: "Project Manager", img: "/images/team/Sai.jpg" }
               ].map((member, idx) => (
                 <div key={idx} className="flex flex-col items-center text-center group">
                   {/* Scaled down avatars for mobile, returning to normal size on md screens */}
