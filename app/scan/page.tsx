@@ -1,4 +1,3 @@
-// app/scan/page.tsx
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -9,6 +8,9 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 export default function ScanPage() {
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    
+    // NEW: State to track the camera's exact natural aspect ratio
+    const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,31 +54,25 @@ export default function ScanPage() {
         loadModel();
     }, []);
 
-    // --- Continuous Live Scanning Logic with Math-Corrected Overlay ---
+    // --- Continuous Live Scanning Logic ---
     const detectFrame = async () => {
         if (activeMode === 'camera' && videoRef.current && canvasRef.current && model) {
             const video = videoRef.current;
             const canvas = canvasRef.current;
 
-            // 1. Sync Canvas rendered resolution to the screen size (Full Screen)
-            if (canvas.clientWidth !== canvas.width || canvas.clientHeight !== canvas.height) {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-            }
-
             if (video.readyState === 4) {
+                // Because of our new CSS wrapper, we don't need magic math!
+                // We just perfectly sync the canvas's internal memory to the raw video pixels.
+                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                }
+
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     try {
                         const predictions = await model.detect(video);
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
-
-                        // 2. THE MAGIC MATH: Calculate how 'object-cover' is scaling and centering the video
-                        const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
-                        const scaledWidth = video.videoWidth * scale;
-                        const scaledHeight = video.videoHeight * scale;
-                        const offsetX = (canvas.width - scaledWidth) / 2;
-                        const offsetY = (canvas.height - scaledHeight) / 2;
 
                         const validPredictions = predictions.filter(
                             p => p.score > CONFIDENCE_THRESHOLD && p.class !== 'person'
@@ -96,22 +92,16 @@ export default function ScanPage() {
                             });
 
                             validPredictions.forEach(prediction => {
-                                // 3. Grab the raw AI coordinates
-                                const [rawX, rawY, rawW, rawH] = prediction.bbox;
+                                // Draw directly using the raw AI coordinates! 
+                                // The browser's CSS scales the video and canvas identically.
+                                const [x, y, width, height] = prediction.bbox;
                                 const isBestMatch = prediction === bestMatch;
-
-                                // 4. TRANSLATE the raw coordinates to match the screen's object-cover cropping
-                                const x = rawX * scale + offsetX;
-                                const y = rawY * scale + offsetY;
-                                const width = rawW * scale;
-                                const height = rawH * scale;
 
                                 const color = isBestMatch ? '#10b981' : 'rgba(255, 255, 255, 0.4)';
                                 ctx.strokeStyle = color;
-                                ctx.lineWidth = isBestMatch ? 4 : 2;
+                                ctx.lineWidth = isBestMatch ? 6 : 3; // Made lines slightly thicker for visibility
                                 const cornerLength = 20;
 
-                                // Draw the box using the translated x, y, width, height
                                 ctx.beginPath();
                                 ctx.moveTo(x, y + cornerLength);
                                 ctx.lineTo(x, y);
@@ -128,11 +118,12 @@ export default function ScanPage() {
                                 ctx.stroke();
 
                                 ctx.fillStyle = color;
-                                ctx.font = isBestMatch ? 'bold 18px sans-serif' : '14px sans-serif';
+                                // Scale up the font size relative to the raw video resolution
+                                ctx.font = isBestMatch ? 'bold 24px sans-serif' : '18px sans-serif';
                                 ctx.fillText(
                                     `${prediction.class} (${Math.round(prediction.score * 100)}%)`,
                                     x,
-                                    y > 20 ? y - 8 : y + 20
+                                    y > 30 ? y - 10 : y + 30
                                 );
                             });
                         } else {
@@ -161,13 +152,10 @@ export default function ScanPage() {
         setActiveMode('camera');
         setAiResult(null);
         try {
-            const isPortrait = window.innerHeight > window.innerWidth;
+            // Give the browser the freedom to use the best resolution it has naturally
+            // This prevents forced hardware zooming.
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { 
-                    facingMode: "environment", 
-                    width: { ideal: isPortrait ? 720 : 1280 }, 
-                    height: { ideal: isPortrait ? 1280 : 720 } 
-                }
+                video: { facingMode: "environment" }
             });
             streamRef.current = stream;
             if (videoRef.current) {
@@ -177,6 +165,15 @@ export default function ScanPage() {
             console.error("Camera access denied:", err);
             alert("Could not access the camera. Please check browser permissions.");
             setActiveMode('selection');
+        }
+    };
+
+    // Extract the exact aspect ratio from the video hardware once it connects
+    const handleVideoLoadedMetadata = () => {
+        if (videoRef.current) {
+            const width = videoRef.current.videoWidth;
+            const height = videoRef.current.videoHeight;
+            setVideoAspectRatio(width / height);
         }
     };
 
@@ -207,6 +204,7 @@ export default function ScanPage() {
 
     // --- UI: Selection Screen ---
     if (activeMode === 'selection') {
+        // ... (Keep the selection screen exactly as it was, it was perfect)
         return (
             <main className="min-h-screen bg-black text-white relative flex flex-col font-sans">
                 <div className="absolute inset-0 bg-gradient-to-b from-black via-[#011a0d] to-black opacity-90 z-0"></div>
@@ -280,22 +278,26 @@ export default function ScanPage() {
                 </button>
             </div>
 
-            {/* Viewport for Video and AR Canvas overlays */}
-            <div className="absolute inset-0 w-full h-full z-0 bg-black flex items-center justify-center">
+            {/* THE NEW WRAPPER SETUP: No cropping, No complex math, 100% accurate */}
+            <div className="absolute inset-0 w-full h-full z-0 bg-black flex items-center justify-center overflow-hidden">
                 {activeMode === 'camera' && (
-                    <>
+                    <div 
+                        className="relative flex items-center justify-center w-full max-h-full max-w-full"
+                        style={{ aspectRatio: `${videoAspectRatio}` }}
+                    >
                         <video
                             ref={videoRef}
                             autoPlay
                             playsInline
                             muted
-                            className="absolute inset-0 w-full h-full object-cover"
+                            onLoadedMetadata={handleVideoLoadedMetadata}
+                            className="absolute inset-0 w-full h-full object-fill"
                         />
                         <canvas
                             ref={canvasRef}
-                            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            className="absolute inset-0 w-full h-full pointer-events-none"
                         />
-                    </>
+                    </div>
                 )}
 
                 {activeMode === 'upload' && previewImage && (
