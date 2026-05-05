@@ -47,7 +47,7 @@ export default function LandingPage(): React.JSX.Element {
               background: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 100%, rgba(255,255,255,0) 0%)',
               filter: 'blur(100px)'
             }}
-          ></div>
+          ></div> 
         </div>
 
         {/* --- HERO CONTENT --- */}
@@ -97,7 +97,54 @@ export default function LandingPage(): React.JSX.Element {
             </p>
           </div>
         </div>
+      {/* --- FEATURES SECTION --- */}
+        <section className="relative z-10 container mx-auto px-6 mb-32 max-w-6xl">
+          <div className="flex flex-col md:flex-row overflow-hidden rounded-[40px] shadow-2xl border border-gray-100">
+            
+            {/* LEFT SIDE - Back to 1/2 width so the right side doesn't shrink */}
+            <div className="w-full md:w-1/2 flex flex-col">
+              {/* Tile 1 - py-8 makes it shorter than the original py-12 */}
+              <div className="bg-[#81915A] py-8 px-10 flex flex-col items-center justify-center text-center gap-4 border-b border-white">
+                <img src="/images/Frame 59.png" alt="AI Icon" className="w-26 h-26 object-contain" />
+                <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">Zero-Latency AI</h3>
+              </div>
+              
+              {/* Tile 2 */}
+              <div className="bg-[#455130] py-8 px-10 flex flex-col items-center justify-center text-center gap-4 border-b border-white">
+                <img src="/images/Frame 60.png" alt="Valuation Icon" className="w-26 h-26 object-contain" />
+                <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">Instant Scrap Valuation</h3>
+              </div>
+              
+              {/* Tile 3 */}
+              <div className="bg-[#3D4829] py-8 px-10 flex flex-col items-center justify-center text-center gap-4 border-b border-white">
+                <img src="/images/Frame 61.png" alt="Routing Icon" className="w-26 h-26 object-contain" />
+                <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">Hazard-First Routing</h3>
+              </div>
+              
+              {/* Tile 4 */}
+              <div className="bg-[#353D22] py-8 px-10 flex flex-col items-center justify-center text-center gap-4">
+                <img src="/images/Frame 62.png" alt="Web Icon" className="w-26 h-26 object-contain" />
+                <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">Frictionless Web Access</h3>
+              </div>
+            </div>
 
+            {/* RIGHT SIDE - Back to 1/2 width */}
+            <div className="w-full md:w-1/2 relative bg-[#E8E6D9] min-h-[500px] flex items-end">
+              <img 
+                src="/images/feature-person.png" 
+                alt="Feature showcase" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              
+              <div className="relative z-10 w-full p-8 md:p-12 pt-32 bg-gradient-to-t from-[#f1f0e8] via-[#f1f0e8]/90 to-transparent text-center">
+                <p className="text-[#4A4A4A] text-xl md:text-2xl font-medium leading-tight max-w-md mx-auto">
+                  No Waiting For Server Uploads. Our Lightweight TensorFlow.Js Model Runs Directly In Your Browser For Instant Identification.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </section>
       </main>
     </div>
   );
