@@ -18,6 +18,8 @@ export default function ARScannerApp() {
     // --- Zoom States ---
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
+    // NEW: Track if we are using physical lens zoom or digital CSS zoom
+    const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
 
     // --- Gallery & Screenshot States ---
     const [capturedImages, setCapturedImages] = useState<string[]>([]);
@@ -80,7 +82,10 @@ export default function ARScannerApp() {
 
             const [track] = stream.getVideoTracks();
             const capabilities = track.getCapabilities() as any;
+            
+            // Check for Hardware Zoom first
             if (capabilities.zoom) {
+                setZoomType('hardware');
                 setZoomRange({
                     min: capabilities.zoom.min || 1,
                     max: capabilities.zoom.max || 3,
@@ -89,7 +94,10 @@ export default function ARScannerApp() {
                 const settings = track.getSettings() as any;
                 setZoomValue(settings.zoom || capabilities.zoom.min || 1);
             } else {
-                setZoomRange(null);
+                // NEW: Fallback to Software Zoom if camera lacks physical zoom lens (like Webcams)
+                setZoomType('software');
+                setZoomRange({ min: 1, max: 3, step: 0.1 });
+                setZoomValue(1);
             }
 
         } catch (err) {
@@ -113,7 +121,6 @@ export default function ARScannerApp() {
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
 
-    // --- Native Camera Features ---
     const toggleCameraFacing = () => {
         setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
@@ -121,7 +128,9 @@ export default function ARScannerApp() {
     const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const newZoom = parseFloat(e.target.value);
         setZoomValue(newZoom);
-        if (streamRef.current) {
+        
+        // Only apply to hardware if supported. Software zoom is handled by CSS below!
+        if (zoomType === 'hardware' && streamRef.current) {
             const track = streamRef.current.getVideoTracks()[0];
             try {
                 await track.applyConstraints({ advanced: [{ zoom: newZoom }] } as any);
@@ -276,7 +285,6 @@ export default function ARScannerApp() {
         };
     }, [model, activeMode]);
 
-    // --- Upload Handlers ---
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -286,8 +294,6 @@ export default function ARScannerApp() {
             setActiveMode('upload');
         }
     };
-
-    const analyzeUploadedImage = async () => { /* Upload logic */ };
 
     // ==========================================
     // RENDER: SELECTION SCREEN
@@ -322,7 +328,8 @@ export default function ARScannerApp() {
     // RENDER: NATIVE CAMERA UI
     // ==========================================
     return (
-        <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden">
+        // NEW: overscroll-none stops the whole page from bouncing on mobile
+        <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden overscroll-none">
             
             <div className="h-16 w-full flex items-center justify-between px-6 z-20 bg-black md:absolute md:top-0 md:bg-transparent md:h-auto md:pt-8 md:bg-gradient-to-b md:from-black/60 md:to-transparent md:pb-12">
                 <button
@@ -341,19 +348,29 @@ export default function ARScannerApp() {
             <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden md:absolute md:inset-0 md:z-0">
                 {activeMode === 'camera' && (
                     <>
-                        <video 
-                            ref={videoRef} 
-                            autoPlay 
-                            playsInline 
-                            muted 
-                            className="absolute inset-0 w-full h-full object-cover" 
-                            style={{ objectFit: 'cover' }} 
-                        />
-                        <canvas 
-                            ref={canvasRef} 
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10" 
-                            style={{ objectFit: 'cover' }} 
-                        />
+                        {/* NEW: CSS Scale Wrapper for Software Zoom */}
+                        <div 
+                            className="absolute inset-0 w-full h-full"
+                            style={{ 
+                                transform: zoomType === 'software' ? `scale(${zoomValue})` : 'scale(1)',
+                                transition: 'transform 0.15s ease-out',
+                                transformOrigin: 'center center'
+                            }}
+                        >
+                            <video 
+                                ref={videoRef} 
+                                autoPlay 
+                                playsInline 
+                                muted 
+                                className="absolute inset-0 w-full h-full object-cover" 
+                                style={{ objectFit: 'cover' }} 
+                            />
+                            <canvas 
+                                ref={canvasRef} 
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10" 
+                                style={{ objectFit: 'cover' }} 
+                            />
+                        </div>
 
                         {zoomRange && (
                             <div className="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center bg-black/40 backdrop-blur-md rounded-full py-4 px-2 border border-white/20 h-48 md:h-64 shadow-xl pointer-events-auto">
@@ -366,7 +383,8 @@ export default function ARScannerApp() {
                                         step={zoomRange.step}
                                         value={zoomValue}
                                         onChange={handleZoomChange}
-                                        className="absolute w-28 md:w-40 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer outline-none -rotate-90 origin-center accent-emerald-500"
+                                        // NEW: touch-none instantly prevents the pull-to-refresh bug!
+                                        className="absolute w-28 md:w-40 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer outline-none -rotate-90 origin-center accent-emerald-500 touch-none"
                                     />
                                 </div>
                                 <span className="text-white/50 text-[10px] font-bold mt-4 drop-shadow-md">1x</span>
