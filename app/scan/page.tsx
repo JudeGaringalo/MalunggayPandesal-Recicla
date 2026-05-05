@@ -1,3 +1,4 @@
+// app/scan/page.tsx
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -51,26 +52,32 @@ export default function ScanPage() {
         loadModel();
     }, []);
 
-    // --- Continuous Live Scanning Logic with Canvas Overlay ---
+    // --- Continuous Live Scanning Logic with Math-Corrected Overlay ---
     const detectFrame = async () => {
         if (activeMode === 'camera' && videoRef.current && canvasRef.current && model) {
             const video = videoRef.current;
             const canvas = canvasRef.current;
 
-            // FIX MOBILE RESPONSIVENESS: Sync Canvas native resolution to Video native resolution
-            if (video.readyState === 4) {
-                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                }
+            // 1. Sync Canvas rendered resolution to the screen size (Full Screen)
+            if (canvas.clientWidth !== canvas.width || canvas.clientHeight !== canvas.height) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
 
+            if (video.readyState === 4) {
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     try {
                         const predictions = await model.detect(video);
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-                        // Filter out unconfident predictions and people
+                        // 2. THE MAGIC MATH: Calculate how 'object-cover' is scaling and centering the video
+                        const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+                        const scaledWidth = video.videoWidth * scale;
+                        const scaledHeight = video.videoHeight * scale;
+                        const offsetX = (canvas.width - scaledWidth) / 2;
+                        const offsetY = (canvas.height - scaledHeight) / 2;
+
                         const validPredictions = predictions.filter(
                             p => p.score > CONFIDENCE_THRESHOLD && p.class !== 'person'
                         );
@@ -88,16 +95,23 @@ export default function ScanPage() {
                                 probability: bestMatch.score
                             });
 
-                            // Draw linear focus boxes around ALL detected objects
                             validPredictions.forEach(prediction => {
-                                const [x, y, width, height] = prediction.bbox;
+                                // 3. Grab the raw AI coordinates
+                                const [rawX, rawY, rawW, rawH] = prediction.bbox;
                                 const isBestMatch = prediction === bestMatch;
+
+                                // 4. TRANSLATE the raw coordinates to match the screen's object-cover cropping
+                                const x = rawX * scale + offsetX;
+                                const y = rawY * scale + offsetY;
+                                const width = rawW * scale;
+                                const height = rawH * scale;
 
                                 const color = isBestMatch ? '#10b981' : 'rgba(255, 255, 255, 0.4)';
                                 ctx.strokeStyle = color;
                                 ctx.lineWidth = isBestMatch ? 4 : 2;
                                 const cornerLength = 20;
 
+                                // Draw the box using the translated x, y, width, height
                                 ctx.beginPath();
                                 ctx.moveTo(x, y + cornerLength);
                                 ctx.lineTo(x, y);
@@ -121,7 +135,6 @@ export default function ScanPage() {
                                     y > 20 ? y - 8 : y + 20
                                 );
                             });
-
                         } else {
                             setAiResult(null);
                         }
@@ -148,13 +161,10 @@ export default function ScanPage() {
         setActiveMode('camera');
         setAiResult(null);
         try {
-            // FIX: Check if the device is in portrait mode
             const isPortrait = window.innerHeight > window.innerWidth;
-
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     facingMode: "environment", 
-                    // FIX: Swap the ideal resolution so the camera gives us a tall frame, not a wide one
                     width: { ideal: isPortrait ? 720 : 1280 }, 
                     height: { ideal: isPortrait ? 1280 : 720 } 
                 }
@@ -164,7 +174,7 @@ export default function ScanPage() {
                 videoRef.current.srcObject = stream;
             }
         } catch (err) {
-            console.error("Camera access denied or unavailable:", err);
+            console.error("Camera access denied:", err);
             alert("Could not access the camera. Please check browser permissions.");
             setActiveMode('selection');
         }
@@ -279,14 +289,11 @@ export default function ScanPage() {
                             autoPlay
                             playsInline
                             muted
-                            // FIX: Changed from object-cover to object-contain so the edges are not cut off
-                            className="absolute inset-0 w-full h-full object-contain"
+                            className="absolute inset-0 w-full h-full object-cover"
                         />
-                        {/* THE AR CANVAS */}
                         <canvas
                             ref={canvasRef}
-                            // FIX: Must match the video exactly
-                            className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none"
+                            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
                         />
                     </>
                 )}
