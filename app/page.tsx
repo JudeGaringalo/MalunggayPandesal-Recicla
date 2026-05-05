@@ -254,7 +254,7 @@ export default function LandingPage(): React.JSX.Element {
         </section>
 
         {/* --- FOOTER SECTION --- */}
-        <footer className="relative w-full h-[60vh] md:h-screen bg-white flex items-end justify-center overflow-hidden">
+        <footer className="relative w-full h-[40vh] md:h-screen bg-white flex items-end justify-center overflow-hidden">
           
           {/* CUT-OUT TEXT (Background) */}
           <div className="absolute inset-0 flex items-center justify-center z-0 px-4 md:px-6 w-full">
