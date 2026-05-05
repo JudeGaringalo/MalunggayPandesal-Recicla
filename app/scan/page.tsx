@@ -50,17 +50,19 @@ export default function ARScannerApp() {
         setActiveMode('camera');
         setIsPaused(false);
         try {
+            // Stop any existing stream before starting a new one (important for switching cameras)
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
 
-            // THE ZOOM FIX: Check if on desktop
+            // THE FIX: Check if we are on a desktop (landscape) or mobile (portrait)
             const isDesktop = window.innerWidth > window.innerHeight;
 
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     facingMode: facingMode,
-                    // If on web/desktop, force 16:9 to prevent zooming. Mobile is left blank so it uses native.
+                    // If desktop, force the widescreen HD camera so it stops zooming/cropping!
+                    // If mobile, leave it completely blank so mobile stays exactly as you want it.
                     ...(isDesktop ? { width: { ideal: 1920 }, height: { ideal: 1080 } } : {})
                 }
             });
@@ -76,6 +78,7 @@ export default function ARScannerApp() {
         }
     };
 
+    // Re-run camera start if the user flips the camera
     useEffect(() => {
         if (activeMode === 'camera') {
             startCamera();
@@ -119,6 +122,7 @@ export default function ARScannerApp() {
                     canvas.height = canvas.clientHeight;
                 }
 
+                // Run detection even if paused so the HUD stays drawn on the frozen image
                 if (video.readyState === 4) {
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
@@ -140,6 +144,7 @@ export default function ARScannerApp() {
                             const width = rawW * scale;
                             const height = rawH * scale;
 
+                            // Off-screen ghost filter
                             const centerX = x + width / 2;
                             const centerY = y + height / 2;
                             if (centerX < 0 || centerX > canvas.width || centerY < 0 || centerY > canvas.height) return; 
@@ -247,6 +252,8 @@ export default function ARScannerApp() {
             
             {/* 
                 TOP BAR 
+                Mobile: Solid black block pushing video down.
+                Desktop (md): Transparent floating overlay on top of the video.
             */}
             <div className="h-16 w-full flex items-center justify-between px-6 z-20 bg-black md:absolute md:top-0 md:bg-transparent md:h-auto md:pt-8 md:bg-gradient-to-b md:from-black/60 md:to-transparent md:pb-12">
                 <button
@@ -256,16 +263,17 @@ export default function ARScannerApp() {
                     &#8592; Close
                 </button>
                 {activeMode === 'camera' && (
-                    <div className={`rounded-full text-xs font-bold flex items-center ${isPaused ? '' : ''}`}>
-                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500'}`}></span>
-                        {isPaused ? '' : ''}
+                    <div className={`rounded-full text-xs font-bold flex items-center bg-black/40 md:backdrop-blur-md px-4 py-2 border border-transparent md:border-white/20`}>
+                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500 animate-pulse'}`}></span>
+                        {isPaused ? 'AI Paused' : 'AI Active'}
                     </div>
-
                 )}
             </div>
 
             {/* 
-                VIEWFINDER
+                VIEWFINDER: Middle Container 
+                Mobile: Flex-1 to fill space between black bars.
+                Desktop (md): Absolute inset-0 to fill the entire screen behind the UI.
             */}
             <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden md:absolute md:inset-0 md:z-0">
                 {activeMode === 'camera' && (
@@ -292,6 +300,8 @@ export default function ARScannerApp() {
 
             {/* 
                 BOTTOM BAR
+                Mobile: Solid black block pushing video up.
+                Desktop (md): Transparent floating overlay at the bottom with a subtle gradient to keep buttons visible.
             */}
             <div className="h-40 w-full flex flex-col items-center justify-end pb-8 z-20 bg-black text-white md:absolute md:bottom-0 md:bg-transparent md:h-auto md:pb-12 md:bg-gradient-to-t md:from-black/60 md:to-transparent md:pt-20">
                 
