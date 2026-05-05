@@ -8,15 +8,11 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 export default function ScanPage() {
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
-    
-    // Tracks the camera's natural aspect ratio for pixel-perfect AI alignment
-    const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
-    // --- AI State ---
     const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
     const [aiResult, setAiResult] = useState<{ className: string; category: string; value: string; probability: number } | null>(null);
     const requestRef = useRef<number | null>(null);
@@ -30,16 +26,15 @@ export default function ScanPage() {
         const metals = ['fork', 'knife', 'spoon'];
         const paper = ['book'];
 
-        if (eWasteHigh.includes(detectedClass)) return { category: 'High-Value E-Waste', value: 'Est. Scrap: ₱150 - ₱500/unit' };
-        if (eWasteLow.includes(detectedClass)) return { category: 'Peripherals / Small Tech', value: 'Est. Scrap: ₱20 - ₱50/unit' };
-        if (plasticsGlass.includes(detectedClass)) return { category: 'Recyclables (Plastic/Glass)', value: 'Est. Scrap: ₱12 - ₱20/kg' };
-        if (metals.includes(detectedClass)) return { category: 'Scrap Metal', value: 'Est. Scrap: ₱100 - ₱150/kg' };
-        if (paper.includes(detectedClass)) return { category: 'Paper / Cardboard', value: 'Est. Scrap: ₱4 - ₱8/kg' };
+        if (eWasteHigh.includes(detectedClass)) return { category: 'High-Value E-Waste', value: '₱150 - ₱500/unit' };
+        if (eWasteLow.includes(detectedClass)) return { category: 'Peripherals / Tech', value: '₱20 - ₱50/unit' };
+        if (plasticsGlass.includes(detectedClass)) return { category: 'Recyclables (Plastic/Glass)', value: '₱12 - ₱20/kg' };
+        if (metals.includes(detectedClass)) return { category: 'Scrap Metal', value: '₱100 - ₱150/kg' };
+        if (paper.includes(detectedClass)) return { category: 'Paper / Cardboard', value: '₱4 - ₱8/kg' };
 
-        return { category: 'General / Non-Scrap', value: 'No significant local scrap value' };
+        return { category: 'General / Non-Scrap', value: 'No local scrap value' };
     };
 
-    // --- Load AI Model ---
     useEffect(() => {
         const loadModel = async () => {
             try {
@@ -53,23 +48,30 @@ export default function ScanPage() {
         loadModel();
     }, []);
 
-    // --- Continuous Live Scanning Logic ---
     const detectFrame = async () => {
         if (activeMode === 'camera' && videoRef.current && canvasRef.current && model) {
             const video = videoRef.current;
             const canvas = canvasRef.current;
 
-            if (video.readyState === 4) {
-                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                }
+            // Sync Canvas to the visual screen size
+            if (canvas.clientWidth !== canvas.width || canvas.clientHeight !== canvas.height) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
 
+            if (video.readyState === 4) {
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     try {
                         const predictions = await model.detect(video);
-                        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        // --- THE MAGIC MATH FOR OBJECT-COVER ---
+                        const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+                        const scaledWidth = video.videoWidth * scale;
+                        const scaledHeight = video.videoHeight * scale;
+                        const offsetX = (canvas.width - scaledWidth) / 2;
+                        const offsetY = (canvas.height - scaledHeight) / 2;
 
                         const validPredictions = predictions.filter(
                             p => p.score > CONFIDENCE_THRESHOLD && p.class !== 'person'
@@ -89,28 +91,79 @@ export default function ScanPage() {
                             });
 
                             validPredictions.forEach(prediction => {
-                                const [x, y, width, height] = prediction.bbox;
+                                const [rawX, rawY, rawW, rawH] = prediction.bbox;
                                 const isBestMatch = prediction === bestMatch;
 
+                                // Translate raw coordinates to screen coordinates
+                                const x = rawX * scale + offsetX;
+                                const y = rawY * scale + offsetY;
+                                const width = rawW * scale;
+                                const height = rawH * scale;
+
+                                const mapped = mapWasteCategory(prediction.class);
                                 const color = isBestMatch ? '#10b981' : 'rgba(255, 255, 255, 0.4)';
+                                
+                                // 1. Draw Bounding Box Corners
                                 ctx.strokeStyle = color;
-                                ctx.lineWidth = isBestMatch ? 6 : 3;
+                                ctx.lineWidth = isBestMatch ? 4 : 2;
                                 const cornerLength = 20;
 
                                 ctx.beginPath();
-                                ctx.moveTo(x, y + cornerLength);
-                                ctx.lineTo(x, y);
-                                ctx.lineTo(x + cornerLength, y);
-                                ctx.moveTo(x + width - cornerLength, y);
-                                ctx.lineTo(x + width, y);
-                                ctx.lineTo(x + width, y + cornerLength);
-                                ctx.moveTo(x, y + height - cornerLength);
-                                ctx.lineTo(x, y + height);
-                                ctx.lineTo(x + cornerLength, y + height);
-                                ctx.moveTo(x + width - cornerLength, y + height);
-                                ctx.lineTo(x + width, y + height);
-                                ctx.lineTo(x + width, y + height - cornerLength);
+                                ctx.moveTo(x, y + cornerLength); ctx.lineTo(x, y); ctx.lineTo(x + cornerLength, y);
+                                ctx.moveTo(x + width - cornerLength, y); ctx.lineTo(x + width, y); ctx.lineTo(x + width, y + cornerLength);
+                                ctx.moveTo(x, y + height - cornerLength); ctx.lineTo(x, y + height); ctx.lineTo(x + cornerLength, y + height);
+                                ctx.moveTo(x + width - cornerLength, y + height); ctx.lineTo(x + width, y + height); ctx.lineTo(x + width, y + height - cornerLength);
                                 ctx.stroke();
+
+                                // 2. Draw the HUD Floating Overlay Panel
+                                const panelW = Math.max(width, 240); // Ensure panel is wide enough
+                                const panelH = 95;
+                                const panelX = x;
+                                // Place panel below the box, or above it if it hits the bottom of the screen
+                                const panelY = (y + height + 10 + panelH > canvas.height) ? y - panelH - 10 : y + height + 10;
+
+                                // Panel Background (Translucent Dark Gray)
+                                ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
+                                ctx.beginPath();
+                                ctx.roundRect ? ctx.roundRect(panelX, panelY, panelW, panelH, 8) : ctx.rect(panelX, panelY, panelW, panelH);
+                                ctx.fill();
+
+                                // Panel Border
+                                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
+
+                                // Text: Classification
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = 'bold 16px sans-serif';
+                                ctx.fillText(prediction.class.toUpperCase(), panelX + 15, panelY + 28);
+
+                                // Text: Confidence Percentage (Right aligned)
+                                ctx.fillStyle = '#10b981';
+                                ctx.font = 'bold 14px sans-serif';
+                                ctx.fillText(`${(prediction.score * 100).toFixed(0)}%`, panelX + panelW - 45, panelY + 28);
+
+                                // Text: Category
+                                ctx.fillStyle = '#a1a1aa';
+                                ctx.font = '12px sans-serif';
+                                ctx.fillText(`Type: ${mapped.category}`, panelX + 15, panelY + 52);
+
+                                // Text: Value
+                                ctx.fillStyle = '#d4d4d8';
+                                ctx.font = '12px sans-serif';
+                                ctx.fillText(`Market: ${mapped.value}`, panelX + 15, panelY + 70);
+
+                                // Draw Progress Bar Background
+                                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                                ctx.beginPath();
+                                ctx.roundRect ? ctx.roundRect(panelX + 15, panelY + 80, panelW - 30, 4, 2) : ctx.rect(panelX + 15, panelY + 80, panelW - 30, 4);
+                                ctx.fill();
+
+                                // Draw Progress Bar Fill (Confidence Score)
+                                ctx.fillStyle = '#10b981';
+                                ctx.beginPath();
+                                ctx.roundRect ? ctx.roundRect(panelX + 15, panelY + 80, (panelW - 30) * prediction.score, 4, 2) : ctx.rect(panelX + 15, panelY + 80, (panelW - 30) * prediction.score, 4);
+                                ctx.fill();
                             });
                         } else {
                             setAiResult(null);
@@ -133,13 +186,12 @@ export default function ScanPage() {
         };
     }, [activeMode, model]);
 
-    // --- Camera & Upload Logic ---
     const startCamera = async () => {
         setActiveMode('camera');
         setAiResult(null);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
+                video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
             });
             streamRef.current = stream;
             if (videoRef.current) {
@@ -147,16 +199,8 @@ export default function ScanPage() {
             }
         } catch (err) {
             console.error("Camera access denied:", err);
-            alert("Could not access the camera. Please check browser permissions.");
+            alert("Could not access the camera.");
             setActiveMode('selection');
-        }
-    };
-
-    const handleVideoLoadedMetadata = () => {
-        if (videoRef.current) {
-            const width = videoRef.current.videoWidth;
-            const height = videoRef.current.videoHeight;
-            setVideoAspectRatio(width / height);
         }
     };
 
@@ -170,9 +214,7 @@ export default function ScanPage() {
         }
     };
 
-    useEffect(() => {
-        return () => stopCamera();
-    }, []);
+    useEffect(() => { return () => stopCamera(); }, []);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -185,24 +227,19 @@ export default function ScanPage() {
         }
     };
 
-    // --- UI: Selection Screen ---
     if (activeMode === 'selection') {
-        // (Unchanged Selection Screen)
+        // (Selection Screen - unchanged)
         return (
             <main className="min-h-screen bg-black text-white relative flex flex-col font-sans">
                 <div className="absolute inset-0 bg-gradient-to-b from-black via-[#011a0d] to-black opacity-90 z-0"></div>
                 <nav className="relative z-10 w-full p-6 flex justify-between items-center">
-                    <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest">
-                        &#8592; Back
-                    </Link>
+                    <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
                     <span className="text-emerald-500 font-serif italic text-lg">Recicla.</span>
                 </nav>
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-serif mb-4">Select Input Method</h2>
-                        <p className="text-gray-400 font-light tracking-wide">
-                            {model ? "AI Core Ready. Choose an input." : "Booting AI Core... Please wait."}
-                        </p>
+                        <p className="text-gray-400 font-light tracking-wide">{model ? "AI Core Ready. Choose an input." : "Booting AI Core... Please wait."}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                         <button onClick={startCamera} disabled={!model} className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
@@ -215,7 +252,6 @@ export default function ScanPage() {
                             <h3 className="text-xl font-medium tracking-wide mb-2 text-white">Live Camera</h3>
                             <p className="text-sm text-gray-500 font-light text-center">Real-time AR scanning.</p>
                         </button>
-
                         <label className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
                             <div className="w-16 h-16 rounded-full border border-gray-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-gray-400 transition-all duration-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -232,15 +268,13 @@ export default function ScanPage() {
         );
     }
 
-    // --- UI: Active Scanner (Google Lens / iOS Standard Layout) ---
     return (
-        // 100dvh ensures it fits perfectly on mobile, ignoring the scrolling address bar
-        <div className="fixed inset-0 w-full h-[100dvh] bg-black flex flex-col font-sans overflow-hidden">
+        // Wrapper now uses 100vw and 100dvh to absolutely guarantee full screen on all devices
+        <div className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden">
             
-            {/* TOP SECTION: The Camera Feed (Pinned to the top) */}
-            <div className="relative flex-1 bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+            {/* The Full Screen Camera View */}
+            <div className="relative flex-1 bg-[#0a0a0a] overflow-hidden">
                 
-                {/* Header Actions inside Camera View */}
                 <div className="absolute top-0 inset-x-0 p-6 z-40 flex justify-between items-center pointer-events-none">
                     <button
                         onClick={() => { stopCamera(); setActiveMode('selection'); }}
@@ -256,48 +290,40 @@ export default function ScanPage() {
                     )}
                 </div>
 
-                {/* The Video & AR Canvas */}
                 {activeMode === 'camera' && (
-                    <div 
-                        className="relative flex items-center justify-center w-full max-h-full max-w-full"
-                        style={{ aspectRatio: `${videoAspectRatio}` }}
-                    >
+                    <div className="absolute inset-0 w-full h-full">
                         <video
                             ref={videoRef}
                             autoPlay
                             playsInline
                             muted
-                            onLoadedMetadata={handleVideoLoadedMetadata}
-                            className="absolute inset-0 w-full h-full object-fill rounded-b-2xl"
+                            // object-cover ensures it fills the entire screen area perfectly
+                            className="absolute inset-0 w-full h-full object-cover"
                         />
                         <canvas
                             ref={canvasRef}
-                            className="absolute inset-0 w-full h-full pointer-events-none"
+                            // Canvas also gets object-cover to match the video's crop exactly
+                            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
                         />
                     </div>
                 )}
 
                 {activeMode === 'upload' && previewImage && (
-                    <img
-                        src={previewImage}
-                        alt="Upload preview"
-                        className="w-full h-full object-contain p-4" 
-                    />
+                    <img src={previewImage} alt="Upload preview" className="absolute inset-0 w-full h-full object-contain p-4" />
                 )}
             </div>
 
-            {/* BOTTOM SECTION: iPhone Standard Bottom Sheet */}
-            <div className="relative w-full bg-[#f2f2f7] dark:bg-[#1c1c1e] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-[32px] flex flex-col flex-shrink-0 z-50 overflow-hidden transition-all duration-300 ease-in-out pb-8">
+            {/* 
+                MOBILE ONLY: iPhone Standard Bottom Sheet 
+                Hidden on medium/desktop screens (md:hidden) so the web view is 100% immersive HUD.
+            */}
+            <div className="md:hidden relative w-full bg-[#f2f2f7] dark:bg-[#1c1c1e] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-[32px] flex flex-col flex-shrink-0 z-50 overflow-hidden transition-all duration-300 ease-in-out pb-8">
                 
-                {/* Frosted Glass Overlay (Apple standard) */}
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/70 backdrop-blur-2xl z-0 pointer-events-none"></div>
 
                 <div className="relative z-10 w-full px-6 pt-4 pb-6 flex flex-col items-center">
-                    
-                    {/* iOS Drag Handle */}
                     <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mb-6"></div>
 
-                    {/* Content Logic */}
                     {!aiResult && activeMode === 'camera' && (
                         <div className="flex flex-col items-center justify-center py-6 text-center">
                             <div className="w-12 h-12 border-4 border-gray-300 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
@@ -316,16 +342,10 @@ export default function ScanPage() {
                                     img.src = previewImage;
                                     await new Promise((resolve) => (img.onload = resolve));
                                     const predictions = await model.detect(img);
-
                                     if (predictions.length > 0) {
                                         const best = predictions.reduce((p, c) => (p.score > c.score) ? p : c);
                                         const mappedData = mapWasteCategory(best.class);
-                                        setAiResult({
-                                            className: best.class,
-                                            category: mappedData.category,
-                                            value: mappedData.value,
-                                            probability: best.score
-                                        });
+                                        setAiResult({ className: best.class, category: mappedData.category, value: mappedData.value, probability: best.score });
                                     } else {
                                         alert("Could not identify any clear objects in this image.");
                                     }
@@ -338,7 +358,6 @@ export default function ScanPage() {
 
                     {aiResult && (
                         <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {/* Header row: Title + Confidence */}
                             <div className="flex justify-between items-baseline mb-5">
                                 <h2 className="text-3xl font-bold tracking-tight text-black dark:text-white capitalize">
                                     {aiResult.className}
@@ -348,7 +367,6 @@ export default function ScanPage() {
                                 </span>
                             </div>
 
-                            {/* Info Cards (Apple Wallet/Maps style) */}
                             <div className="bg-white dark:bg-[#2c2c2e] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/5 mb-4">
                                 <div className="flex flex-col gap-1 border-b border-gray-100 dark:border-white/10 pb-4 mb-4">
                                     <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Classification</span>
@@ -360,7 +378,6 @@ export default function ScanPage() {
                                 </div>
                             </div>
                             
-                            {/* Hackathon Add-on: Fake "Save to Log" Button */}
                             <button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold tracking-wide py-4 rounded-2xl transition-all shadow-md active:scale-95">
                                 Log to Segregation Profile
                             </button>
