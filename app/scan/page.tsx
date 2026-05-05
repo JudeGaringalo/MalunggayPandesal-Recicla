@@ -10,6 +10,7 @@ export default function ScanPage() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null); // NEW: Canvas for drawing AR boxes
     const streamRef = useRef<MediaStream | null>(null);
 
     // --- AI State & Configuration ---
@@ -17,45 +18,29 @@ export default function ScanPage() {
     const [aiResult, setAiResult] = useState<{ className: string; category: string; value: string; probability: number } | null>(null);
     const requestRef = useRef<number | null>(null);
 
-    // COCO-SSD is a bit less confident than custom models, so 60% is a good threshold
-    // Change this from 0.60 to 0.75 or 0.80
-    const CONFIDENCE_THRESHOLD = 0.75;
+    const CONFIDENCE_THRESHOLD = 0.65;
 
-    // Maps generic AI terms to your hackathon's specific e-waste & recycling categories
     const mapWasteCategory = (detectedClass: string) => {
-        // High-value electronics
         const eWasteHigh = ['laptop', 'tv', 'cell phone', 'refrigerator'];
-        // Peripherals and small appliances
         const eWasteLow = ['mouse', 'keyboard', 'remote', 'microwave', 'toaster', 'oven'];
-        // Recyclables
         const plasticsGlass = ['bottle', 'cup', 'bowl', 'vase'];
         const metals = ['fork', 'knife', 'spoon'];
         const paper = ['book'];
 
-        if (eWasteHigh.includes(detectedClass)) {
-            return { category: 'High-Value E-Waste', value: 'Est. Scrap: ₱150 - ₱500/unit' };
-        }
-        if (eWasteLow.includes(detectedClass)) {
-            return { category: 'Peripherals / Small Tech', value: 'Est. Scrap: ₱20 - ₱50/unit' };
-        }
-        if (plasticsGlass.includes(detectedClass)) {
-            return { category: 'Recyclables (Plastic/Glass)', value: 'Est. Scrap: ₱12 - ₱20/kg' };
-        }
-        if (metals.includes(detectedClass)) {
-            return { category: 'Scrap Metal', value: 'Est. Scrap: ₱100 - ₱150/kg' };
-        }
-        if (paper.includes(detectedClass)) {
-            return { category: 'Paper / Cardboard', value: 'Est. Scrap: ₱4 - ₱8/kg' };
-        }
+        if (eWasteHigh.includes(detectedClass)) return { category: 'High-Value E-Waste', value: 'Est. Scrap: ₱150 - ₱500/unit' };
+        if (eWasteLow.includes(detectedClass)) return { category: 'Peripherals / Small Tech', value: 'Est. Scrap: ₱20 - ₱50/unit' };
+        if (plasticsGlass.includes(detectedClass)) return { category: 'Recyclables (Plastic/Glass)', value: 'Est. Scrap: ₱12 - ₱20/kg' };
+        if (metals.includes(detectedClass)) return { category: 'Scrap Metal', value: 'Est. Scrap: ₱100 - ₱150/kg' };
+        if (paper.includes(detectedClass)) return { category: 'Paper / Cardboard', value: 'Est. Scrap: ₱4 - ₱8/kg' };
 
-        // Fallback for anything else it sees (like 'chair', 'person', 'car')
         return { category: 'General / Non-Scrap', value: 'No significant local scrap value' };
     };
+
     // --- Load AI Model ---
     useEffect(() => {
         const loadModel = async () => {
             try {
-                await tf.ready(); // Ensure the TensorFlow engine is booted up first
+                await tf.ready();
                 const loadedModel = await cocoSsd.load();
                 setModel(loadedModel);
                 console.log("Open-Source AI Model Loaded Successfully!");
@@ -66,34 +51,92 @@ export default function ScanPage() {
         loadModel();
     }, []);
 
-    // --- Continuous Live Scanning Logic ---
+    // --- Continuous Live Scanning Logic with Canvas Overlay ---
     const detectFrame = async () => {
-        if (activeMode === 'camera' && videoRef.current && model) {
-            try {
-                const predictions = await model.detect(videoRef.current);
+        if (activeMode === 'camera' && videoRef.current && canvasRef.current && model) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
 
-                if (predictions.length > 0) {
-                    // Find the prediction with the highest confidence score
-                    const bestMatch = predictions.reduce((prev, current) =>
-                        (prev.score > current.score) ? prev : current
-                    );
-
-                    if (bestMatch.score > CONFIDENCE_THRESHOLD && bestMatch.class !== 'person') {
-                        const mappedData = mapWasteCategory(bestMatch.class);
-                        setAiResult({
-                            className: bestMatch.class,
-                            category: mappedData.category,
-                            value: mappedData.value,
-                            probability: bestMatch.score
-                        });
-                    } else {
-                        setAiResult(null);
-                    }
-                } else {
-                    setAiResult(null); // Look at nothing, show nothing
+            // FIX MOBILE RESPONSIVENESS: Sync Canvas native resolution to Video native resolution
+            if (video.readyState === 4) { // Ensure video has metadata
+                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
                 }
-            } catch (err) {
-                console.error("Inference error:", err);
+
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    try {
+                        const predictions = await model.detect(video);
+                        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous frame
+
+                        // Filter out unconfident predictions and people
+                        const validPredictions = predictions.filter(
+                            p => p.score > CONFIDENCE_THRESHOLD && p.class !== 'person'
+                        );
+
+                        if (validPredictions.length > 0) {
+                            // Find the most confident prediction to display in the UI Card below
+                            const bestMatch = validPredictions.reduce((prev, current) =>
+                                (prev.score > current.score) ? prev : current
+                            );
+
+                            const mappedData = mapWasteCategory(bestMatch.class);
+                            setAiResult({
+                                className: bestMatch.class,
+                                category: mappedData.category,
+                                value: mappedData.value,
+                                probability: bestMatch.score
+                            });
+
+                            // NEW: Draw linear focus boxes around ALL detected objects
+                            validPredictions.forEach(prediction => {
+                                const [x, y, width, height] = prediction.bbox;
+                                const isBestMatch = prediction === bestMatch;
+
+                                // Emerald for the main object, faded gray for background objects
+                                const color = isBestMatch ? '#10b981' : 'rgba(255, 255, 255, 0.4)';
+                                ctx.strokeStyle = color;
+                                ctx.lineWidth = isBestMatch ? 4 : 2;
+
+                                const cornerLength = 20;
+
+                                ctx.beginPath();
+                                // Top-Left Corner
+                                ctx.moveTo(x, y + cornerLength);
+                                ctx.lineTo(x, y);
+                                ctx.lineTo(x + cornerLength, y);
+                                // Top-Right Corner
+                                ctx.moveTo(x + width - cornerLength, y);
+                                ctx.lineTo(x + width, y);
+                                ctx.lineTo(x + width, y + cornerLength);
+                                // Bottom-Left Corner
+                                ctx.moveTo(x, y + height - cornerLength);
+                                ctx.lineTo(x, y + height);
+                                ctx.lineTo(x + cornerLength, y + height);
+                                // Bottom-Right Corner
+                                ctx.moveTo(x + width - cornerLength, y + height);
+                                ctx.lineTo(x + width, y + height);
+                                ctx.lineTo(x + width, y + height - cornerLength);
+                                ctx.stroke();
+
+                                // Draw Label above the box
+                                ctx.fillStyle = color;
+                                ctx.font = isBestMatch ? 'bold 18px sans-serif' : '14px sans-serif';
+                                ctx.fillText(
+                                    `${prediction.class} (${Math.round(prediction.score * 100)}%)`,
+                                    x,
+                                    y > 20 ? y - 8 : y + 20 // Keep label inside if box is at the very top edge
+                                );
+                            });
+
+                        } else {
+                            setAiResult(null);
+                        }
+                    } catch (err) {
+                        console.error("Inference error:", err);
+                    }
+                }
             }
         }
         requestRef.current = requestAnimationFrame(detectFrame);
@@ -114,7 +157,8 @@ export default function ScanPage() {
         setAiResult(null);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
+                // Ideal settings for mobile back cameras
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
             });
             streamRef.current = stream;
             if (videoRef.current) {
@@ -214,50 +258,47 @@ export default function ScanPage() {
 
     // --- UI: Active Scanner/Upload Viewer ---
     return (
-        <div className="fixed inset-0 w-full h-full bg-black z-50 flex flex-col font-sans">
+        <div className="fixed inset-0 w-full h-full bg-black z-50 flex flex-col font-sans overflow-hidden">
 
-            <div className="absolute top-0 inset-x-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-8 pb-12">
+            <div className="absolute top-0 inset-x-0 p-6 z-40 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-8 pb-12 pointer-events-none">
                 <button
                     onClick={() => {
                         stopCamera();
                         setActiveMode('selection');
                     }}
-                    className="text-white hover:text-emerald-400 transition-colors text-sm uppercase tracking-widest backdrop-blur-sm bg-black/30 px-4 py-2 rounded-full border border-white/10"
+                    className="pointer-events-auto text-white hover:text-emerald-400 transition-colors text-sm uppercase tracking-widest backdrop-blur-sm bg-black/30 px-4 py-2 rounded-full border border-white/10"
                 >
                     &#8592; Cancel
                 </button>
             </div>
 
-            <div className="absolute inset-0 w-full h-full z-0">
+            {/* Viewport for Video and AR Canvas overlays */}
+            <div className="absolute inset-0 w-full h-full z-0 bg-black flex items-center justify-center">
                 {activeMode === 'camera' && (
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover"
-                    />
+                    <>
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        {/* THE AR CANVAS */}
+                        <canvas
+                            ref={canvasRef}
+                            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                        />
+                    </>
                 )}
 
                 {activeMode === 'upload' && previewImage && (
                     <img
                         src={previewImage}
                         alt="Upload preview"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain" // Changed to object-contain so they can see the whole photo
                     />
                 )}
             </div>
-
-            {activeMode === 'camera' && (
-                <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-                    <div className="w-64 h-64 relative opacity-60">
-                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl"></div>
-                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl"></div>
-                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl"></div>
-                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl"></div>
-                    </div>
-                </div>
-            )}
 
             {/* Upload Mode: Manual Analyze Button */}
             {activeMode === 'upload' && !aiResult && (
@@ -292,8 +333,8 @@ export default function ScanPage() {
 
             {/* The Results Card with Hackathon Data */}
             {aiResult && (
-                <div className="absolute bottom-10 inset-x-0 p-6 z-30 flex justify-center transition-all duration-300 ease-in-out">
-                    <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl border-t-8 border-emerald-500">
+                <div className="absolute bottom-10 inset-x-0 p-6 z-30 flex justify-center transition-all duration-300 ease-in-out pointer-events-none">
+                    <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl border-t-8 border-emerald-500 pointer-events-auto">
                         {activeMode === 'camera' && (
                             <p className="text-gray-500 text-sm uppercase tracking-widest mb-1 animate-pulse text-center">Live Scan Active</p>
                         )}
@@ -315,7 +356,6 @@ export default function ScanPage() {
                     </div>
                 </div>
             )}
-
         </div>
     );
 }
