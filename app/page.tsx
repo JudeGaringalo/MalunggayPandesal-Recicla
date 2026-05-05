@@ -1,43 +1,104 @@
+"use client";
+
 import Link from 'next/link';
+import React from 'react';
 
-export default function LandingPage() {
+export default function LandingPage(): React.JSX.Element {
   return (
-    <main className="min-h-screen bg-black text-white overflow-hidden relative flex flex-col justify-center font-sans">
-      
-      {/* Background Styling */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#022c16] via-black to-[#064e3b] opacity-90 z-0"></div>
-      <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-800/30 via-transparent to-transparent blur-3xl z-0 pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-transparent to-transparent blur-3xl z-0 pointer-events-none"></div>
+    <div className="bg-white">
+      {/* 
+        MAIN WRAPPER 
+        overflow-hidden keeps the massive rings from breaking the screen width
+      */}
+      <main className="relative bg-white text-[#4A4A4A] font-sans overflow-hidden">
 
-      <div className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center">
-        
-        <span className="uppercase tracking-[0.4em] text-emerald-400 text-xs md:text-sm mb-6 font-light">
-          Green Tech & Sustainability
-        </span>
-        
-        <h1 className="text-6xl md:text-9xl font-serif tracking-tight mb-8 drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
-          Recicla
-        </h1>
-        
-        <p className="text-xl md:text-2xl font-light tracking-wide text-gray-300 max-w-2xl mb-16 leading-relaxed">
-          Waste segregation meets AI-verified circular economy.
-        </p>
-        
-        <Link 
-          href="/scan" 
-          className="group relative px-10 py-4 bg-white text-black overflow-hidden hover:bg-emerald-400 transition-all duration-500 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-        >
-          <span className="relative z-10 uppercase tracking-[0.2em] font-bold text-sm">
-            Start Scanning
+        <style>{`
+          @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+          }
+          
+          @keyframes spin-reverse {
+            from { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: translate(-50%, -50%) rotate(0deg); }
+          }
+
+          .spin-inner { animation: spin 100s linear infinite; }
+          .spin-outer { animation: spin-reverse 140s linear infinite; }
+        `}</style>
+
+        {/* --- BACKGROUND RINGS LAYER --- */}
+        {/* Locked to top-[50vh] so they stay perfectly centered in the first screen */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+          <img
+            src="/images/Group 8.png"
+            alt="Outer floating items"
+            className="absolute top-[50vh] left-1/2 w-[155vw] max-w-[1850px] object-contain spin-outer opacity-90"
+          />
+          <img
+            src="/images/Group 7.png"
+            alt="Inner floating items"
+            className="absolute top-[50vh] left-1/2 w-[90vw] max-w-[1000px] object-contain spin-inner"
+          />
+          
+          <div
+            className="absolute top-[50vh] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-[50%] pointer-events-none z-[5]"
+            style={{
+              background: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 100%, rgba(255,255,255,0) 0%)',
+              filter: 'blur(100px)'
+            }}
+          ></div>
+        </div>
+
+        {/* --- HERO CONTENT --- */}
+        {/* min-h-screen guarantees this takes the first full view, sending the rest down */}
+        <div className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center text-center gap-6 px-6">
+          <span className="uppercase tracking-[2px] text-[#7C8D58] text-xl font-bold">
+            RECICLA
           </span>
-        </Link>
-      </div>
-      
-      <div className="absolute bottom-8 w-full text-center z-10">
-        <p className="text-xs uppercase tracking-widest text-gray-500 font-light">
-          By Team Malunggay Pandesal
-        </p>
-      </div>
-    </main>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#4A4A4A] leading-[1.2] mb-4">
+            Recycle from anywhere,<br />Value from anything
+          </h1>
+
+          <Link
+            href="/scan"
+            className="mt-2 bg-[#7C8D58] text-white font-semibold rounded-[30px] px-10 py-[15px] shadow-[inset_0px_-3px_0px_rgba(0,0,0,0.2),_0px_4px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 transition-colors hover:bg-[#6a794b] hover:-translate-y-0.5 active:translate-y-[1px] active:shadow-[inset_0px_2px_5px_rgba(0,0,0,0.3)]"
+          >
+            Get Started
+          </Link>
+        </div>
+
+        {/* --- ABOUT CONTENT --- */}
+        {/* mt-48 creates a huge empty space before the About section starts */}
+        <div className="relative z-10 w-full mt-48 pb-32">
+          
+          {/* Image Container for Rectangle 50.png */}
+          <div className="relative w-full flex items-center justify-center">
+            <img
+              src="/images/Rectangle 50.png"
+              alt="About Section Header"
+              className="w-[110%] max-w-none h-auto drop-shadow-xl"
+            />
+            <h2 className="absolute inset-0 flex items-center justify-center text-white text-3xl md:text-5xl font-bold tracking-tight mb-4">
+              About Recicla
+            </h2>
+          </div>
+
+          {/* Description Text */}
+          <div className="container mx-auto px-6 mt-16 max-w-4xl text-center">
+            <p className="text-[#4A4A4A] text-lg md:text-xl leading-relaxed font-medium">
+              Recicla is a real-time, AI-driven web application designed to bridge the gap between
+              waste segregation and financial incentive. By leveraging high-speed, client-side
+              object detection, Recicla empowers users to instantly identify the value and risks
+              of their household waste. We focus specifically on the untapped potential of
+              e-waste and precious metal recovery, transforming the act of "throwing things away"
+              into a deliberate step toward environmental sustainability and personal profit.
+            </p>
+          </div>
+        </div>
+
+      </main>
+    </div>
   );
 }
