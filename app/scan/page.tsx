@@ -54,8 +54,15 @@ export default function ARScannerApp() {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
 
+            // THE ZOOM FIX: Check if on desktop
+            const isDesktop = window.innerWidth > window.innerHeight;
+
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facingMode }
+                video: { 
+                    facingMode: facingMode,
+                    // If on web/desktop, force 16:9 to prevent zooming. Mobile is left blank so it uses native.
+                    ...(isDesktop ? { width: { ideal: 1920 }, height: { ideal: 1080 } } : {})
+                }
             });
             
             streamRef.current = stream;
@@ -240,8 +247,6 @@ export default function ARScannerApp() {
             
             {/* 
                 TOP BAR 
-                Mobile: Solid black block pushing video down.
-                Desktop (md): Transparent floating overlay on top of the video.
             */}
             <div className="h-16 w-full flex items-center justify-between px-6 z-20 bg-black md:absolute md:top-0 md:bg-transparent md:h-auto md:pt-8 md:bg-gradient-to-b md:from-black/60 md:to-transparent md:pb-12">
                 <button
@@ -260,9 +265,7 @@ export default function ARScannerApp() {
             </div>
 
             {/* 
-                VIEWFINDER: Middle Container 
-                Mobile: Flex-1 to fill space between black bars.
-                Desktop (md): Absolute inset-0 to fill the entire screen behind the UI.
+                VIEWFINDER
             */}
             <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden md:absolute md:inset-0 md:z-0">
                 {activeMode === 'camera' && (
@@ -289,8 +292,6 @@ export default function ARScannerApp() {
 
             {/* 
                 BOTTOM BAR
-                Mobile: Solid black block pushing video up.
-                Desktop (md): Transparent floating overlay at the bottom with a subtle gradient to keep buttons visible.
             */}
             <div className="h-40 w-full flex flex-col items-center justify-end pb-8 z-20 bg-black text-white md:absolute md:bottom-0 md:bg-transparent md:h-auto md:pb-12 md:bg-gradient-to-t md:from-black/60 md:to-transparent md:pt-20">
                 
