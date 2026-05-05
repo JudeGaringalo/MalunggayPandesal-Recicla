@@ -253,9 +253,9 @@ export default function ARScannerApp() {
                     &#8592; Close
                 </button>
                 {activeMode === 'camera' && (
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${isPaused ? 'bg-yellow-500/20 text-yellow-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500 animate-pulse'}`}></span>
-                        {isPaused ? 'AI Paused' : 'AI Active'}
+                    <div className={`rounded-full text-xs font-bold flex items-center ${isPaused ? '' : ''}`}>
+                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500'}`}></span>
+                        {isPaused ? '' : ''}
                     </div>
                 )}
             </div>
@@ -289,10 +289,7 @@ export default function ARScannerApp() {
                 
                 {/* Camera Modes Overlay (Decorative) */}
                 <div className="flex space-x-6 text-xs font-medium text-gray-500 mb-6">
-                    <span>Pro</span>
-                    <span>Video</span>
-                    <span className="text-yellow-500">Scan</span>
-                    <span>Portrait</span>
+                    <span className="text-yellow-500">Capture</span>
                 </div>
 
                 {/* Shutter Row */}
