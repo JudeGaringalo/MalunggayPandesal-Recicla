@@ -18,23 +18,39 @@ export default function ScanPage() {
   const requestRef = useRef<number | null>(null);
   
   // COCO-SSD is a bit less confident than custom models, so 60% is a good threshold
-  const CONFIDENCE_THRESHOLD = 0.60; 
+// Change this from 0.60 to 0.75 or 0.80
+const CONFIDENCE_THRESHOLD = 0.75;
 
-  // --- The Recicla Logic Engine ---
   // Maps generic AI terms to your hackathon's specific e-waste & recycling categories
   const mapWasteCategory = (detectedClass: string) => {
-    const eWaste = ['cell phone', 'laptop', 'tv', 'mouse', 'keyboard', 'remote'];
-    const recyclables = ['bottle', 'cup', 'wine glass'];
+    // High-value electronics
+    const eWasteHigh = ['laptop', 'tv', 'cell phone', 'refrigerator'];
+    // Peripherals and small appliances
+    const eWasteLow = ['mouse', 'keyboard', 'remote', 'microwave', 'toaster', 'oven'];
+    // Recyclables
+    const plasticsGlass = ['bottle', 'cup', 'bowl', 'vase'];
+    const metals = ['fork', 'knife', 'spoon'];
+    const paper = ['book'];
 
-    if (eWaste.includes(detectedClass)) {
-      return { category: 'E-Waste (Valuable)', value: 'Est. Scrap: ₱150 - ₱300/kg' };
+    if (eWasteHigh.includes(detectedClass)) {
+      return { category: 'High-Value E-Waste', value: 'Est. Scrap: ₱150 - ₱500/unit' };
     }
-    if (recyclables.includes(detectedClass)) {
-      return { category: 'Recyclable Plastic/Glass', value: 'Est. Scrap: ₱12 - ₱20/kg' };
+    if (eWasteLow.includes(detectedClass)) {
+      return { category: 'Peripherals / Small Tech', value: 'Est. Scrap: ₱20 - ₱50/unit' };
     }
-    return { category: 'General / Unknown', value: 'Value varies by local shop' };
+    if (plasticsGlass.includes(detectedClass)) {
+      return { category: 'Recyclables (Plastic/Glass)', value: 'Est. Scrap: ₱12 - ₱20/kg' };
+    }
+    if (metals.includes(detectedClass)) {
+      return { category: 'Scrap Metal', value: 'Est. Scrap: ₱100 - ₱150/kg' };
+    }
+    if (paper.includes(detectedClass)) {
+      return { category: 'Paper / Cardboard', value: 'Est. Scrap: ₱4 - ₱8/kg' };
+    }
+    
+    // Fallback for anything else it sees (like 'chair', 'person', 'car')
+    return { category: 'General / Non-Scrap', value: 'No significant local scrap value' };
   };
-
   // --- Load AI Model ---
   useEffect(() => {
     const loadModel = async () => {
