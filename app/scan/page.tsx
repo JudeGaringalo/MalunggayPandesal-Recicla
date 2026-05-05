@@ -50,13 +50,11 @@ export default function ARScannerApp() {
         setActiveMode('camera');
         setIsPaused(false);
         try {
-            // Stop any existing stream before starting a new one (important for switching cameras)
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({
-                // We let the phone decide the optimal resolution, completely preventing stretching
                 video: { facingMode: facingMode }
             });
             
@@ -71,7 +69,6 @@ export default function ARScannerApp() {
         }
     };
 
-    // Re-run camera start if the user flips the camera
     useEffect(() => {
         if (activeMode === 'camera') {
             startCamera();
@@ -115,7 +112,6 @@ export default function ARScannerApp() {
                     canvas.height = canvas.clientHeight;
                 }
 
-                // Run detection even if paused so the HUD stays drawn on the frozen image
                 if (video.readyState === 4) {
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
@@ -137,7 +133,6 @@ export default function ARScannerApp() {
                             const width = rawW * scale;
                             const height = rawH * scale;
 
-                            // Off-screen ghost filter
                             const centerX = x + width / 2;
                             const centerY = y + height / 2;
                             if (centerX < 0 || centerX > canvas.width || centerY < 0 || centerY > canvas.height) return; 
@@ -206,7 +201,7 @@ export default function ARScannerApp() {
         }
     };
 
-    const analyzeUploadedImage = async () => { /* Upload logic remains identical */ };
+    const analyzeUploadedImage = async () => { /* Upload logic */ };
 
     // ==========================================
     // RENDER: SELECTION SCREEN
@@ -214,7 +209,6 @@ export default function ARScannerApp() {
     if (activeMode === 'selection') {
         return (
             <main className="min-h-screen bg-black text-white relative flex flex-col font-sans">
-                {/* Your standard selection screen rendering goes here - keeping it brief for the snippet */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black via-[#011a0d] to-black opacity-90 z-0"></div>
                 <nav className="relative z-10 w-full p-6 flex justify-between items-center">
                     <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
@@ -244,11 +238,15 @@ export default function ARScannerApp() {
     return (
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden">
             
-            {/* TOP BAR: Native Camera Header */}
-            <div className="h-16 md:h-24 w-full flex items-center justify-between px-6 z-20 bg-black">
+            {/* 
+                TOP BAR 
+                Mobile: Solid black block pushing video down.
+                Desktop (md): Transparent floating overlay on top of the video.
+            */}
+            <div className="h-16 w-full flex items-center justify-between px-6 z-20 bg-black md:absolute md:top-0 md:bg-transparent md:h-auto md:pt-8 md:bg-gradient-to-b md:from-black/60 md:to-transparent md:pb-12">
                 <button
                     onClick={() => { stopCamera(); setActiveMode('selection'); setPreviewImage(null); }}
-                    className="text-white hover:text-emerald-400 transition-colors text-xs uppercase tracking-widest"
+                    className="text-white hover:text-emerald-400 transition-colors text-xs uppercase tracking-widest bg-black/40 md:backdrop-blur-md px-4 py-2 rounded-full border border-transparent md:border-white/20"
                 >
                     &#8592; Close
                 </button>
@@ -257,11 +255,16 @@ export default function ARScannerApp() {
                         <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500'}`}></span>
                         {isPaused ? '' : ''}
                     </div>
+
                 )}
             </div>
 
-            {/* VIEWFINDER: Middle Container */}
-            <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+            {/* 
+                VIEWFINDER: Middle Container 
+                Mobile: Flex-1 to fill space between black bars.
+                Desktop (md): Absolute inset-0 to fill the entire screen behind the UI.
+            */}
+            <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden md:absolute md:inset-0 md:z-0">
                 {activeMode === 'camera' && (
                     <>
                         <video 
@@ -280,40 +283,39 @@ export default function ARScannerApp() {
                     </>
                 )}
                 {activeMode === 'upload' && previewImage && (
-                    <img src={previewImage} alt="Upload preview" className="w-full h-full object-contain p-4" />
+                    <img src={previewImage} alt="Upload preview" className="w-full h-full object-contain p-4 md:object-cover" />
                 )}
             </div>
 
-            {/* BOTTOM BAR: Native Camera Controls */}
-            <div className="h-40 md:h-48 w-full flex flex-col items-center justify-end pb-8 md:pb-12 z-20 bg-black text-white">
+            {/* 
+                BOTTOM BAR
+                Mobile: Solid black block pushing video up.
+                Desktop (md): Transparent floating overlay at the bottom with a subtle gradient to keep buttons visible.
+            */}
+            <div className="h-40 w-full flex flex-col items-center justify-end pb-8 z-20 bg-black text-white md:absolute md:bottom-0 md:bg-transparent md:h-auto md:pb-12 md:bg-gradient-to-t md:from-black/60 md:to-transparent md:pt-20">
                 
-                {/* Camera Modes Overlay (Decorative) */}
-                <div className="flex space-x-6 text-xs font-medium text-gray-500 mb-6">
+                <div className="flex space-x-6 text-xs font-medium text-gray-400 mb-6 drop-shadow-md">
                     <span className="text-yellow-500">Capture</span>
                 </div>
 
-                {/* Shutter Row */}
-                <div className="w-full flex justify-between items-center px-10">
+                <div className="w-full flex justify-between items-center px-10 max-w-2xl mx-auto">
                     
-                    {/* Left Placeholder (Could be a gallery thumbnail later) */}
-                    <div className="w-12 h-12 rounded-lg bg-white/10"></div>
+                    <div className="w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md"></div>
 
-                    {/* Center: Massive Shutter/Capture Button */}
                     {activeMode === 'camera' ? (
                         <button 
                             onClick={toggleCaptureFreeze}
-                            className={`w-20 h-20 rounded-full border-4 transition-all duration-300 flex items-center justify-center ${isPaused ? 'border-yellow-500 bg-yellow-500/20 scale-95' : 'border-white bg-white/20 hover:bg-white/40 active:scale-95'}`}
+                            className={`w-20 h-20 rounded-full border-4 transition-all duration-300 flex items-center justify-center shadow-lg ${isPaused ? 'border-yellow-500 bg-yellow-500/20 scale-95' : 'border-white bg-white/20 hover:bg-white/40 active:scale-95'}`}
                         >
                             <div className={`w-14 h-14 rounded-full transition-all duration-300 ${isPaused ? 'bg-yellow-500' : 'bg-white'}`}></div>
                         </button>
                     ) : (
-                        <div className="w-20 h-20"></div> // Spacer for upload mode
+                        <div className="w-20 h-20"></div> 
                     )}
 
-                    {/* Right: Camera Flip Icon */}
                     <button 
                         onClick={toggleCameraFacing}
-                        className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors active:scale-90"
+                        className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 md:bg-white/20 md:backdrop-blur-md flex items-center justify-center transition-colors active:scale-90 shadow-lg"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
