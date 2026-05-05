@@ -59,7 +59,7 @@ export default function LandingPage(): React.JSX.Element {
             <img
               src="/images/Group 8.png"
               alt="Outer floating items"
-              className="absolute top-[50vh] left-1/2 w-[180vw] max-w-[1900px] object-contain spin-outer unzoomable"
+              className="absolute top-[50vh] left-1/2 w-[180vw] max-w-[1700px] object-contain spin-outer unzoomable"
             />
             <img
               src="/images/Group 7.png"
@@ -235,8 +235,8 @@ export default function LandingPage(): React.JSX.Element {
           <div
             className="relative flex overflow-hidden group"
             style={{
-              maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
-              WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)'
+              maskImage: 'linear-gradient(to right, transparent, black 20%, black 60%, transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 60%, transparent)'
             }}
           >
             <div className="flex animate-marquee whitespace-nowrap items-center py-4">
