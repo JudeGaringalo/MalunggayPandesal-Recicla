@@ -1,4 +1,3 @@
-// app/scan/page.tsx
 "use client";
 
 import { useRef, useEffect, useState } from 'react';
@@ -20,7 +19,6 @@ export default function ARScannerApp() {
     
     const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
 
-    // Data mapping inspired by the Recicla pitch document
     const mapWasteCategory = (detectedClass: string) => {
         const eWasteHigh = ['laptop', 'tv', 'cell phone', 'refrigerator'];
         const eWasteLow = ['mouse', 'keyboard', 'remote', 'microwave', 'oven'];
@@ -48,17 +46,14 @@ export default function ARScannerApp() {
         loadModel();
     }, []);
 
-    // --- 2. Live Camera Logic (Full Screen HUD) ---
+    // --- 2. Live Camera Logic (FIXED FOR STRETCHING) ---
     const startCamera = async () => {
         setActiveMode('camera');
         try {
-            const isPortrait = window.innerHeight > window.innerWidth;
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { 
-                    facingMode: "environment", 
-                    width: { ideal: isPortrait ? 1080 : 1920 }, 
-                    height: { ideal: isPortrait ? 1920 : 1080 } 
-                }
+                // We remove forced dimensions. This allows every phone to use its native 
+                // aspect ratio, permanently preventing the funhouse mirror stretching effect.
+                video: { facingMode: "environment" }
             });
             streamRef.current = stream;
             if (videoRef.current) {
@@ -111,8 +106,19 @@ export default function ARScannerApp() {
                             const width = rawW * scale;
                             const height = rawH * scale;
 
+                            // --- NEW: OFF-SCREEN GHOST FILTER ---
+                            // Check where the center of the object is. 
+                            const centerX = x + width / 2;
+                            const centerY = y + height / 2;
+                            
+                            // If the center of the object is outside the visible bounds of the screen,
+                            // we immediately skip drawing it. No more detecting things outside the mobile screen!
+                            if (centerX < 0 || centerX > canvas.width || centerY < 0 || centerY > canvas.height) {
+                                return; 
+                            }
+
                             const mapped = mapWasteCategory(prediction.class);
-                            const primaryColor = mapped.hazard ? '#ef4444' : '#10b981'; // Red for hazard, Green for safe
+                            const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
 
                             // --- DRAW HUD BRACKETS ---
                             ctx.strokeStyle = primaryColor;
@@ -131,22 +137,18 @@ export default function ARScannerApp() {
                             ctx.font = 'bold 14px sans-serif';
                             const textWidth = Math.max(ctx.measureText(label).width, 180);
                             
-                            // Panel BG
                             ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
                             ctx.beginPath();
                             ctx.roundRect ? ctx.roundRect(x, y - 65, textWidth + 20, 55, 6) : ctx.rect(x, y - 65, textWidth + 20, 55);
                             ctx.fill();
                             
-                            // Main Label
                             ctx.fillStyle = primaryColor;
                             ctx.fillText(label, x + 10, y - 45);
 
-                            // Sub Label (Value)
                             ctx.fillStyle = '#d4d4d8';
                             ctx.font = '12px sans-serif';
                             ctx.fillText(`Value: ${mapped.value}`, x + 10, y - 25);
 
-                            // Hazard Warning
                             if (mapped.hazard) {
                                 ctx.fillStyle = '#ef4444';
                                 ctx.fillText(`! Hazard: Handle carefully`, x + 10, y - 8);
@@ -223,7 +225,6 @@ export default function ARScannerApp() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                        {/* Camera Button */}
                         <button onClick={startCamera} disabled={!model} className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm rounded-2xl ${model ? 'hover:bg-white/10 cursor-pointer hover:border-emerald-500/50' : 'opacity-50 cursor-not-allowed'}`}>
                             <div className="w-16 h-16 rounded-full border border-emerald-500/50 flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -235,7 +236,6 @@ export default function ARScannerApp() {
                             <p className="text-sm text-gray-500 font-light text-center">Real-time AR HUD scanning.</p>
                         </button>
 
-                        {/* Upload Button */}
                         <label className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm rounded-2xl ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
                             <div className="w-16 h-16 rounded-full border border-gray-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -258,7 +258,6 @@ export default function ARScannerApp() {
     return (
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black overflow-hidden font-sans">
             
-            {/* Header / Back Button */}
             <div className="absolute top-0 inset-x-0 p-6 z-40 flex justify-between items-center pointer-events-none">
                 <button
                     onClick={() => { stopCamera(); setActiveMode('selection'); setPreviewImage(null); }}
@@ -282,7 +281,6 @@ export default function ARScannerApp() {
                     <div className="relative w-full max-w-md aspect-[4/5] rounded-3xl overflow-hidden border border-white/10 shadow-2xl mb-8">
                         <img src={previewImage} alt="Upload preview" className="w-full h-full object-cover" />
                         
-                        {/* Analysis Overlay Result */}
                         {staticAiResult && (
                             <div className="absolute bottom-4 inset-x-4 bg-black/80 backdrop-blur-lg border border-white/20 rounded-2xl p-5 animate-in slide-in-from-bottom-4">
                                 <h3 className="text-2xl font-bold text-white capitalize mb-1">{staticAiResult.className}</h3>
