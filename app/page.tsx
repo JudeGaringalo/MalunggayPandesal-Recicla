@@ -33,7 +33,7 @@ export default function LandingPage(): React.JSX.Element {
           <img
             src="/images/Group 8.png"
             alt="Outer floating items"
-            className="absolute top-[50vh] left-1/2 w-[155vw] max-w-[1850px] object-contain spin-outer opacity-90"
+            className="absolute top-[50vh] left-1/2 w-[155vw] max-w-[1800px] object-contain spin-outer opacity-90"
           />
           <img
             src="/images/Group 7.png"
