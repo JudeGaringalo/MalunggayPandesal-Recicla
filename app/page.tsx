@@ -1,4 +1,3 @@
-// app/page.tsx
 import Link from 'next/link';
 
 export default function LandingPage() {
@@ -24,7 +23,6 @@ export default function LandingPage() {
           Waste segregation meets AI-verified circular economy.
         </p>
         
-        {/* The CTA matching your document's flow */}
         <Link 
           href="/scan" 
           className="group relative px-10 py-4 bg-white text-black overflow-hidden hover:bg-emerald-400 transition-all duration-500 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.3)]"
