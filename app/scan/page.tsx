@@ -15,6 +15,16 @@ export default function ARScannerApp() {
     const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
     const [isPaused, setIsPaused] = useState(false);
     
+    // --- Zoom States ---
+    const [zoomValue, setZoomValue] = useState<number>(1);
+    const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
+
+    // --- Gallery & Screenshot States ---
+    const [capturedImages, setCapturedImages] = useState<string[]>([]);
+    const [flashActive, setFlashActive] = useState(false);
+    const [flyAnim, setFlyAnim] = useState<{ src: string, active: boolean } | null>(null);
+    const [thumbPulse, setThumbPulse] = useState(false);
+    
     // --- Refs ---
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,9 +69,6 @@ export default function ARScannerApp() {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     facingMode: facingMode,
-                    // THE MAX HARDWARE UNLOCK:
-                    // If desktop, demand the absolute maximum uncropped sensor resolution 
-                    // your camera hardware supports. Mobile is left blank so it uses native.
                     ...(isDesktop ? { width: { ideal: 4096 }, height: { ideal: 2160 } } : {})
                 }
             });
@@ -70,6 +77,21 @@ export default function ARScannerApp() {
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
+
+            const [track] = stream.getVideoTracks();
+            const capabilities = track.getCapabilities() as any;
+            if (capabilities.zoom) {
+                setZoomRange({
+                    min: capabilities.zoom.min || 1,
+                    max: capabilities.zoom.max || 3,
+                    step: capabilities.zoom.step || 0.1
+                });
+                const settings = track.getSettings() as any;
+                setZoomValue(settings.zoom || capabilities.zoom.min || 1);
+            } else {
+                setZoomRange(null);
+            }
+
         } catch (err) {
             console.error("Camera access denied:", err);
             alert("Please allow camera access to use Live Scan.");
@@ -96,6 +118,44 @@ export default function ARScannerApp() {
         setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
 
+    const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newZoom = parseFloat(e.target.value);
+        setZoomValue(newZoom);
+        if (streamRef.current) {
+            const track = streamRef.current.getVideoTracks()[0];
+            try {
+                await track.applyConstraints({ advanced: [{ zoom: newZoom }] } as any);
+            } catch (err) {
+                console.error("Zoom apply failed", err);
+            }
+        }
+    };
+
+    // --- Screenshot & Gallery Logic ---
+    const extractScreenshot = () => {
+        if (!videoRef.current || !canvasRef.current) return null;
+        
+        const video = videoRef.current;
+        const arCanvas = canvasRef.current;
+        
+        const screenCanvas = document.createElement('canvas');
+        screenCanvas.width = arCanvas.width;
+        screenCanvas.height = arCanvas.height;
+        const screenCtx = screenCanvas.getContext('2d');
+        if(!screenCtx) return null;
+
+        const scale = Math.max(screenCanvas.width / video.videoWidth, screenCanvas.height / video.videoHeight);
+        const scaledWidth = video.videoWidth * scale;
+        const scaledHeight = video.videoHeight * scale;
+        const offsetX = (screenCanvas.width - scaledWidth) / 2;
+        const offsetY = (screenCanvas.height - scaledHeight) / 2;
+        
+        screenCtx.drawImage(video, offsetX, offsetY, scaledWidth, scaledHeight);
+        screenCtx.drawImage(arCanvas, 0, 0); 
+        
+        return screenCanvas.toDataURL('image/jpeg', 0.9);
+    };
+
     const toggleCaptureFreeze = () => {
         if (videoRef.current) {
             if (isPaused) {
@@ -104,6 +164,26 @@ export default function ARScannerApp() {
             } else {
                 videoRef.current.pause();
                 setIsPaused(true);
+                
+                setFlashActive(true);
+                setTimeout(() => setFlashActive(false), 150);
+
+                const imgData = extractScreenshot();
+                if (imgData) {
+                    setFlyAnim({ src: imgData, active: false });
+                    
+                    setTimeout(() => {
+                        setFlyAnim(prev => prev ? { ...prev, active: true } : null);
+                    }, 50);
+
+                    setTimeout(() => {
+                        setCapturedImages(prev => [...prev, imgData]);
+                        setFlyAnim(null);
+                        
+                        setThumbPulse(true);
+                        setTimeout(() => setThumbPulse(false), 300);
+                    }, 600);
+                }
             }
         }
     };
@@ -148,7 +228,6 @@ export default function ARScannerApp() {
                             const mapped = mapWasteCategory(prediction.class);
                             const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
 
-                            // Draw Brackets
                             ctx.strokeStyle = primaryColor;
                             ctx.lineWidth = 3;
                             const cornerLength = 25;
@@ -160,7 +239,6 @@ export default function ARScannerApp() {
                             ctx.moveTo(x + width - cornerLength, y + height); ctx.lineTo(x + width, y + height); ctx.lineTo(x + width, y + height - cornerLength);
                             ctx.stroke();
 
-                            // Draw Data Panel
                             const label = `${prediction.class.toUpperCase()} ${(prediction.score * 100).toFixed(0)}%`;
                             ctx.font = 'bold 14px sans-serif';
                             const textWidth = Math.max(ctx.measureText(label).width, 180);
@@ -254,9 +332,8 @@ export default function ARScannerApp() {
                     &#8592; Close
                 </button>
                 {activeMode === 'camera' && (
-                    <div className={`rounded-full text-xs font-bold flex items-center ${isPaused ? '' : ''}`}>
-                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500'}`}></span>
-                        {isPaused ? '' : ''}
+                    <div className={`rounded-full text-xs font-bold flex items-center bg-black/40 md:backdrop-blur-md px-4 py-2 border border-transparent md:border-white/20`}>
+                        <span className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500 animate-pulse'}`}></span>
                     </div>
                 )}
             </div>
@@ -277,6 +354,40 @@ export default function ARScannerApp() {
                             className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10" 
                             style={{ objectFit: 'cover' }} 
                         />
+
+                        {zoomRange && (
+                            <div className="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center bg-black/40 backdrop-blur-md rounded-full py-4 px-2 border border-white/20 h-48 md:h-64 shadow-xl pointer-events-auto">
+                                <span className="text-white text-xs font-bold mb-4 drop-shadow-md">{zoomValue.toFixed(1)}x</span>
+                                <div className="relative flex-1 w-full flex items-center justify-center">
+                                    <input
+                                        type="range"
+                                        min={zoomRange.min}
+                                        max={zoomRange.max}
+                                        step={zoomRange.step}
+                                        value={zoomValue}
+                                        onChange={handleZoomChange}
+                                        className="absolute w-28 md:w-40 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer outline-none -rotate-90 origin-center accent-emerald-500"
+                                    />
+                                </div>
+                                <span className="text-white/50 text-[10px] font-bold mt-4 drop-shadow-md">1x</span>
+                            </div>
+                        )}
+
+                        {flashActive && (
+                            <div className="absolute inset-0 bg-white z-40 pointer-events-none transition-opacity duration-150 opacity-80"></div>
+                        )}
+
+                        {flyAnim && (
+                            <img 
+                                src={flyAnim.src} 
+                                alt="Captured frame"
+                                className={`fixed z-50 object-cover border-2 border-white/50 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                                    flyAnim.active 
+                                        ? 'w-12 h-12 bottom-12 md:bottom-20 left-10 opacity-0 rounded-lg scale-50' 
+                                        : 'w-[80vw] h-[60vh] top-[20vh] left-[10vw] opacity-100 rounded-3xl scale-100' 
+                                }`}
+                            />
+                        )}
                     </>
                 )}
                 {activeMode === 'upload' && previewImage && (
@@ -292,7 +403,11 @@ export default function ARScannerApp() {
 
                 <div className="w-full flex justify-between items-center px-10 max-w-2xl mx-auto">
                     
-                    <div className="w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md"></div>
+                    <div className={`w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md overflow-hidden relative border border-white/20 transition-transform duration-200 ${thumbPulse ? 'scale-125' : 'scale-100'}`}>
+                        {capturedImages.length > 0 && (
+                            <img src={capturedImages[capturedImages.length - 1]} alt="Gallery latest" className="w-full h-full object-cover" />
+                        )}
+                    </div>
 
                     {activeMode === 'camera' ? (
                         <button 
