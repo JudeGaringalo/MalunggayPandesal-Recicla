@@ -5,7 +5,7 @@ import React from 'react';
 import Image from 'next/image';
 
 export default function LandingPage(): React.JSX.Element {
-  
+
   const techLogos = [
     { name: "Next.js", src: "/images/next.png" },
     { name: "Tailwind CSS", src: "/images/tailwind.png" },
@@ -20,7 +20,7 @@ export default function LandingPage(): React.JSX.Element {
 
   return (
     <div className="bg-white">
-      
+
       <main className="relative bg-white text-[#4A4A4A] font-sans">
 
         <style>{`
@@ -52,8 +52,8 @@ export default function LandingPage(): React.JSX.Element {
         `}</style>
 
         {/* --- HERO WRAPPER --- */}
-        <div className="relative w-full min-h-screen overflow-hidden">
-          
+        <section className="relative w-full min-h-screen overflow-hidden">
+
           {/* --- BACKGROUND RINGS LAYER --- */}
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
             <img
@@ -66,19 +66,19 @@ export default function LandingPage(): React.JSX.Element {
               alt="Inner floating items"
               className="absolute top-[50vh] left-1/2 w-[90vw] max-w-[1000px] object-contain spin-inner unzoomable"
             />
-            
+
             <div
               className="absolute top-[50vh] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-[50%] pointer-events-none z-[5]"
               style={{
                 background: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 100%, rgba(255,255,255,0) 0%)',
                 filter: 'blur(100px)'
               }}
-            ></div> 
+            ></div>
           </div>
 
           {/* --- HERO CONTENT --- */}
           <div className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center text-center gap-6 px-6">
-            <span className="uppercase tracking-[2px] text-[#7C8D58] text-xl font-bold">
+            <span className="font-inter uppercase tracking-[2px] text-[#7C8D58] text-xl font-bold">
               RECICLA
             </span>
 
@@ -93,10 +93,10 @@ export default function LandingPage(): React.JSX.Element {
               Get Started
             </Link>
           </div>
-        </div>
+        </section>
 
         {/* --- ABOUT CONTENT --- */}
-        <div className="relative z-10 w-full mt-48 pb-32">
+        <section className="relative z-10 w-full">
           <div className="relative w-full flex items-center justify-center overflow-hidden">
             <img
               src="/images/Rectangle 50.png"
@@ -113,10 +113,10 @@ export default function LandingPage(): React.JSX.Element {
               Recicla is a real-time, AI-driven web application designed to bridge the gap between waste segregation and financial incentive. By leveraging high-speed, client-side object detection, Recicla empowers users to instantly identify the value and risks of their household waste. We focus specifically on the untapped potential of e-waste and precious metal recovery, transforming the act of "throwing things away" into a deliberate step toward environmental sustainability and personal profit
             </p>
           </div>
-        </div>
+        </section>
 
         {/* --- FEATURES SECTION --- */}
-        <section className="relative z-10 container mx-auto px-6 mb-32 max-w-6xl">
+        <section className="relative z-10 container mx-auto px-6 py-24 md:py-32 max-w-6xl">
           <div className="flex flex-col md:flex-row overflow-hidden rounded-[40px] shadow-2xl border border-gray-100">
             <div className="w-full md:w-1/2 flex flex-col">
               <div className="bg-[#81915A] py-8 px-10 flex flex-col items-center justify-center text-center gap-4 border-b border-white">
@@ -138,9 +138,9 @@ export default function LandingPage(): React.JSX.Element {
             </div>
 
             <div className="w-full md:w-1/2 relative bg-[#E8E6D9] min-h-[500px] flex items-end">
-              <img 
-                src="/images/feature-person.png" 
-                alt="Feature showcase" 
+              <img
+                src="/images/feature-person.png"
+                alt="Feature showcase"
                 className="absolute inset-0 w-full h-full object-cover unzoomable"
               />
               <div className="relative z-10 w-full p-8 md:p-12 pt-32 bg-gradient-to-t from-[#f1f0e8] via-[#f1f0e8]/90 to-transparent text-center">
@@ -153,11 +153,11 @@ export default function LandingPage(): React.JSX.Element {
         </section>
 
         {/* --- HOW IT WORKS --- */}
-        <section 
-          className="max-w-[90rem] mx-auto px-6 md:px-12 py-32 flex flex-col md:flex-row gap-20 relative items-start perspective-[1000px]"
+        <section
+          className="max-w-[90rem] mx-auto px-6 md:px-12 py-24 md:py-32 flex flex-col md:flex-row gap-20 relative items-start perspective-[1000px]"
         >
           <div className="sticky-box w-full md:w-5/12 self-start md:sticky md:top-40 h-auto">
-            <div className="w-full py-10 md:py-0"> 
+            <div className="w-full py-10 md:py-0">
               <div className="text-xs md:text-sm tracking-widest uppercase text-[#7C8D58] font-bold mb-8 flex items-center gap-4">
                 How It Works
               </div>
@@ -195,7 +195,6 @@ export default function LandingPage(): React.JSX.Element {
         </section>
 
         {/* --- MEET OUR TEAM --- */}
-        {/* Changed z-10 to z-20 and added a custom dark bottom shadow */}
         <section className="relative z-20 bg-[#76864C] py-24 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
           <div className="container mx-auto px-6">
             <h2 className="text-white text-4xl md:text-6xl font-bold text-center mb-20 tracking-tight">
@@ -218,21 +217,19 @@ export default function LandingPage(): React.JSX.Element {
               ))}
             </div>
           </div>
-          
-          {/* Optional: You can keep this inner dark rim, or remove it if the new outer shadow is enough */}
+
           <div className="absolute bottom-0 left-0 w-full h-6 bg-[#4B5320] blur-[2px]"></div>
         </section>
 
         {/* --- MARQUEE TECH STACK SECTION --- */}
-        <section className="relative z-10 py-20 bg-white overflow-hidden">
-          <div className="container mx-auto px-6 text-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-bold text-[#4A4A4A] tracking-tight">
-              Built Fast With A Zero-Latency, Zero-Cost Architecture
-            </h2>
-          </div>
-          
-          {/* Applied mask-image inline styles to fade the left and right edges */}
-          <div 
+        <section className="relative z-10 mt-16 md:mt-24 py-24 md:py-32 bg-white overflow-hidden">
+  <div className="container mx-auto px-6 text-center mb-12">
+    <h2 className="text-2xl md:text-4xl font-bold text-[#4A4A4A] tracking-[1.5px]">
+      Built Fast With A Zero-Latency, Zero-Cost Architecture
+    </h2>
+  </div>
+
+          <div
             className="relative flex overflow-hidden group"
             style={{
               maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
@@ -242,11 +239,10 @@ export default function LandingPage(): React.JSX.Element {
             <div className="flex animate-marquee whitespace-nowrap items-center py-4">
               {[...techLogos, ...techLogos].map((logo, index) => (
                 <div key={index} className="mx-6 md:mx-10 flex-shrink-0 flex items-center justify-center">
-                  <img 
-                    src={logo.src} 
-                    alt={logo.name} 
-                    /* Added explicit fixed width, height, and object-contain to normalize all logos */
-                    className="h-10 w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable" 
+                  <img
+                    src={logo.src}
+                    alt={logo.name}
+                    className="h-10 w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable"
                   />
                 </div>
               ))}
@@ -254,6 +250,50 @@ export default function LandingPage(): React.JSX.Element {
           </div>
         </section>
 
+        {/* --- FOOTER SECTION --- */}
+        <footer className="relative w-full h-screen bg-white flex items-end justify-center overflow-hidden">
+          
+          {/* CUT-OUT TEXT (Background) */}
+          <div className="absolute inset-0 flex items-center justify-center z-0 px-6 w-full">
+            <svg 
+              className="w-full max-w-[1600px] h-auto drop-shadow-sm unzoomable" 
+              viewBox="0 0 1600 500" 
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <defs>
+                <filter id="innerShadow">
+                  <feOffset dx="8" dy="12" />
+                  <feGaussianBlur stdDeviation="8" result="offset-blur" />
+                  <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+                  <feFlood floodColor="black" floodOpacity="0.35" result="color" />
+                  <feComposite operator="in" in="color" in2="inverse" result="shadow" />
+                  <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+                </filter>
+              </defs>
+              
+              <text
+                x="50%"
+                y="50%"
+                dominantBaseline="middle"
+                textAnchor="middle"
+                fill="#E8EBE4"
+                className="font-inter font-bold uppercase"
+                style={{ fontSize: '300px', letterSpacing: '14px' }}
+                filter="url(#innerShadow)"
+              >
+                RECICLA
+              </text>
+            </svg>
+          </div>
+
+          {/* LEAVES IMAGE (Foreground) */}
+          <img
+            src="/images/footer.png" 
+            alt="Tropical Leaves"
+            className="relative z-10 w-full h-[60vh] md:h-[85vh] object-cover object-bottom pointer-events-none unzoomable drop-shadow-2xl"
+          />
+          
+        </footer>
       </main>
     </div>
   );
