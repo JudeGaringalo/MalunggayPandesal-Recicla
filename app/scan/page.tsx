@@ -18,7 +18,6 @@ export default function ARScannerApp() {
     // --- Zoom States ---
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
-    // NEW: Track if we are using physical lens zoom or digital CSS zoom
     const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
 
     // --- Gallery & Screenshot States ---
@@ -94,7 +93,7 @@ export default function ARScannerApp() {
                 const settings = track.getSettings() as any;
                 setZoomValue(settings.zoom || capabilities.zoom.min || 1);
             } else {
-                // NEW: Fallback to Software Zoom if camera lacks physical zoom lens (like Webcams)
+                // Fallback to Software Zoom if camera lacks physical zoom lens
                 setZoomType('software');
                 setZoomRange({ min: 1, max: 3, step: 0.1 });
                 setZoomValue(1);
@@ -125,15 +124,18 @@ export default function ARScannerApp() {
         setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
 
-    const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newZoom = parseFloat(e.target.value);
-        setZoomValue(newZoom);
-        
-        // Only apply to hardware if supported. Software zoom is handled by CSS below!
+    // --- ZOOM LOGIC ---
+    // 1. Instantly update the UI value for a smooth slider and software zoom
+    const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setZoomValue(parseFloat(e.target.value));
+    };
+
+    // 2. Only apply the physical lens adjustment when the user lets go
+    const applyHardwareZoom = async () => {
         if (zoomType === 'hardware' && streamRef.current) {
             const track = streamRef.current.getVideoTracks()[0];
             try {
-                await track.applyConstraints({ advanced: [{ zoom: newZoom }] } as any);
+                await track.applyConstraints({ advanced: [{ zoom: zoomValue }] } as any);
             } catch (err) {
                 console.error("Zoom apply failed", err);
             }
@@ -328,7 +330,6 @@ export default function ARScannerApp() {
     // RENDER: NATIVE CAMERA UI
     // ==========================================
     return (
-        // NEW: overscroll-none stops the whole page from bouncing on mobile
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden overscroll-none">
             
             <div className="h-16 w-full flex items-center justify-between px-6 z-20 bg-black md:absolute md:top-0 md:bg-transparent md:h-auto md:pt-8 md:bg-gradient-to-b md:from-black/60 md:to-transparent md:pb-12">
@@ -348,7 +349,6 @@ export default function ARScannerApp() {
             <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden md:absolute md:inset-0 md:z-0">
                 {activeMode === 'camera' && (
                     <>
-                        {/* NEW: CSS Scale Wrapper for Software Zoom */}
                         <div 
                             className="absolute inset-0 w-full h-full"
                             style={{ 
@@ -383,8 +383,9 @@ export default function ARScannerApp() {
                                         step={zoomRange.step}
                                         value={zoomValue}
                                         onChange={handleZoomChange}
-                                        // NEW: touch-none instantly prevents the pull-to-refresh bug!
-                                        className="absolute w-28 md:w-40 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer outline-none -rotate-90 origin-center accent-emerald-500 touch-none"
+                                        onPointerUp={applyHardwareZoom}
+                                        onTouchEnd={applyHardwareZoom}
+                                        className="absolute w-28 md:w-40 h-6 bg-white/30 rounded-full appearance-none cursor-pointer outline-none -rotate-90 origin-center accent-emerald-500 touch-none shadow-inner"
                                     />
                                 </div>
                                 <span className="text-white/50 text-[10px] font-bold mt-4 drop-shadow-md">1x</span>
