@@ -17,7 +17,7 @@ export default function LandingPage() {
         </span>
         
         <h1 className="text-6xl md:text-9xl font-serif tracking-tight mb-8 drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
-          Recicla.
+          Recicla
         </h1>
         
         <p className="text-xl md:text-2xl font-light tracking-wide text-gray-300 max-w-2xl mb-16 leading-relaxed">
