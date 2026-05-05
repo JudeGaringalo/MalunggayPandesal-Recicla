@@ -19,9 +19,8 @@ export default function ARScannerApp() {
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
     const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
+    const [isZooming, setIsZooming] = useState(false); // NEW: Tracks if the user is actively sliding
     
-    // NEW: We use a ref to hold the absolute latest zoom value for the hardware constraints 
-    // so it doesn't get caught in a stale React closure when you lift your finger.
     const zoomValueRef = useRef<number>(1);
     const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -130,18 +129,17 @@ export default function ARScannerApp() {
         setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
 
-    // --- NEW: CUSTOM SMOOTH ZOOM LOGIC ---
+    // --- CUSTOM SMOOTH ZOOM LOGIC ---
     const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
         if (!sliderRef.current || !zoomRange) return;
         
         const rect = sliderRef.current.getBoundingClientRect();
-        // Calculate Y position relative to the track's height (0 at bottom, 1 at top)
         const y = rect.bottom - e.clientY; 
         const percentage = Math.max(0, Math.min(1, y / rect.height));
         
         const newValue = zoomRange.min + percentage * (zoomRange.max - zoomRange.min);
         setZoomValue(newValue);
-        zoomValueRef.current = newValue; // Store instantly for hardware update later
+        zoomValueRef.current = newValue; 
     };
 
     const applyHardwareZoom = async () => {
@@ -385,47 +383,51 @@ export default function ARScannerApp() {
                             />
                         </div>
 
+                        {/* MINIMALIST ZOOM CONTROL */}
                         {zoomRange && (
-                            <div className="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center bg-black/40 backdrop-blur-md rounded-full py-6 px-3 border border-white/20 shadow-xl pointer-events-auto">
-                                <span className="text-white text-xs font-bold mb-4 drop-shadow-md">{zoomValue.toFixed(1)}x</span>
+                            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center pointer-events-auto w-12">
+                                {/* Fading Text */}
+                                <span className={`text-white text-[12px] font-medium mb-3 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-opacity duration-300 ${isZooming ? 'opacity-100' : 'opacity-50'}`}>
+                                    {zoomValue.toFixed(1)}x
+                                </span>
                                 
-                                {/* NEW: Fully Custom Touch-Driven Vertical Slider */}
+                                {/* Invisible touch area with ultra-thin visible track */}
                                 <div 
                                     ref={sliderRef}
-                                    className="relative w-3 h-32 md:h-48 bg-white/20 rounded-full cursor-pointer touch-none shadow-inner"
+                                    className="relative w-8 h-32 md:h-48 flex justify-center cursor-pointer touch-none group"
                                     onPointerDown={(e) => {
+                                        setIsZooming(true);
                                         sliderRef.current?.setPointerCapture(e.pointerId);
                                         handlePointerMove(e);
                                     }}
                                     onPointerMove={(e) => {
-                                        // e.buttons > 0 ensures it only follows while the user is actually pressing/dragging
                                         if (e.buttons > 0) handlePointerMove(e);
                                     }}
                                     onPointerUp={(e) => {
+                                        setIsZooming(false);
                                         sliderRef.current?.releasePointerCapture(e.pointerId);
                                         applyHardwareZoom();
                                     }}
                                 >
-                                    {/* The Green Fill Track */}
+                                    {/* The faint background line (1px) */}
+                                    <div className="absolute top-0 bottom-0 w-[1px] bg-white/20 rounded-full" />
+                                    
+                                    {/* The active fill line (2px white) */}
                                     <div 
-                                        className="absolute bottom-0 left-0 w-full bg-emerald-500 rounded-full transition-all duration-75 ease-out"
+                                        className="absolute bottom-0 w-[2px] bg-white rounded-full transition-all duration-75 ease-out shadow-[0_0_5px_rgba(255,255,255,0.5)]"
                                         style={{ 
                                             height: `${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}%` 
                                         }}
                                     />
                                     
-                                    {/* The Draggable Thumb */}
+                                    {/* The Dot - Expands slightly when zooming */}
                                     <div 
-                                        className="absolute left-1/2 w-8 h-8 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none transition-all duration-75 ease-out"
+                                        className={`absolute left-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_8px_rgba(0,0,0,0.4)] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-200 ease-out ${isZooming ? 'scale-100 opacity-100' : 'scale-50 opacity-60'}`}
                                         style={{ 
-                                            bottom: `calc(${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}% - 16px)`
+                                            bottom: `calc(${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}% - 8px)`
                                         }}
-                                    >
-                                        <div className="w-3 h-3 bg-emerald-500 rounded-full" />
-                                    </div>
+                                    />
                                 </div>
-
-                                <span className="text-white/50 text-[10px] font-bold mt-4 drop-shadow-md">1x</span>
                             </div>
                         )}
 
