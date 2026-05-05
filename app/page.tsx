@@ -68,7 +68,7 @@ export default function LandingPage(): React.JSX.Element {
             />
 
             <div
-              className="absolute top-[50vh] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] md:w-[850px] md:h-[850px] rounded-[50%] pointer-events-none z-[5]"
+              className="absolute top-[50vh] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] md:w-[850px] md:h-[850px] rounded-[50%] pointer-events-none z-[5]"
               style={{
                 background: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 100%, rgba(255,255,255,0) 0%)',
                 filter: 'blur(100px)'
