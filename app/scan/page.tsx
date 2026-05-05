@@ -14,29 +14,29 @@ export default function ARScannerApp() {
     // --- Camera Features States ---
     const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
     const [isPaused, setIsPaused] = useState(false);
-
+    
     // --- Zoom States ---
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
     const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
     const [isZooming, setIsZooming] = useState(false); // NEW: Tracks if the user is actively sliding
-
+    
     const zoomValueRef = useRef<number>(1);
     const sliderRef = useRef<HTMLDivElement>(null);
-    const isDraggingRef = useRef<boolean>(false);
+const isDraggingRef = useRef<boolean>(false); 
 
     // --- Gallery & Screenshot States ---
     const [capturedImages, setCapturedImages] = useState<string[]>([]);
     const [flashActive, setFlashActive] = useState(false);
     const [flyAnim, setFlyAnim] = useState<{ src: string, active: boolean } | null>(null);
     const [thumbPulse, setThumbPulse] = useState(false);
-
+    
     // --- Refs ---
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const requestRef = useRef<number | null>(null);
-
+    
     const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
     const lastHardwareUpdateTime = useRef<number>(0);
 
@@ -44,11 +44,11 @@ export default function ARScannerApp() {
         const eWasteHigh = ['laptop', 'tv', 'cell phone', 'refrigerator'];
         const eWasteLow = ['mouse', 'keyboard', 'remote', 'microwave', 'oven'];
         const plasticsGlass = ['bottle', 'cup', 'bowl', 'vase'];
-
+        
         if (eWasteHigh.includes(detectedClass)) return { category: 'High-Value E-Waste', value: '₱150 - ₱500/unit', hazard: true };
         if (eWasteLow.includes(detectedClass)) return { category: 'Peripherals / Tech', value: '₱20 - ₱50/unit', hazard: false };
         if (plasticsGlass.includes(detectedClass)) return { category: 'Recyclables (Plastic/Glass)', value: '₱12 - ₱20/kg', hazard: false };
-
+        
         return { category: 'General / Non-Scrap', value: 'No local scrap value', hazard: false };
     };
 
@@ -74,12 +74,12 @@ export default function ARScannerApp() {
             const isDesktop = window.innerWidth > window.innerHeight;
 
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
+                video: { 
                     facingMode: facingMode,
                     ...(isDesktop ? { width: { ideal: 4096 }, height: { ideal: 2160 } } : {})
                 }
             });
-
+            
             streamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -87,7 +87,7 @@ export default function ARScannerApp() {
 
             const [track] = stream.getVideoTracks();
             const capabilities = track.getCapabilities() as any;
-
+            
             if (capabilities.zoom) {
                 setZoomType('hardware');
                 setZoomRange({
@@ -132,24 +132,24 @@ export default function ARScannerApp() {
     };
 
     const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!sliderRef.current || !zoomRange) return;
+    if (!sliderRef.current || !zoomRange) return;
+    
+    const rect = sliderRef.current.getBoundingClientRect();
+    const y = rect.bottom - e.clientY; 
+    const percentage = Math.max(0, Math.min(1, y / rect.height));
+    
+    const newValue = zoomRange.min + percentage * (zoomRange.max - zoomRange.min);
+    setZoomValue(newValue);
+    zoomValueRef.current = newValue; 
 
-        const rect = sliderRef.current.getBoundingClientRect();
-        const y = rect.bottom - e.clientY;
-        const percentage = Math.max(0, Math.min(1, y / rect.height));
-
-        const newValue = zoomRange.min + percentage * (zoomRange.max - zoomRange.min);
-        setZoomValue(newValue);
-        zoomValueRef.current = newValue;
-
-        // NEW: Throttled Hardware Update
-        // Only ask the physical lens to move if 200ms have passed since the last request
-        const now = Date.now();
-        if (now - lastHardwareUpdateTime.current > 200) {
-            applyHardwareZoom();
-            lastHardwareUpdateTime.current = now;
-        }
-    };
+    // NEW: Throttled Hardware Update
+    // Only ask the physical lens to move if 200ms have passed since the last request
+    const now = Date.now();
+    if (now - lastHardwareUpdateTime.current > 200) {
+        applyHardwareZoom();
+        lastHardwareUpdateTime.current = now;
+    }
+};
 
     const applyHardwareZoom = async () => {
         if (zoomType === 'hardware' && streamRef.current) {
@@ -165,25 +165,25 @@ export default function ARScannerApp() {
     // --- Screenshot & Gallery Logic ---
     const extractScreenshot = () => {
         if (!videoRef.current || !canvasRef.current) return null;
-
+        
         const video = videoRef.current;
         const arCanvas = canvasRef.current;
-
+        
         const screenCanvas = document.createElement('canvas');
         screenCanvas.width = arCanvas.width;
         screenCanvas.height = arCanvas.height;
         const screenCtx = screenCanvas.getContext('2d');
-        if (!screenCtx) return null;
+        if(!screenCtx) return null;
 
         const scale = Math.max(screenCanvas.width / video.videoWidth, screenCanvas.height / video.videoHeight);
         const scaledWidth = video.videoWidth * scale;
         const scaledHeight = video.videoHeight * scale;
         const offsetX = (screenCanvas.width - scaledWidth) / 2;
         const offsetY = (screenCanvas.height - scaledHeight) / 2;
-
+        
         screenCtx.drawImage(video, offsetX, offsetY, scaledWidth, scaledHeight);
-        screenCtx.drawImage(arCanvas, 0, 0);
-
+        screenCtx.drawImage(arCanvas, 0, 0); 
+        
         return screenCanvas.toDataURL('image/jpeg', 0.9);
     };
 
@@ -195,14 +195,14 @@ export default function ARScannerApp() {
             } else {
                 videoRef.current.pause();
                 setIsPaused(true);
-
+                
                 setFlashActive(true);
                 setTimeout(() => setFlashActive(false), 150);
 
                 const imgData = extractScreenshot();
                 if (imgData) {
                     setFlyAnim({ src: imgData, active: false });
-
+                    
                     setTimeout(() => {
                         setFlyAnim(prev => prev ? { ...prev, active: true } : null);
                     }, 50);
@@ -210,7 +210,7 @@ export default function ARScannerApp() {
                     setTimeout(() => {
                         setCapturedImages(prev => [...prev, imgData]);
                         setFlyAnim(null);
-
+                        
                         setThumbPulse(true);
                         setTimeout(() => setThumbPulse(false), 300);
                     }, 600);
@@ -254,7 +254,7 @@ export default function ARScannerApp() {
 
                             const centerX = x + width / 2;
                             const centerY = y + height / 2;
-                            if (centerX < 0 || centerX > canvas.width || centerY < 0 || centerY > canvas.height) return;
+                            if (centerX < 0 || centerX > canvas.width || centerY < 0 || centerY > canvas.height) return; 
 
                             const mapped = mapWasteCategory(prediction.class);
                             const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
@@ -273,12 +273,12 @@ export default function ARScannerApp() {
                             const label = `${prediction.class.toUpperCase()} ${(prediction.score * 100).toFixed(0)}%`;
                             ctx.font = 'bold 14px sans-serif';
                             const textWidth = Math.max(ctx.measureText(label).width, 180);
-
+                            
                             ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
                             ctx.beginPath();
                             ctx.roundRect ? ctx.roundRect(x, y - 65, textWidth + 20, 55, 6) : ctx.rect(x, y - 65, textWidth + 20, 55);
                             ctx.fill();
-
+                            
                             ctx.fillStyle = primaryColor;
                             ctx.fillText(label, x + 10, y - 45);
 
@@ -351,7 +351,7 @@ export default function ARScannerApp() {
     // ==========================================
     return (
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden overscroll-none">
-
+            
             <div className="h-16 w-full flex items-center justify-between px-6 z-20 bg-black md:absolute md:top-0 md:bg-transparent md:h-auto md:pt-8 md:bg-gradient-to-b md:from-black/60 md:to-transparent md:pb-12">
                 <button
                     onClick={() => { stopCamera(); setActiveMode('selection'); setPreviewImage(null); }}
@@ -369,26 +369,26 @@ export default function ARScannerApp() {
             <div className="relative flex-1 w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden md:absolute md:inset-0 md:z-0">
                 {activeMode === 'camera' && (
                     <>
-                        <div
+                        <div 
                             className="absolute inset-0 w-full h-full"
-                            style={{
+                            style={{ 
                                 transform: zoomType === 'software' ? `scale(${zoomValue})` : 'scale(1)',
                                 transition: 'transform 0.1s linear',
                                 transformOrigin: 'center center'
                             }}
                         >
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="absolute inset-0 w-full h-full object-cover"
-                                style={{ objectFit: 'cover' }}
+                            <video 
+                                ref={videoRef} 
+                                autoPlay 
+                                playsInline 
+                                muted 
+                                className="absolute inset-0 w-full h-full object-cover" 
+                                style={{ objectFit: 'cover' }} 
                             />
-                            <canvas
-                                ref={canvasRef}
-                                className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10"
-                                style={{ objectFit: 'cover' }}
+                            <canvas 
+                                ref={canvasRef} 
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10" 
+                                style={{ objectFit: 'cover' }} 
                             />
                         </div>
 
@@ -399,52 +399,52 @@ export default function ARScannerApp() {
                                 <span className={`text-white text-[12px] font-medium mb-3 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-opacity duration-300 ${isZooming ? 'opacity-100' : 'opacity-50'}`}>
                                     {zoomValue.toFixed(1)}x
                                 </span>
-
+                                
                                 {/* Invisible touch area with ultra-thin visible track */}
-                                <div
-                                    ref={sliderRef}
-                                    className="relative w-8 h-32 md:h-48 flex justify-center cursor-pointer touch-none group select-none"
-                                    draggable={false}
-                                    onPointerDown={(e) => {
-                                        isDraggingRef.current = true;
-                                        setIsZooming(true);
-                                        sliderRef.current?.setPointerCapture(e.pointerId);
-                                        handlePointerMove(e);
-                                    }}
-                                    onPointerMove={(e) => {
-                                        if (isDraggingRef.current) handlePointerMove(e);
-                                    }}
-                                    onPointerUp={(e) => {
-                                        isDraggingRef.current = false;
-                                        setIsZooming(false);
-                                        sliderRef.current?.releasePointerCapture(e.pointerId);
-                                        applyHardwareZoom();
-                                    }}
-                                    onPointerCancel={(e) => {
-                                        isDraggingRef.current = false;
-                                        setIsZooming(false);
-                                        sliderRef.current?.releasePointerCapture(e.pointerId);
-                                    }}
-                                >
-                                    {/* The faint background line (1px) */}
-                                    <div className="absolute top-0 bottom-0 w-[1px] bg-white/20 rounded-full" />
-
-                                    {/* The active fill line (2px white) */}
-                                    <div
-                                        className="absolute bottom-0 w-[2px] bg-white rounded-full transition-all duration-75 ease-out shadow-[0_0_5px_rgba(255,255,255,0.5)]"
-                                        style={{
-                                            height: `${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}%`
-                                        }}
-                                    />
-
-                                    {/* The Dot - Expands slightly when zooming */}
-                                    <div
-                                        className={`absolute left-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_8px_rgba(0,0,0,0.4)] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-200 ease-out ${isZooming ? 'scale-100 opacity-100' : 'scale-50 opacity-60'}`}
-                                        style={{
-                                            bottom: `calc(${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}% - 8px)`
-                                        }}
-                                    />
-                                </div>
+                                <div 
+    ref={sliderRef}
+    className="relative w-8 h-32 md:h-48 flex justify-center cursor-pointer touch-none group select-none"
+    draggable={false}
+    onPointerDown={(e) => {
+        isDraggingRef.current = true;
+        setIsZooming(true);
+        sliderRef.current?.setPointerCapture(e.pointerId);
+        handlePointerMove(e);
+    }}
+    onPointerMove={(e) => {
+        if (isDraggingRef.current) handlePointerMove(e);
+    }}
+    onPointerUp={(e) => {
+        isDraggingRef.current = false;
+        setIsZooming(false);
+        sliderRef.current?.releasePointerCapture(e.pointerId);
+        applyHardwareZoom();
+    }}
+    onPointerCancel={(e) => {
+        isDraggingRef.current = false;
+        setIsZooming(false);
+        sliderRef.current?.releasePointerCapture(e.pointerId);
+    }}
+>
+    {/* The faint background line (1px) */}
+    <div className="absolute top-0 bottom-0 w-[1px] bg-white/20 rounded-full" />
+    
+    {/* The active fill line (2px white) */}
+    <div 
+        className="absolute bottom-0 w-[2px] bg-white rounded-full transition-all duration-75 ease-out shadow-[0_0_5px_rgba(255,255,255,0.5)]"
+        style={{ 
+            height: `${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}%` 
+        }}
+    />
+    
+    {/* The Dot - Expands slightly when zooming */}
+    <div 
+        className={`absolute left-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_8px_rgba(0,0,0,0.4)] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-200 ease-out ${isZooming ? 'scale-100 opacity-100' : 'scale-50 opacity-60'}`}
+        style={{ 
+            bottom: `calc(${((zoomValue - zoomRange.min) / (zoomRange.max - zoomRange.min)) * 100}% - 8px)`
+        }}
+    />
+</div>
                             </div>
                         )}
 
@@ -453,13 +453,14 @@ export default function ARScannerApp() {
                         )}
 
                         {flyAnim && (
-                            <img
-                                src={flyAnim.src}
+                            <img 
+                                src={flyAnim.src} 
                                 alt="Captured frame"
-                                className={`fixed z-50 object-cover border-2 border-white/50 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${flyAnim.active
-                                        ? 'w-12 h-12 bottom-12 md:bottom-20 left-10 opacity-0 rounded-lg scale-50'
-                                        : 'w-[80vw] h-[60vh] top-[20vh] left-[10vw] opacity-100 rounded-3xl scale-100'
-                                    }`}
+                                className={`fixed z-50 object-cover border-2 border-white/50 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                                    flyAnim.active 
+                                        ? 'w-12 h-12 bottom-12 md:bottom-20 left-10 opacity-0 rounded-lg scale-50' 
+                                        : 'w-[80vw] h-[60vh] top-[20vh] left-[10vw] opacity-100 rounded-3xl scale-100' 
+                                }`}
                             />
                         )}
                     </>
@@ -470,13 +471,13 @@ export default function ARScannerApp() {
             </div>
 
             <div className="h-40 w-full flex flex-col items-center justify-end pb-8 z-20 bg-black text-white md:absolute md:bottom-0 md:bg-transparent md:h-auto md:pb-12 md:bg-gradient-to-t md:from-black/60 md:to-transparent md:pt-20">
-
+                
                 <div className="flex space-x-6 text-xs font-medium text-gray-400 mb-6 drop-shadow-md">
                     <span className="text-yellow-500">Capture</span>
                 </div>
 
                 <div className="w-full flex justify-between items-center px-10 max-w-2xl mx-auto">
-
+                    
                     <div className={`w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md overflow-hidden relative border border-white/20 transition-transform duration-200 ${thumbPulse ? 'scale-125' : 'scale-100'}`}>
                         {capturedImages.length > 0 && (
                             <img src={capturedImages[capturedImages.length - 1]} alt="Gallery latest" className="w-full h-full object-cover" />
@@ -484,17 +485,17 @@ export default function ARScannerApp() {
                     </div>
 
                     {activeMode === 'camera' ? (
-                        <button
+                        <button 
                             onClick={toggleCaptureFreeze}
                             className={`w-20 h-20 rounded-full border-4 transition-all duration-300 flex items-center justify-center shadow-lg ${isPaused ? 'border-yellow-500 bg-yellow-500/20 scale-95' : 'border-white bg-white/20 hover:bg-white/40 active:scale-95'}`}
                         >
                             <div className={`w-14 h-14 rounded-full transition-all duration-300 ${isPaused ? 'bg-yellow-500' : 'bg-white'}`}></div>
                         </button>
                     ) : (
-                        <div className="w-20 h-20"></div>
+                        <div className="w-20 h-20"></div> 
                     )}
 
-                    <button
+                    <button 
                         onClick={toggleCameraFacing}
                         className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 md:bg-white/20 md:backdrop-blur-md flex items-center justify-center transition-colors active:scale-90 shadow-lg"
                     >
