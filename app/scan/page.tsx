@@ -10,7 +10,7 @@ export default function ScanPage() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null); // NEW: Canvas for drawing AR boxes
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
     // --- AI State & Configuration ---
@@ -58,7 +58,7 @@ export default function ScanPage() {
             const canvas = canvasRef.current;
 
             // FIX MOBILE RESPONSIVENESS: Sync Canvas native resolution to Video native resolution
-            if (video.readyState === 4) { // Ensure video has metadata
+            if (video.readyState === 4) {
                 if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
@@ -68,7 +68,7 @@ export default function ScanPage() {
                 if (ctx) {
                     try {
                         const predictions = await model.detect(video);
-                        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous frame
+                        ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
                         // Filter out unconfident predictions and people
                         const validPredictions = predictions.filter(
@@ -76,7 +76,6 @@ export default function ScanPage() {
                         );
 
                         if (validPredictions.length > 0) {
-                            // Find the most confident prediction to display in the UI Card below
                             const bestMatch = validPredictions.reduce((prev, current) =>
                                 (prev.score > current.score) ? prev : current
                             );
@@ -89,44 +88,37 @@ export default function ScanPage() {
                                 probability: bestMatch.score
                             });
 
-                            // NEW: Draw linear focus boxes around ALL detected objects
+                            // Draw linear focus boxes around ALL detected objects
                             validPredictions.forEach(prediction => {
                                 const [x, y, width, height] = prediction.bbox;
                                 const isBestMatch = prediction === bestMatch;
 
-                                // Emerald for the main object, faded gray for background objects
                                 const color = isBestMatch ? '#10b981' : 'rgba(255, 255, 255, 0.4)';
                                 ctx.strokeStyle = color;
                                 ctx.lineWidth = isBestMatch ? 4 : 2;
-
                                 const cornerLength = 20;
 
                                 ctx.beginPath();
-                                // Top-Left Corner
                                 ctx.moveTo(x, y + cornerLength);
                                 ctx.lineTo(x, y);
                                 ctx.lineTo(x + cornerLength, y);
-                                // Top-Right Corner
                                 ctx.moveTo(x + width - cornerLength, y);
                                 ctx.lineTo(x + width, y);
                                 ctx.lineTo(x + width, y + cornerLength);
-                                // Bottom-Left Corner
                                 ctx.moveTo(x, y + height - cornerLength);
                                 ctx.lineTo(x, y + height);
                                 ctx.lineTo(x + cornerLength, y + height);
-                                // Bottom-Right Corner
                                 ctx.moveTo(x + width - cornerLength, y + height);
                                 ctx.lineTo(x + width, y + height);
                                 ctx.lineTo(x + width, y + height - cornerLength);
                                 ctx.stroke();
 
-                                // Draw Label above the box
                                 ctx.fillStyle = color;
                                 ctx.font = isBestMatch ? 'bold 18px sans-serif' : '14px sans-serif';
                                 ctx.fillText(
                                     `${prediction.class} (${Math.round(prediction.score * 100)}%)`,
                                     x,
-                                    y > 20 ? y - 8 : y + 20 // Keep label inside if box is at the very top edge
+                                    y > 20 ? y - 8 : y + 20
                                 );
                             });
 
@@ -156,9 +148,16 @@ export default function ScanPage() {
         setActiveMode('camera');
         setAiResult(null);
         try {
+            // FIX: Check if the device is in portrait mode
+            const isPortrait = window.innerHeight > window.innerWidth;
+
             const stream = await navigator.mediaDevices.getUserMedia({
-                // Ideal settings for mobile back cameras
-                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                video: { 
+                    facingMode: "environment", 
+                    // FIX: Swap the ideal resolution so the camera gives us a tall frame, not a wide one
+                    width: { ideal: isPortrait ? 720 : 1280 }, 
+                    height: { ideal: isPortrait ? 1280 : 720 } 
+                }
             });
             streamRef.current = stream;
             if (videoRef.current) {
@@ -185,7 +184,6 @@ export default function ScanPage() {
         return () => stopCamera();
     }, []);
 
-    // --- Upload Logic ---
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -281,12 +279,14 @@ export default function ScanPage() {
                             autoPlay
                             playsInline
                             muted
-                            className="absolute inset-0 w-full h-full object-cover"
+                            // FIX: Changed from object-cover to object-contain so the edges are not cut off
+                            className="absolute inset-0 w-full h-full object-contain"
                         />
                         {/* THE AR CANVAS */}
                         <canvas
                             ref={canvasRef}
-                            className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            // FIX: Must match the video exactly
+                            className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none"
                         />
                     </>
                 )}
@@ -295,7 +295,7 @@ export default function ScanPage() {
                     <img
                         src={previewImage}
                         alt="Upload preview"
-                        className="w-full h-full object-contain" // Changed to object-contain so they can see the whole photo
+                        className="w-full h-full object-contain" 
                     />
                 )}
             </div>
