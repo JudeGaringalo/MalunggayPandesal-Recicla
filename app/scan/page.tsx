@@ -9,14 +9,14 @@ export default function ScanPage() {
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     
-    // NEW: State to track the camera's exact natural aspect ratio
+    // Tracks the camera's natural aspect ratio for pixel-perfect AI alignment
     const [videoAspectRatio, setVideoAspectRatio] = useState<number>(16 / 9);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
-    // --- AI State & Configuration ---
+    // --- AI State ---
     const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
     const [aiResult, setAiResult] = useState<{ className: string; category: string; value: string; probability: number } | null>(null);
     const requestRef = useRef<number | null>(null);
@@ -46,7 +46,6 @@ export default function ScanPage() {
                 await tf.ready();
                 const loadedModel = await cocoSsd.load();
                 setModel(loadedModel);
-                console.log("Open-Source AI Model Loaded Successfully!");
             } catch (error) {
                 console.error("Failed to load AI model.", error);
             }
@@ -61,8 +60,6 @@ export default function ScanPage() {
             const canvas = canvasRef.current;
 
             if (video.readyState === 4) {
-                // Because of our new CSS wrapper, we don't need magic math!
-                // We just perfectly sync the canvas's internal memory to the raw video pixels.
                 if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
@@ -92,14 +89,12 @@ export default function ScanPage() {
                             });
 
                             validPredictions.forEach(prediction => {
-                                // Draw directly using the raw AI coordinates! 
-                                // The browser's CSS scales the video and canvas identically.
                                 const [x, y, width, height] = prediction.bbox;
                                 const isBestMatch = prediction === bestMatch;
 
                                 const color = isBestMatch ? '#10b981' : 'rgba(255, 255, 255, 0.4)';
                                 ctx.strokeStyle = color;
-                                ctx.lineWidth = isBestMatch ? 6 : 3; // Made lines slightly thicker for visibility
+                                ctx.lineWidth = isBestMatch ? 6 : 3;
                                 const cornerLength = 20;
 
                                 ctx.beginPath();
@@ -116,15 +111,6 @@ export default function ScanPage() {
                                 ctx.lineTo(x + width, y + height);
                                 ctx.lineTo(x + width, y + height - cornerLength);
                                 ctx.stroke();
-
-                                ctx.fillStyle = color;
-                                // Scale up the font size relative to the raw video resolution
-                                ctx.font = isBestMatch ? 'bold 24px sans-serif' : '18px sans-serif';
-                                ctx.fillText(
-                                    `${prediction.class} (${Math.round(prediction.score * 100)}%)`,
-                                    x,
-                                    y > 30 ? y - 10 : y + 30
-                                );
                             });
                         } else {
                             setAiResult(null);
@@ -147,13 +133,11 @@ export default function ScanPage() {
         };
     }, [activeMode, model]);
 
-    // --- Camera Logic ---
+    // --- Camera & Upload Logic ---
     const startCamera = async () => {
         setActiveMode('camera');
         setAiResult(null);
         try {
-            // Give the browser the freedom to use the best resolution it has naturally
-            // This prevents forced hardware zooming.
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: "environment" }
             });
@@ -168,7 +152,6 @@ export default function ScanPage() {
         }
     };
 
-    // Extract the exact aspect ratio from the video hardware once it connects
     const handleVideoLoadedMetadata = () => {
         if (videoRef.current) {
             const width = videoRef.current.videoWidth;
@@ -204,18 +187,16 @@ export default function ScanPage() {
 
     // --- UI: Selection Screen ---
     if (activeMode === 'selection') {
-        // ... (Keep the selection screen exactly as it was, it was perfect)
+        // (Unchanged Selection Screen)
         return (
             <main className="min-h-screen bg-black text-white relative flex flex-col font-sans">
                 <div className="absolute inset-0 bg-gradient-to-b from-black via-[#011a0d] to-black opacity-90 z-0"></div>
-
                 <nav className="relative z-10 w-full p-6 flex justify-between items-center">
                     <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest">
                         &#8592; Back
                     </Link>
                     <span className="text-emerald-500 font-serif italic text-lg">Recicla.</span>
                 </nav>
-
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-serif mb-4">Select Input Method</h2>
@@ -223,13 +204,8 @@ export default function ScanPage() {
                             {model ? "AI Core Ready. Choose an input." : "Booting AI Core... Please wait."}
                         </p>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                        <button
-                            onClick={startCamera}
-                            disabled={!model}
-                            className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
-                        >
+                        <button onClick={startCamera} disabled={!model} className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
                             <div className="w-16 h-16 rounded-full border border-emerald-500/50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-emerald-400 transition-all duration-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
@@ -248,13 +224,7 @@ export default function ScanPage() {
                             </div>
                             <h3 className="text-xl font-medium tracking-wide mb-2 text-white">Upload Photo</h3>
                             <p className="text-sm text-gray-500 font-light text-center">Analyze from camera roll.</p>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleFileUpload}
-                                disabled={!model}
-                            />
+                            <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={!model} />
                         </label>
                     </div>
                 </div>
@@ -262,24 +232,31 @@ export default function ScanPage() {
         );
     }
 
-    // --- UI: Active Scanner/Upload Viewer ---
+    // --- UI: Active Scanner (Google Lens / iOS Standard Layout) ---
     return (
-        <div className="fixed inset-0 w-full h-full bg-black z-50 flex flex-col font-sans overflow-hidden">
+        // 100dvh ensures it fits perfectly on mobile, ignoring the scrolling address bar
+        <div className="fixed inset-0 w-full h-[100dvh] bg-black flex flex-col font-sans overflow-hidden">
+            
+            {/* TOP SECTION: The Camera Feed (Pinned to the top) */}
+            <div className="relative flex-1 bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+                
+                {/* Header Actions inside Camera View */}
+                <div className="absolute top-0 inset-x-0 p-6 z-40 flex justify-between items-center pointer-events-none">
+                    <button
+                        onClick={() => { stopCamera(); setActiveMode('selection'); }}
+                        className="pointer-events-auto bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-black/60 transition-colors text-xs uppercase tracking-widest px-5 py-2.5 rounded-full shadow-lg"
+                    >
+                        &#8592; Close
+                    </button>
+                    {activeMode === 'camera' && (
+                        <div className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-full text-xs font-medium flex items-center shadow-lg">
+                            <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                            AI Active
+                        </div>
+                    )}
+                </div>
 
-            <div className="absolute top-0 inset-x-0 p-6 z-40 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-8 pb-12 pointer-events-none">
-                <button
-                    onClick={() => {
-                        stopCamera();
-                        setActiveMode('selection');
-                    }}
-                    className="pointer-events-auto text-white hover:text-emerald-400 transition-colors text-sm uppercase tracking-widest backdrop-blur-sm bg-black/30 px-4 py-2 rounded-full border border-white/10"
-                >
-                    &#8592; Cancel
-                </button>
-            </div>
-
-            {/* THE NEW WRAPPER SETUP: No cropping, No complex math, 100% accurate */}
-            <div className="absolute inset-0 w-full h-full z-0 bg-black flex items-center justify-center overflow-hidden">
+                {/* The Video & AR Canvas */}
                 {activeMode === 'camera' && (
                     <div 
                         className="relative flex items-center justify-center w-full max-h-full max-w-full"
@@ -291,7 +268,7 @@ export default function ScanPage() {
                             playsInline
                             muted
                             onLoadedMetadata={handleVideoLoadedMetadata}
-                            className="absolute inset-0 w-full h-full object-fill"
+                            className="absolute inset-0 w-full h-full object-fill rounded-b-2xl"
                         />
                         <canvas
                             ref={canvasRef}
@@ -304,67 +281,93 @@ export default function ScanPage() {
                     <img
                         src={previewImage}
                         alt="Upload preview"
-                        className="w-full h-full object-contain" 
+                        className="w-full h-full object-contain p-4" 
                     />
                 )}
             </div>
 
-            {/* Upload Mode: Manual Analyze Button */}
-            {activeMode === 'upload' && !aiResult && (
-                <div className="absolute bottom-0 inset-x-0 p-6 z-20 bg-gradient-to-t from-black/90 via-black/60 to-transparent pb-10 flex justify-center">
-                    <button
-                        className="w-full max-w-sm bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] text-lg transition-transform transform active:scale-95"
-                        onClick={async () => {
-                            if (!model || !previewImage) return;
-                            const img = document.createElement('img');
-                            img.src = previewImage;
-                            await new Promise((resolve) => (img.onload = resolve));
-                            const predictions = await model.detect(img);
+            {/* BOTTOM SECTION: iPhone Standard Bottom Sheet */}
+            <div className="relative w-full bg-[#f2f2f7] dark:bg-[#1c1c1e] shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-[32px] flex flex-col flex-shrink-0 z-50 overflow-hidden transition-all duration-300 ease-in-out pb-8">
+                
+                {/* Frosted Glass Overlay (Apple standard) */}
+                <div className="absolute inset-0 bg-white/70 dark:bg-black/70 backdrop-blur-2xl z-0 pointer-events-none"></div>
 
-                            if (predictions.length > 0) {
-                                const best = predictions.reduce((p, c) => (p.score > c.score) ? p : c);
-                                const mappedData = mapWasteCategory(best.class);
-                                setAiResult({
-                                    className: best.class,
-                                    category: mappedData.category,
-                                    value: mappedData.value,
-                                    probability: best.score
-                                });
-                            } else {
-                                alert("Could not identify any clear objects in this image.");
-                            }
-                        }}
-                    >
-                        Analyze Uploaded Image
-                    </button>
-                </div>
-            )}
+                <div className="relative z-10 w-full px-6 pt-4 pb-6 flex flex-col items-center">
+                    
+                    {/* iOS Drag Handle */}
+                    <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mb-6"></div>
 
-            {/* The Results Card with Hackathon Data */}
-            {aiResult && (
-                <div className="absolute bottom-10 inset-x-0 p-6 z-30 flex justify-center transition-all duration-300 ease-in-out pointer-events-none">
-                    <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl border-t-8 border-emerald-500 pointer-events-auto">
-                        {activeMode === 'camera' && (
-                            <p className="text-gray-500 text-sm uppercase tracking-widest mb-1 animate-pulse text-center">Live Scan Active</p>
-                        )}
-
-                        <div className="mt-2">
-                            <h2 className="text-3xl font-extrabold text-gray-900 capitalize text-center">{aiResult.className}</h2>
-                            <div className="mt-4 bg-gray-100 rounded-xl p-4">
-                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Classification</p>
-                                <p className="text-gray-900 font-bold">{aiResult.category}</p>
-
-                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mt-3 mb-1">Market Data</p>
-                                <p className="text-emerald-600 font-bold">{aiResult.value}</p>
-                            </div>
+                    {/* Content Logic */}
+                    {!aiResult && activeMode === 'camera' && (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                            <div className="w-12 h-12 border-4 border-gray-300 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+                            <h3 className="text-xl font-semibold tracking-tight text-black dark:text-white">Scanning Environment</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Point your camera clearly at an object.</p>
                         </div>
+                    )}
 
-                        <p className="text-gray-400 text-xs font-medium text-center mt-4">
-                            AI Confidence: {(aiResult.probability * 100).toFixed(1)}%
-                        </p>
-                    </div>
+                    {!aiResult && activeMode === 'upload' && (
+                        <div className="w-full py-4">
+                            <button
+                                className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold tracking-wide py-4 rounded-2xl text-lg transition-transform transform active:scale-95 shadow-lg"
+                                onClick={async () => {
+                                    if (!model || !previewImage) return;
+                                    const img = document.createElement('img');
+                                    img.src = previewImage;
+                                    await new Promise((resolve) => (img.onload = resolve));
+                                    const predictions = await model.detect(img);
+
+                                    if (predictions.length > 0) {
+                                        const best = predictions.reduce((p, c) => (p.score > c.score) ? p : c);
+                                        const mappedData = mapWasteCategory(best.class);
+                                        setAiResult({
+                                            className: best.class,
+                                            category: mappedData.category,
+                                            value: mappedData.value,
+                                            probability: best.score
+                                        });
+                                    } else {
+                                        alert("Could not identify any clear objects in this image.");
+                                    }
+                                }}
+                            >
+                                Tap to Analyze
+                            </button>
+                        </div>
+                    )}
+
+                    {aiResult && (
+                        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Header row: Title + Confidence */}
+                            <div className="flex justify-between items-baseline mb-5">
+                                <h2 className="text-3xl font-bold tracking-tight text-black dark:text-white capitalize">
+                                    {aiResult.className}
+                                </h2>
+                                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full">
+                                    {(aiResult.probability * 100).toFixed(0)}% Match
+                                </span>
+                            </div>
+
+                            {/* Info Cards (Apple Wallet/Maps style) */}
+                            <div className="bg-white dark:bg-[#2c2c2e] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/5 mb-4">
+                                <div className="flex flex-col gap-1 border-b border-gray-100 dark:border-white/10 pb-4 mb-4">
+                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Classification</span>
+                                    <span className="text-lg font-semibold text-black dark:text-white">{aiResult.category}</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estimated Value</span>
+                                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{aiResult.value}</span>
+                                </div>
+                            </div>
+                            
+                            {/* Hackathon Add-on: Fake "Save to Log" Button */}
+                            <button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold tracking-wide py-4 rounded-2xl transition-all shadow-md active:scale-95">
+                                Log to Segregation Profile
+                            </button>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
