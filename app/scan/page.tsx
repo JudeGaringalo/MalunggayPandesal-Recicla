@@ -37,6 +37,7 @@ export default function ARScannerApp() {
     const requestRef = useRef<number | null>(null);
     
     const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
+    const lastHardwareUpdateTime = useRef<number>(0);
 
     const mapWasteCategory = (detectedClass: string) => {
         const eWasteHigh = ['laptop', 'tv', 'cell phone', 'refrigerator'];
@@ -129,18 +130,25 @@ export default function ARScannerApp() {
         setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
 
-    // --- CUSTOM SMOOTH ZOOM LOGIC ---
     const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!sliderRef.current || !zoomRange) return;
-        
-        const rect = sliderRef.current.getBoundingClientRect();
-        const y = rect.bottom - e.clientY; 
-        const percentage = Math.max(0, Math.min(1, y / rect.height));
-        
-        const newValue = zoomRange.min + percentage * (zoomRange.max - zoomRange.min);
-        setZoomValue(newValue);
-        zoomValueRef.current = newValue; 
-    };
+    if (!sliderRef.current || !zoomRange) return;
+    
+    const rect = sliderRef.current.getBoundingClientRect();
+    const y = rect.bottom - e.clientY; 
+    const percentage = Math.max(0, Math.min(1, y / rect.height));
+    
+    const newValue = zoomRange.min + percentage * (zoomRange.max - zoomRange.min);
+    setZoomValue(newValue);
+    zoomValueRef.current = newValue; 
+
+    // NEW: Throttled Hardware Update
+    // Only ask the physical lens to move if 200ms have passed since the last request
+    const now = Date.now();
+    if (now - lastHardwareUpdateTime.current > 200) {
+        applyHardwareZoom();
+        lastHardwareUpdateTime.current = now;
+    }
+};
 
     const applyHardwareZoom = async () => {
         if (zoomType === 'hardware' && streamRef.current) {
