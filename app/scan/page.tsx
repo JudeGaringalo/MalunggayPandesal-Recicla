@@ -263,9 +263,9 @@ export default function ARScannerApp() {
                     &#8592; Close
                 </button>
                 {activeMode === 'camera' && (
-                    <div className={`rounded-full text-xs font-bold flex items-center bg-black/40 md:backdrop-blur-md px-4 py-2 border border-transparent md:border-white/20`}>
-                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500 animate-pulse'}`}></span>
-                        {isPaused ? 'AI Paused' : 'AI Active'}
+                    <div className={`rounded-full text-xs font-bold flex items-center ${isPaused ? '' : ''}`}>
+                        <span className={`w-2 h-2 rounded-full mr-2 ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500'}`}></span>
+                        {isPaused ? '' : ''}
                     </div>
                 )}
             </div>
