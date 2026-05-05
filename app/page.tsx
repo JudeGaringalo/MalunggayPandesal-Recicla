@@ -241,12 +241,12 @@ export default function LandingPage(): React.JSX.Element {
           >
             <div className="flex animate-marquee whitespace-nowrap items-center py-4">
               {[...techLogos, ...techLogos].map((logo, index) => (
-                <div key={index} className="mx-8 md:mx-12 flex-shrink-0">
+                <div key={index} className="mx-6 md:mx-10 flex-shrink-0 flex items-center justify-center">
                   <img 
                     src={logo.src} 
                     alt={logo.name} 
-                    /* Removed the grayscale and opacity classes to keep it full color */
-                    className="h-8 md:h-12 w-auto transition-transform duration-300 hover:scale-110 unzoomable" 
+                    /* Added explicit fixed width, height, and object-contain to normalize all logos */
+                    className="h-10 w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable" 
                   />
                 </div>
               ))}
