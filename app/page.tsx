@@ -59,16 +59,16 @@ export default function LandingPage(): React.JSX.Element {
             <img
               src="/images/Group 8.png"
               alt="Outer floating items"
-              className="absolute top-[50vh] left-1/2 w-[180vw] max-w-[2400px] object-contain spin-outer opacity-90 unzoomable"
+              className="absolute top-[50vh] left-1/2 w-[100vw] max-w-[1900px] object-contain spin-outer unzoomable"
             />
             <img
               src="/images/Group 7.png"
               alt="Inner floating items"
-              className="absolute top-[50vh] left-1/2 w-[110vw] max-w-[1400px] object-contain spin-inner unzoomable"
+              className="absolute top-[50vh] left-1/2 w-[100vw] max-w-[1000px] object-contain spin-inner unzoomable"
             />
 
             <div
-              className="absolute top-[50vh] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] md:w-[1150px] md:h-[1150px] rounded-[50%] pointer-events-none z-[5]"
+              className="absolute top-[50vh] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] md:w-[850px] md:h-[850px] rounded-[50%] pointer-events-none z-[5]"
               style={{
                 background: 'radial-gradient(ellipse at center, rgba(255,255,255,1) 100%, rgba(255,255,255,0) 0%)',
                 filter: 'blur(100px)'
