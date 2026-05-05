@@ -2,22 +2,103 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import * as tf from '@tensorflow/tfjs';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
 export default function ScanPage() {
-  // State to control what the user sees
   const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
-  // Hardware references
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // --- AI State & Configuration ---
+  const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
+  const [aiResult, setAiResult] = useState<{ className: string; category: string; value: string; probability: number } | null>(null);
+  const requestRef = useRef<number | null>(null);
+  
+  // COCO-SSD is a bit less confident than custom models, so 60% is a good threshold
+  const CONFIDENCE_THRESHOLD = 0.60; 
+
+  // --- The Recicla Logic Engine ---
+  // Maps generic AI terms to your hackathon's specific e-waste & recycling categories
+  const mapWasteCategory = (detectedClass: string) => {
+    const eWaste = ['cell phone', 'laptop', 'tv', 'mouse', 'keyboard', 'remote'];
+    const recyclables = ['bottle', 'cup', 'wine glass'];
+
+    if (eWaste.includes(detectedClass)) {
+      return { category: 'E-Waste (Valuable)', value: 'Est. Scrap: ₱150 - ₱300/kg' };
+    }
+    if (recyclables.includes(detectedClass)) {
+      return { category: 'Recyclable Plastic/Glass', value: 'Est. Scrap: ₱12 - ₱20/kg' };
+    }
+    return { category: 'General / Unknown', value: 'Value varies by local shop' };
+  };
+
+  // --- Load AI Model ---
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        await tf.ready(); // Ensure the TensorFlow engine is booted up first
+        const loadedModel = await cocoSsd.load();
+        setModel(loadedModel);
+        console.log("Open-Source AI Model Loaded Successfully!");
+      } catch (error) {
+        console.error("Failed to load AI model.", error);
+      }
+    };
+    loadModel();
+  }, []);
+
+  // --- Continuous Live Scanning Logic ---
+  const detectFrame = async () => {
+    if (activeMode === 'camera' && videoRef.current && model) {
+      try {
+        const predictions = await model.detect(videoRef.current);
+        
+        if (predictions.length > 0) {
+          // Find the prediction with the highest confidence score
+          const bestMatch = predictions.reduce((prev, current) => 
+            (prev.score > current.score) ? prev : current
+          );
+
+          if (bestMatch.score > CONFIDENCE_THRESHOLD && bestMatch.class !== 'person') {
+            const mappedData = mapWasteCategory(bestMatch.class);
+            setAiResult({ 
+              className: bestMatch.class, 
+              category: mappedData.category,
+              value: mappedData.value,
+              probability: bestMatch.score 
+            });
+          } else {
+            setAiResult(null); 
+          }
+        } else {
+          setAiResult(null); // Look at nothing, show nothing
+        }
+      } catch (err) {
+        console.error("Inference error:", err);
+      }
+    }
+    requestRef.current = requestAnimationFrame(detectFrame);
+  };
+
+  useEffect(() => {
+    if (activeMode === 'camera' && model) {
+      requestRef.current = requestAnimationFrame(detectFrame);
+    }
+    return () => {
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    };
+  }, [activeMode, model]);
 
   // --- Camera Logic ---
   const startCamera = async () => {
     setActiveMode('camera');
+    setAiResult(null); 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } // Prioritize back camera
+        video: { facingMode: "environment" } 
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -35,9 +116,11 @@ export default function ScanPage() {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+    }
   };
 
-  // Turn off the camera if the user leaves the page or unmounts the component
   useEffect(() => {
     return () => stopCamera();
   }, []);
@@ -46,7 +129,8 @@ export default function ScanPage() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      stopCamera(); // Make sure camera is off
+      stopCamera(); 
+      setAiResult(null);
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
       setActiveMode('upload');
@@ -70,15 +154,15 @@ export default function ScanPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-serif mb-4">Select Input Method</h2>
             <p className="text-gray-400 font-light tracking-wide">
-              Choose how you would like the AI to analyze your item.
+              {model ? "AI Core Ready. Choose an input." : "Booting AI Core... Please wait."}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            {/* Live Camera Button */}
             <button 
               onClick={startCamera}
-              className="group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-500 backdrop-blur-sm"
+              disabled={!model}
+              className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
             >
               <div className="w-16 h-16 rounded-full border border-emerald-500/50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-emerald-400 transition-all duration-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -90,8 +174,7 @@ export default function ScanPage() {
               <p className="text-sm text-gray-500 font-light text-center">Real-time AR scanning.</p>
             </button>
 
-            {/* Upload Photo Button */}
-            <label className="group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-500 backdrop-blur-sm cursor-pointer">
+            <label className={`group relative flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 transition-all duration-500 backdrop-blur-sm ${model ? 'hover:bg-white/10 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
               <div className="w-16 h-16 rounded-full border border-gray-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-gray-400 transition-all duration-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -104,6 +187,7 @@ export default function ScanPage() {
                 accept="image/*" 
                 className="hidden" 
                 onChange={handleFileUpload}
+                disabled={!model}
               />
             </label>
           </div>
@@ -116,7 +200,6 @@ export default function ScanPage() {
   return (
     <div className="fixed inset-0 w-full h-full bg-black z-50 flex flex-col font-sans">
       
-      {/* Top Nav Overlay */}
       <div className="absolute top-0 inset-x-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-8 pb-12">
         <button 
           onClick={() => {
@@ -129,7 +212,6 @@ export default function ScanPage() {
         </button>
       </div>
 
-      {/* The Viewport */}
       <div className="absolute inset-0 w-full h-full z-0">
         {activeMode === 'camera' && (
           <video 
@@ -150,7 +232,6 @@ export default function ScanPage() {
         )}
       </div>
 
-      {/* Targeting Reticle (Only in Camera Mode) */}
       {activeMode === 'camera' && (
         <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
           <div className="w-64 h-64 relative opacity-60">
@@ -162,15 +243,62 @@ export default function ScanPage() {
         </div>
       )}
 
-      {/* Action Button (Ready for AI) */}
-      <div className="absolute bottom-0 inset-x-0 p-6 z-20 bg-gradient-to-t from-black/90 via-black/60 to-transparent pb-10 flex justify-center">
-        <button 
-          className="w-full max-w-sm bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] text-lg transition-transform transform active:scale-95 border border-white/50"
-          onClick={() => console.log("Run AI Inference here!")}
-        >
-          Analyze Item
-        </button>
-      </div>
+      {/* Upload Mode: Manual Analyze Button */}
+      {activeMode === 'upload' && !aiResult && (
+        <div className="absolute bottom-0 inset-x-0 p-6 z-20 bg-gradient-to-t from-black/90 via-black/60 to-transparent pb-10 flex justify-center">
+          <button 
+            className="w-full max-w-sm bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] text-lg transition-transform transform active:scale-95"
+            onClick={async () => {
+               if (!model || !previewImage) return;
+               const img = document.createElement('img');
+               img.src = previewImage;
+               await new Promise((resolve) => (img.onload = resolve));
+               const predictions = await model.detect(img);
+               
+               if (predictions.length > 0) {
+                 const best = predictions.reduce((p, c) => (p.score > c.score) ? p : c);
+                 const mappedData = mapWasteCategory(best.class);
+                 setAiResult({ 
+                   className: best.class, 
+                   category: mappedData.category,
+                   value: mappedData.value,
+                   probability: best.score 
+                 });
+               } else {
+                 alert("Could not identify any clear objects in this image.");
+               }
+            }}
+          >
+            Analyze Uploaded Image
+          </button>
+        </div>
+      )}
+
+      {/* The Results Card with Hackathon Data */}
+      {aiResult && (
+        <div className="absolute bottom-10 inset-x-0 p-6 z-30 flex justify-center transition-all duration-300 ease-in-out">
+          <div className="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl border-t-8 border-emerald-500">
+            {activeMode === 'camera' && (
+              <p className="text-gray-500 text-sm uppercase tracking-widest mb-1 animate-pulse text-center">Live Scan Active</p>
+            )}
+            
+            <div className="mt-2">
+              <h2 className="text-3xl font-extrabold text-gray-900 capitalize text-center">{aiResult.className}</h2>
+              <div className="mt-4 bg-gray-100 rounded-xl p-4">
+                <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Classification</p>
+                <p className="text-gray-900 font-bold">{aiResult.category}</p>
+                
+                <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mt-3 mb-1">Market Data</p>
+                <p className="text-emerald-600 font-bold">{aiResult.value}</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-400 text-xs font-medium text-center mt-4">
+              AI Confidence: {(aiResult.probability * 100).toFixed(1)}%
+            </p>
+          </div>
+        </div>
+      )}
 
     </div>
   );
