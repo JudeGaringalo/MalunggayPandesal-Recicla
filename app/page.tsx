@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import VineScrollbar from './components/VineScrollbar';
@@ -25,36 +25,45 @@ const FEATURES = [
     icon: "/images/Frame 59.png",
     bgColor: "bg-[#81915A]",
     description: "No waiting for server uploads. Our lightweight model runs directly in your browser for instant identification.",
-    image: "/images/feature-showcase.png"
+    image: "/images/feature-1.png"
   },
   {
     id: "02",
     title: "Instant Valuation",
     icon: "/images/Frame 61.png",
-    bgColor: "bg-[#455130]",
-    description: "Get real-time market value estimates for your recyclables based on current local processing rates.",
-    image: "/images/feature-showcase.png"
+    bgColor: "bg-[#404828]",
+    description: "We provide real-time estimates of an item’s market value (e.g., copper or aluminum), giving you a tangible reason to recycle rather than discard.",
+    image: "/images/feature-2.png"
   },
   {
     id: "03",
     title: "Hazard Routing",
     icon: "/images/Frame 60.png",
-    bgColor: "bg-[#3D4829]",
-    description: "Identify dangerous materials instantly and get guided paths to the nearest specialized handling centers.",
-    image: "/images/feature-showcase.png"
+    bgColor: "bg-[#404828]",
+    description: "Unlike general recycling apps, we prioritize safety by flagging toxic materials—like bloated batteries—and routing them to specialized disposal centers instead of general bins.",
+    image: "/images/feature-3.png"
   },
   {
     id: "04",
     title: "Frictionless Access",
     icon: "/images/Frame 62.png",
-    bgColor: "bg-[#353D22]",
-    description: "No app downloads or accounts required. Access professional-grade tools immediately through your browser.",
-    image: "/images/feature-showcase.png"
+    bgColor: "bg-[#404828]",
+    description: "No app store downloads required. Users can transition from curiosity to a live scan in under three clicks.",
+    image: "/images/feature-4.png"
   }
 ];
 
 export default function LandingPage(): React.JSX.Element {
   const [activeArea, setActiveArea] = useState(0); // Animation State[cite: 1]
+
+  // --- ADD THE EFFECT HERE ---
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveArea((prevArea) => (prevArea + 1) % FEATURES.length);
+    }, 8000);
+
+    return () => clearInterval(timer);
+  }, [activeArea]);
 
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
@@ -154,10 +163,10 @@ export default function LandingPage(): React.JSX.Element {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setActiveArea(index)}
+                      // The background color is now controlled purely by the isActive ternary operator below
                       className={`flex-1 flex flex-col items-center justify-center text-center gap-1 md:gap-4 py-6 px-4 border-b border-r border-white last:border-b-0 transition-all duration-500 outline-none group 
-              ${feature.bgColor} 
-              ${isActive ? 'brightness-110 z-10 scale-[1.02] shadow-xl' : 'hover:brightness-95'}
-            `}
+                        ${isActive ? 'bg-[#81915A] z-10 scale-[1.02] shadow-xl' : 'bg-[#404828] hover:brightness-110'}
+                      `}
                     >
                       <img src={feature.icon} alt={feature.title} className={`w-8 h-8 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain unzoomable transition-transform duration-500 ${isActive ? 'scale-110' : 'scale-100'}`} />
                       <h3 className={`text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-70'}`}>
@@ -184,14 +193,19 @@ export default function LandingPage(): React.JSX.Element {
                   {FEATURES.map((feature, index) => (
                     <div
                       key={`text-${feature.id}`}
-                      className={`absolute inset-0 p-6 md:p-12 flex items-end justify-center transition-all duration-[800ms] ease-out
-              ${activeArea === index ? 'opacity-100 translate-y-0 pointer-events-auto z-10 delay-200' : 'opacity-0 translate-y-12 pointer-events-none z-0'}
-            `}
+                      // Removed the p-6 md:p-12 from this parent wrapper
+                      className={`absolute inset-0 flex items-end justify-center transition-all duration-[800ms] ease-out
+                        ${activeArea === index ? 'opacity-100 translate-y-0 pointer-events-auto z-10 delay-200' : 'opacity-0 translate-y-12 pointer-events-none z-0'}
+                      `}
                     >
-                      <div className="w-full p-4 md:p-8 bg-gradient-to-t from-[#f1f0e8] via-[#f1f0e8]/95 to-transparent text-center">
-                        <p className="text-[#4A4A4A] text-[10px] sm:text-base md:text-2xl font-medium leading-tight max-w-md mx-auto">
+                      {/* Full-width gradient container with padding applied internally for a smooth, tall fade */}
+                      <div className="w-full pt-32 pb-8 md:pb-16 px-6 md:px-12 bg-gradient-to-t from-white via-white/90 to-transparent text-center">
+                        
+                        {/* Added 'capitalize', adjusted text color, and added leading-relaxed */}
+                        <p className="text-[#2A2A2A] text-[13px] sm:text-base md:text-[22px] font-medium leading-relaxed max-w-lg mx-auto capitalize">
                           {feature.description}
                         </p>
+                        
                       </div>
                     </div>
                   ))}
@@ -224,7 +238,7 @@ export default function LandingPage(): React.JSX.Element {
               ].map((step, idx) => (
                 <div key={idx} className="reveal-up group">
                   <div className="aspect-[4/3] bg-gray-100 overflow-hidden rounded-[10px] md:rounded-[30px] mb-3 md:mb-8 relative cursor-pointer shadow-lg">
-                    <Image src={step.img} alt={step.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105 unzoomable" />
+                    <Image src={step.img} alt={step.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105 unzoomable border-10 border-[#7E8C54] rounded-[30px]" />
                     <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
                   </div>
                   <div className="flex gap-2 sm:gap-4 md:gap-8 items-start border-b border-gray-100 pb-3 md:pb-8">
