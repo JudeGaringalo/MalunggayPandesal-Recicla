@@ -417,26 +417,28 @@ export default function ARScannerApp() {
     // ==========================================
     if (activeMode === 'selection') {
         return (
-            <main className="min-h-screen bg-black text-white relative flex flex-col font-sans">
-                <div className="absolute inset-0 bg-gradient-to-b from-black via-[#011a0d] to-black opacity-90 z-0"></div>
+            <main className="min-h-screen bg-white text-484848 relative flex flex-col font-sans">
                 <nav className="relative z-10 w-full p-6 flex justify-between items-center">
-                    <Link href="/" className="text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
-                    <span className="text-emerald-500 font-serif italic text-lg">Recicla.</span>
+                    <Link href="/" className="text-black hover:text-gray-400 transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
                 </nav>
-                <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto">
-                    <h2 className="text-3xl md:text-5xl font-serif mb-12 text-center">Select Input Method</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                        <button onClick={startCamera} disabled={!model} className="p-12 bg-white/5 border border-white/10 hover:bg-white/10 rounded-2xl transition-all">
+                <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto pb-32">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full ">
+                        <button onClick={startCamera} disabled={!model} className="w-full aspect-[1.2/1] flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all">
+                            <img src="/images/camera_icon.png" alt="Camera Icon" className="w-18 h-18 mb-6 mx-auto"/>
                             <h3 className="text-xl font-bold mb-2">Live Camera</h3>
-                            <p className="text-sm text-gray-500">Real-time AR HUD scanning.</p>
+                            <p className="text-sm">Real-time AR HUD scanning.</p>
                         </button>
-                        <label className="p-12 bg-white/5 border border-white/10 hover:bg-white/10 rounded-2xl transition-all cursor-pointer text-center">
+                        <label className="w-full aspect-[1.2/1] flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all cursor-pointer text-center">
+                            <img src="/images/photos_icon.png" alt="Photos Icon" className="w-18 h-18 mb-6 mx-auto"/>
                             <h3 className="text-xl font-bold mb-2">Upload Photo</h3>
-                            <p className="text-sm text-gray-500">Analyze from camera roll.</p>
+                            <p className="text-sm">Analyze from camera roll.</p>
                             <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={!model} />
-                        </label>
+                        </label> 
                     </div>
                 </div>
+                <footer className="absolute bottom-0 left-0 w-full z-0 leading-[0] overflow-hidden">
+                    <img alt="Tropical Leaves" className="w-full h-[40vh] md:h-[53vh] object-cover object-top pointer-events-none drop-shadow-2xl" src="/images/footer.png" />
+                </footer>
             </main>
         );
     }
