@@ -226,10 +226,9 @@ export default function ARScannerApp() {
     // --- 3. The Multi-Target Detection Loop ---
     useEffect(() => {
         let lastFrameTime = 0;
-        // Run AI at 5 FPS to allow the browser to process multiple items without freezing
         const fpsInterval = 1000 / 5; 
 
-                const classifyFrame = async (timestamp: number) => {
+        const classifyFrame = async (timestamp: number) => {
             if (activeMode === 'camera' && videoRef.current && model && objectDetector && !isPaused) {
                 const video = videoRef.current;
 
@@ -242,10 +241,7 @@ export default function ARScannerApp() {
                     isDetecting.current = true; 
 
                     try {
-                        // IMPROVEMENT 2: Only grab boxes COCO-SSD is at least 60% confident about
                         const detections = await objectDetector.detect(video, 20, 0.6); 
-                        
-                        // Filter out 'person' and grab up to the 3 most prominent items
                         const validTargets = detections.filter(d => d.class !== 'person').slice(0, 3);
                         const activeTrackers = [];
 
@@ -257,8 +253,6 @@ export default function ARScannerApp() {
                         if (cropCtx) {
                             for (const target of validTargets) {
                                 const [rawX, rawY, rawWidth, rawHeight] = target.bbox;
-
-                                // IMPROVEMENT 1: Calculate a perfect square around the object
                                 const baseSize = Math.max(rawWidth, rawHeight);
                                 const size = baseSize * 1.8;
                                 const centerX = rawX + rawWidth / 2;
@@ -267,7 +261,6 @@ export default function ARScannerApp() {
                                 let squareX = centerX - size / 2;
                                 let squareY = centerY - size / 2;
 
-                                // IMPROVEMENT 3: Clamp coordinates so they never go off-screen
                                 squareX = Math.max(0, squareX);
                                 squareY = Math.max(0, squareY);
                                 const safeSize = Math.min(
@@ -278,7 +271,6 @@ export default function ARScannerApp() {
 
                                 if (safeSize <= 0) continue;
 
-                                // Crop the PERFECT SQUARE to send to Teachable Machine
                                 cropCtx.drawImage(
                                     video,
                                     squareX, squareY, safeSize, safeSize, 
@@ -292,10 +284,9 @@ export default function ARScannerApp() {
                                 const mappedData = mapReciclaCategory(bestMatch.className);
                                 const threshold = mappedData.minConfidence;
 
-                                // If TM is confident, track it!
                                 if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
                                     activeTrackers.push({
-                                        bbox: target.bbox, // Pass the original tight rectangle to the HUD
+                                        bbox: target.bbox, 
                                         match: bestMatch,
                                         mapped: mappedData
                                     });
@@ -303,36 +294,34 @@ export default function ARScannerApp() {
                             }
                         }
                         
-                                    if (validTargets.length === 0) {
-                        const fallbackSize = Math.min(video.videoWidth, video.videoHeight) * 0.6;
-                        const fallbackX = (video.videoWidth - fallbackSize) / 2;
-                        const fallbackY = (video.videoHeight - fallbackSize) / 2;
+                        if (validTargets.length === 0) {
+                            const fallbackSize = Math.min(video.videoWidth, video.videoHeight) * 0.6;
+                            const fallbackX = (video.videoWidth - fallbackSize) / 2;
+                            const fallbackY = (video.videoHeight - fallbackSize) / 2;
 
-                        // ADDED: The safety check for TypeScript
-                        if (cropCtx) {
-                            cropCtx.drawImage(
-                                video,
-                                fallbackX, fallbackY, fallbackSize, fallbackSize,
-                                0, 0, 224, 224
-                            );
+                            if (cropCtx) {
+                                cropCtx.drawImage(
+                                    video,
+                                    fallbackX, fallbackY, fallbackSize, fallbackSize,
+                                    0, 0, 224, 224
+                                );
 
-                            const predictions = await model.predict(cropCanvas);
-                            predictions.sort((a, b) => b.probability - a.probability);
-                            const bestMatch = predictions[0];
+                                const predictions = await model.predict(cropCanvas);
+                                predictions.sort((a, b) => b.probability - a.probability);
+                                const bestMatch = predictions[0];
 
-                            const mappedData = mapReciclaCategory(bestMatch.className);
-                            const threshold = mappedData.minConfidence;
+                                const mappedData = mapReciclaCategory(bestMatch.className);
+                                const threshold = mappedData.minConfidence;
 
-                            if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
-                                // Create a "fake" bounding box in the center of the screen
-                                activeTrackers.push({
-                                    bbox: [fallbackX, fallbackY, fallbackSize, fallbackSize], 
-                                    match: bestMatch,
-                                    mapped: mappedData
-                                });
+                                if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
+                                    activeTrackers.push({
+                                        bbox: [fallbackX, fallbackY, fallbackSize, fallbackSize], 
+                                        match: bestMatch,
+                                        mapped: mappedData
+                                    });
+                                }
                             }
                         }
-                    }
 
                         trackedObjectsRef.current = activeTrackers;
 
@@ -344,7 +333,6 @@ export default function ARScannerApp() {
                 }
             }
             
-            // BUG FIX: Always request the next frame so the loop doesn't die when paused
             if (activeMode === 'camera') {
                 requestRef.current = requestAnimationFrame(classifyFrame);
             }
@@ -356,7 +344,7 @@ export default function ARScannerApp() {
         return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
     }, [model, objectDetector, activeMode, isPaused]);
 
-    // --- 4. The UI Render Loop (Runs silky smooth at 60fps) ---
+    // --- 4. The UI Render Loop ---
     useEffect(() => {
         const drawFrame = () => {
             if (activeMode === 'camera' && videoRef.current && canvasRef.current && !isPaused) {
@@ -365,16 +353,13 @@ export default function ARScannerApp() {
                 const ctx = canvas.getContext('2d');
 
                 if (ctx && video.videoWidth > 0) {
-                    // Force internal canvas resolution to match raw video 1:1 for perfect tracking
                     if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
                         canvas.width = video.videoWidth;
                         canvas.height = video.videoHeight;
                     }
 
-                    // Clear previous frame
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                    // Draw the UI for every tracked object on screen
                     trackedObjectsRef.current.forEach(item => {
                         drawMultiTargetHUD(ctx, canvas, item.bbox, item.match, item.mapped);
                     });
@@ -399,39 +384,29 @@ export default function ARScannerApp() {
         
         ctx.save();
 
-        // 1. Draw a translucent highlight over the actual item body
         ctx.fillStyle = mapped.hazard ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
         ctx.fillRect(x, y, width, height);
 
-        // 2. Draw sleek corner brackets framing the item
         ctx.strokeStyle = primaryColor;
         ctx.lineWidth = 4;
-        const cornerLength = Math.min(width, height) * 0.2; // Brackets scale to object size
+        const cornerLength = Math.min(width, height) * 0.2; 
 
-        // Top Left
         ctx.beginPath(); ctx.moveTo(x, y + cornerLength); ctx.lineTo(x, y); ctx.lineTo(x + cornerLength, y); ctx.stroke();
-        // Top Right
         ctx.beginPath(); ctx.moveTo(x + width - cornerLength, y); ctx.lineTo(x + width, y); ctx.lineTo(x + width, y + cornerLength); ctx.stroke();
-        // Bottom Left
         ctx.beginPath(); ctx.moveTo(x, y + height - cornerLength); ctx.lineTo(x, y + height); ctx.lineTo(x + cornerLength, y + height); ctx.stroke();
-        // Bottom Right
         ctx.beginPath(); ctx.moveTo(x + width - cornerLength, y + height); ctx.lineTo(x + width, y + height); ctx.lineTo(x + width, y + height - cornerLength); ctx.stroke();
 
-        // 3. Draw the Info Card right next to the object
         const boxW = 240;
         const boxH = 75;
         
-        // Calculate placement: Try to put it to the right of the object. 
-        // If it goes offscreen, put it below or inside.
         let boxX = x + width + 15;
         let boxY = y + (height / 2) - (boxH / 2);
 
         if (boxX + boxW > canvas.width) {
-            boxX = x + (width / 2) - (boxW / 2); // Center horizontally
-            boxY = y + height + 15; // Put below
+            boxX = x + (width / 2) - (boxW / 2); 
+            boxY = y + height + 15; 
         }
         
-        // Keep inside screen bounds
         boxX = Math.max(10, Math.min(canvas.width - boxW - 10, boxX));
         boxY = Math.max(10, Math.min(canvas.height - boxH - 10, boxY));
 
@@ -441,7 +416,6 @@ export default function ARScannerApp() {
         ctx.fillStyle = primaryColor;
         ctx.fillRect(boxX, boxY, 4, boxH);
 
-        // Labels
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px sans-serif';
@@ -463,19 +437,41 @@ export default function ARScannerApp() {
     // ==========================================
     if (activeMode === 'selection') {
         return (
-            <main className="min-h-screen bg-white text-484848 relative flex flex-col font-sans">
+            <main className="min-h-screen bg-white text-[#484848] relative flex flex-col font-sans overflow-hidden">
+                
+                {/* --- NEW LOADING OVERLAY --- */}
+                <div 
+                    className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md transition-all duration-1000 ease-in-out ${
+                        isModelLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    }`}
+                >
+                    <p className="text-sm md:text-base text-gray-600 font-medium tracking-wide mb-6">
+                        We are getting it ready for you...
+                    </p>
+                    <div className="w-16 h-16 border-4 border-[#7E8C54] border-t-transparent rounded-full animate-spin mb-6"></div>
+                </div>
+                {/* --- END LOADING OVERLAY --- */}
+
                 <nav className="relative z-10 w-full p-6 flex justify-between items-center">
                     <Link href="/" className="text-black hover:text-gray-400 transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
                 </nav>
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto pb-32">
                     
                     <div className="grid grid-cols-2 gap-4 md:gap-6 w-full">
-                        <button onClick={startCamera} disabled={isModelLoading} className="w-full h-full py-6 md:py-12 px-3 md:px-6 text-center flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all disabled:opacity-50">
+                        {/* Removed disabled state styling so it looks active under the overlay */}
+                        <button 
+                            onClick={startCamera} 
+                            disabled={isModelLoading} 
+                            className="w-full h-full py-6 md:py-12 px-3 md:px-6 text-center flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] rounded-2xl transition-all"
+                        >
                             <img src="/images/camera_icon.png" alt="Camera Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
                             <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Live Camera</h3>
                             <p className="text-xs md:text-sm">Real-time AR HUD scanning.</p>
                         </button>
-                        <label className={`w-full h-full py-6 md:py-12 px-3 md:px-6 flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all text-center ${isModelLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                        
+                        <label 
+                            className="w-full h-full py-6 md:py-12 px-3 md:px-6 flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] rounded-2xl transition-all text-center cursor-pointer"
+                        >
                             <img src="/images/photos_icon.png" alt="Photos Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
                             <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Upload Photo</h3>
                             <p className="text-xs md:text-sm">Analyze from camera roll.</p>
@@ -531,29 +527,28 @@ export default function ARScannerApp() {
                                 className="absolute w-full h-full object-cover pointer-events-none z-10"
                             />
                         </div>
-                        {/* --- NOT WORKING HELP DROPDOWN (Fixed for Desktop) --- */}
-<div className="absolute top-4 right-4 md:top-24 md:right-6 z-[110] flex flex-col items-end pointer-events-auto">
-    <button
-        onClick={(e) => {
-            e.stopPropagation(); // Prevents click from bubbling to camera
-            setShowHelp(!showHelp);
-        }}
-        className="text-white bg-black/50 hover:bg-black/80 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 rounded-full border border-white/20 transition-all hover:border-emerald-500 active:scale-95 text-[10px] md:text-[11px] font-bold uppercase tracking-wider shadow-2xl"
-    >
-        Not accurate?
-    </button>
+                        <div className="absolute top-4 right-4 md:top-24 md:right-6 z-[110] flex flex-col items-end pointer-events-auto">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); 
+                                    setShowHelp(!showHelp);
+                                }}
+                                className="text-white bg-black/50 hover:bg-black/80 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 rounded-full border border-white/20 transition-all hover:border-emerald-500 active:scale-95 text-[10px] md:text-[11px] font-bold uppercase tracking-wider shadow-2xl"
+                            >
+                                Not accurate?
+                            </button>
 
-    {showHelp && (
-        <div className="mt-2 w-52 md:w-64 bg-black/95 backdrop-blur-2xl p-4 md:p-5 rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
-            <p className="text-[11px] md:text-[12px] leading-relaxed text-gray-100 font-medium">
-                Noticing issues? 
-            </p>
-            <p className="mt-1.5 text-[11px] md:text-[12px] leading-relaxed text-gray-400">
-                Try <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">capturing the image</span> and click the <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">album feature</span> for higher accuracy and details information.
-            </p>
-        </div>
-    )}
-</div>
+                            {showHelp && (
+                                <div className="mt-2 w-52 md:w-64 bg-black/95 backdrop-blur-2xl p-4 md:p-5 rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
+                                    <p className="text-[11px] md:text-[12px] leading-relaxed text-gray-100 font-medium">
+                                        Noticing issues? 
+                                    </p>
+                                    <p className="mt-1.5 text-[11px] md:text-[12px] leading-relaxed text-gray-400">
+                                        Try <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">capturing the image</span> and click the <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">album feature</span> for higher accuracy and details information.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
 
                         {zoomRange && (
                             <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center pointer-events-auto w-12">
