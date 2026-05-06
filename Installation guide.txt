@@ -4,3 +4,4 @@ npm install @tensorflow-models/coco-ssd --legacy-peer-deps
 npm install framer-motion
 npm install gsap
 npm install @studio-freight/react-lenis
+npm install @tensorflow-models/coco-ssd
