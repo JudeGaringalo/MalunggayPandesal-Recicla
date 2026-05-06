@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import VineScrollbar from './components/VineScrollbar';
+import BackToTop from './components/BackToTop'; 
 
 const techLogos = [
   { name: "Next.js", src: "/images/next.png" },
@@ -51,7 +52,7 @@ const FEATURES = [
     description: "No app store downloads required. Users can transition from curiosity to a live scan in under three clicks.",
     image: "/images/feature-4.png"
   }
-];
+]; 
 
 export default function LandingPage(): React.JSX.Element {
   const [activeArea, setActiveArea] = useState(0); // Animation State[cite: 1]
@@ -68,6 +69,7 @@ export default function LandingPage(): React.JSX.Element {
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
       <VineScrollbar />
+      <BackToTop />
 
       <div className="bg-white">
         <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
