@@ -13,7 +13,6 @@ export default function ARScannerApp() {
 
     // --- Camera Features States ---
     const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
-    const [isPaused, setIsPaused] = useState(false);
 
     // --- Zoom States ---
     const [zoomValue, setZoomValue] = useState<number>(1);
@@ -37,7 +36,7 @@ export default function ARScannerApp() {
     const streamRef = useRef<MediaStream | null>(null);
     const requestRef = useRef<number | null>(null);
     const renderRef = useRef<number | null>(null);
-    
+
     const isDetecting = useRef<boolean>(false);
 
     // AI States
@@ -46,11 +45,11 @@ export default function ARScannerApp() {
     const [isModelLoading, setIsModelLoading] = useState(true);
     const lastHardwareUpdateTime = useRef<number>(0);
 
-    // NEW: Store multiple tracked objects instead of just one
+    // Store multiple tracked objects instead of just one
     const trackedObjectsRef = useRef<Array<{ bbox: number[], match: any, mapped: any }>>([]);
 
     const mapReciclaCategory = (className: string) => {
-       const categories: Record<string, { category: string; value: string; hazard: boolean; minConfidence: number }> = {
+        const categories: Record<string, { category: string; value: string; hazard: boolean; minConfidence: number }> = {
             // --- High Value & Electronics ---
             "Electronics": { category: 'E-Waste', value: '₱50 - ₱500/unit', hazard: true, minConfidence: 0.70 },
             "Battery": { category: 'Hazardous E-Waste', value: '₱100 - ₱300/kg (Lead)', hazard: true, minConfidence: 0.80 },
@@ -116,7 +115,7 @@ export default function ARScannerApp() {
                 setModel(loadedTM);
                 setObjectDetector(loadedCoco);
                 setIsModelLoading(false);
-            } catch(e) {
+            } catch (e) {
                 console.error("Failed to load models", e);
             }
         };
@@ -126,7 +125,6 @@ export default function ARScannerApp() {
     // --- 2. Live Camera Logic ---
     const startCamera = async () => {
         setActiveMode('camera');
-        setIsPaused(false);
         try {
             if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
             const isDesktop = window.innerWidth > window.innerHeight;
@@ -195,41 +193,64 @@ export default function ARScannerApp() {
     const applyHardwareZoom = async () => {
         if (zoomType === 'hardware' && streamRef.current) {
             const track = streamRef.current.getVideoTracks()[0];
-            try { await track.applyConstraints({ advanced: [{ zoom: zoomValueRef.current }] } as any); } catch (err) {}
+            try { await track.applyConstraints({ advanced: [{ zoom: zoomValueRef.current }] } as any); } catch (err) { }
         }
     };
 
-    const toggleCaptureFreeze = () => {
+    // NEW: Replaced toggleCaptureFreeze with handleCapture (removes pause logic)
+    const handleCapture = () => {
         if (videoRef.current && canvasRef.current) {
-            if (isPaused) {
-                videoRef.current.play();
-                setIsPaused(false);
-            } else {
-                videoRef.current.pause();
-                setIsPaused(true);
-                setFlashActive(true);
-                setTimeout(() => setFlashActive(false), 150);
+            // Flash effect
+            setFlashActive(true);
+            setTimeout(() => setFlashActive(false), 150);
 
-                const imgData = canvasRef.current.toDataURL('image/jpeg', 0.9);
-                setFlyAnim({ src: imgData, active: false });
-                setTimeout(() => setFlyAnim(prev => prev ? { ...prev, active: true } : null), 50);
-                setTimeout(() => {
-                    setCapturedImages(prev => [...prev, imgData]);
-                    setFlyAnim(null);
-                    setThumbPulse(true);
-                    setTimeout(() => setThumbPulse(false), 300);
-                }, 600);
+            // Create a composite canvas to capture BOTH the video and the AR HUD overlay
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = videoRef.current.videoWidth;
+            tempCanvas.height = videoRef.current.videoHeight;
+            const ctx = tempCanvas.getContext('2d');
+
+            if (ctx) {
+                // Draw the actual camera feed first
+                ctx.drawImage(videoRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
+                // Draw the AR boxes on top
+                ctx.drawImage(canvasRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
             }
+
+            const imgData = tempCanvas.toDataURL('image/jpeg', 0.5);
+
+            // Save to localStorage so /information can access it
+            // Inside handleCapture() in your ARScannerApp:
+            localStorage.setItem('lastCapturedImage', imgData);
+
+            // ADD THIS LINE: Save the top tracked object's data (if any exist)
+            if (trackedObjectsRef.current.length > 0) {
+                localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
+            } else {
+                localStorage.removeItem('lastAnalyzedItem'); // Clear it if nothing was detected
+            }
+
+            // Trigger flying animation to the album
+            setFlyAnim({ src: imgData, active: false });
+            setTimeout(() => setFlyAnim(prev => prev ? { ...prev, active: true } : null), 50);
+
+            // Clean up animation and update gallery
+            setTimeout(() => {
+                setCapturedImages(prev => [...prev, imgData]);
+                setFlyAnim(null);
+                setThumbPulse(true);
+                setTimeout(() => setThumbPulse(false), 300);
+            }, 600);
         }
     };
 
     // --- 3. The Multi-Target Detection Loop ---
     useEffect(() => {
         let lastFrameTime = 0;
-        const fpsInterval = 1000 / 5; 
+        const fpsInterval = 1000 / 5;
 
         const classifyFrame = async (timestamp: number) => {
-            if (activeMode === 'camera' && videoRef.current && model && objectDetector && !isPaused) {
+            if (activeMode === 'camera' && videoRef.current && model && objectDetector) {
                 const video = videoRef.current;
 
                 if (video.readyState === 4 && !isDetecting.current) {
@@ -238,10 +259,10 @@ export default function ARScannerApp() {
                         return;
                     }
                     lastFrameTime = timestamp;
-                    isDetecting.current = true; 
+                    isDetecting.current = true;
 
                     try {
-                        const detections = await objectDetector.detect(video, 20, 0.6); 
+                        const detections = await objectDetector.detect(video, 20, 0.6);
                         const validTargets = detections.filter(d => d.class !== 'person').slice(0, 3);
                         const activeTrackers = [];
 
@@ -257,15 +278,15 @@ export default function ARScannerApp() {
                                 const size = baseSize * 1.8;
                                 const centerX = rawX + rawWidth / 2;
                                 const centerY = rawY + rawHeight / 2;
-                                
+
                                 let squareX = centerX - size / 2;
                                 let squareY = centerY - size / 2;
 
                                 squareX = Math.max(0, squareX);
                                 squareY = Math.max(0, squareY);
                                 const safeSize = Math.min(
-                                    size, 
-                                    video.videoWidth - squareX, 
+                                    size,
+                                    video.videoWidth - squareX,
                                     video.videoHeight - squareY
                                 );
 
@@ -273,7 +294,7 @@ export default function ARScannerApp() {
 
                                 cropCtx.drawImage(
                                     video,
-                                    squareX, squareY, safeSize, safeSize, 
+                                    squareX, squareY, safeSize, safeSize,
                                     0, 0, 224, 224
                                 );
 
@@ -286,14 +307,14 @@ export default function ARScannerApp() {
 
                                 if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
                                     activeTrackers.push({
-                                        bbox: target.bbox, 
+                                        bbox: target.bbox,
                                         match: bestMatch,
                                         mapped: mappedData
                                     });
                                 }
                             }
                         }
-                        
+
                         if (validTargets.length === 0) {
                             const fallbackSize = Math.min(video.videoWidth, video.videoHeight) * 0.6;
                             const fallbackX = (video.videoWidth - fallbackSize) / 2;
@@ -315,7 +336,7 @@ export default function ARScannerApp() {
 
                                 if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
                                     activeTrackers.push({
-                                        bbox: [fallbackX, fallbackY, fallbackSize, fallbackSize], 
+                                        bbox: [fallbackX, fallbackY, fallbackSize, fallbackSize],
                                         match: bestMatch,
                                         mapped: mappedData
                                     });
@@ -332,7 +353,7 @@ export default function ARScannerApp() {
                     }
                 }
             }
-            
+
             if (activeMode === 'camera') {
                 requestRef.current = requestAnimationFrame(classifyFrame);
             }
@@ -342,12 +363,12 @@ export default function ARScannerApp() {
             requestRef.current = requestAnimationFrame(classifyFrame);
         }
         return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
-    }, [model, objectDetector, activeMode, isPaused]);
+    }, [model, objectDetector, activeMode]);
 
     // --- 4. The UI Render Loop ---
     useEffect(() => {
         const drawFrame = () => {
-            if (activeMode === 'camera' && videoRef.current && canvasRef.current && !isPaused) {
+            if (activeMode === 'camera' && videoRef.current && canvasRef.current) {
                 const video = videoRef.current;
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
@@ -365,7 +386,7 @@ export default function ARScannerApp() {
                     });
                 }
             }
-            if (activeMode === 'camera' && !isPaused) {
+            if (activeMode === 'camera') {
                 renderRef.current = requestAnimationFrame(drawFrame);
             }
         };
@@ -374,14 +395,14 @@ export default function ARScannerApp() {
             renderRef.current = requestAnimationFrame(drawFrame);
         }
         return () => { if (renderRef.current) cancelAnimationFrame(renderRef.current); };
-    }, [activeMode, isPaused]);
+    }, [activeMode]);
 
 
     // --- The Multi-Target HUD Renderer ---
     const drawMultiTargetHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, bbox: number[], match: any, mapped: any) => {
         const [x, y, width, height] = bbox;
         const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
-        
+
         ctx.save();
 
         ctx.fillStyle = mapped.hazard ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
@@ -389,7 +410,7 @@ export default function ARScannerApp() {
 
         ctx.strokeStyle = primaryColor;
         ctx.lineWidth = 4;
-        const cornerLength = Math.min(width, height) * 0.2; 
+        const cornerLength = Math.min(width, height) * 0.2;
 
         ctx.beginPath(); ctx.moveTo(x, y + cornerLength); ctx.lineTo(x, y); ctx.lineTo(x + cornerLength, y); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(x + width - cornerLength, y); ctx.lineTo(x + width, y); ctx.lineTo(x + width, y + cornerLength); ctx.stroke();
@@ -398,15 +419,15 @@ export default function ARScannerApp() {
 
         const boxW = 240;
         const boxH = 75;
-        
+
         let boxX = x + width + 15;
         let boxY = y + (height / 2) - (boxH / 2);
 
         if (boxX + boxW > canvas.width) {
-            boxX = x + (width / 2) - (boxW / 2); 
-            boxY = y + height + 15; 
+            boxX = x + (width / 2) - (boxW / 2);
+            boxY = y + height + 15;
         }
-        
+
         boxX = Math.max(10, Math.min(canvas.width - boxW - 10, boxX));
         boxY = Math.max(10, Math.min(canvas.height - boxH - 10, boxY));
 
@@ -438,12 +459,11 @@ export default function ARScannerApp() {
     if (activeMode === 'selection') {
         return (
             <main className="min-h-screen bg-white text-[#484848] relative flex flex-col font-sans overflow-hidden">
-                
+
                 {/* --- NEW LOADING OVERLAY --- */}
-                <div 
-                    className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md transition-all duration-1000 ease-in-out ${
-                        isModelLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                    }`}
+                <div
+                    className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md transition-all duration-1000 ease-in-out ${isModelLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                        }`}
                 >
                     <p className="text-sm md:text-base text-gray-600 font-medium tracking-wide mb-6">
                         We are getting it ready for you...
@@ -456,20 +476,19 @@ export default function ARScannerApp() {
                     <Link href="/" className="text-black hover:text-gray-400 transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
                 </nav>
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto pb-32">
-                    
+
                     <div className="grid grid-cols-2 gap-4 md:gap-6 w-full">
-                        {/* Removed disabled state styling so it looks active under the overlay */}
-                        <button 
-                            onClick={startCamera} 
-                            disabled={isModelLoading} 
+                        <button
+                            onClick={startCamera}
+                            disabled={isModelLoading}
                             className="w-full h-full py-6 md:py-12 px-3 md:px-6 text-center flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] rounded-2xl transition-all"
                         >
                             <img src="/images/camera_icon.png" alt="Camera Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
                             <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Live Camera</h3>
                             <p className="text-xs md:text-sm">Real-time AR HUD scanning.</p>
                         </button>
-                        
-                        <label 
+
+                        <label
                             className="w-full h-full py-6 md:py-12 px-3 md:px-6 flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] rounded-2xl transition-all text-center cursor-pointer"
                         >
                             <img src="/images/photos_icon.png" alt="Photos Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
@@ -501,7 +520,7 @@ export default function ARScannerApp() {
                 </button>
                 {activeMode === 'camera' && (
                     <div className={`rounded-full text-xs font-bold flex items-center bg-black/40 md:backdrop-blur-md px-4 py-2 border border-transparent md:border-white/20`}>
-                        <span className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-emerald-500 animate-pulse'}`}></span>
+                        <span className={`w-2 h-2 rounded-full bg-emerald-500 animate-pulse`}></span>
                     </div>
                 )}
             </div>
@@ -530,7 +549,7 @@ export default function ARScannerApp() {
                         <div className="absolute top-4 right-4 md:top-24 md:right-6 z-[110] flex flex-col items-end pointer-events-auto">
                             <button
                                 onClick={(e) => {
-                                    e.stopPropagation(); 
+                                    e.stopPropagation();
                                     setShowHelp(!showHelp);
                                 }}
                                 className="text-white bg-black/50 hover:bg-black/80 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 rounded-full border border-white/20 transition-all hover:border-emerald-500 active:scale-95 text-[10px] md:text-[11px] font-bold uppercase tracking-wider shadow-2xl"
@@ -541,7 +560,7 @@ export default function ARScannerApp() {
                             {showHelp && (
                                 <div className="mt-2 w-52 md:w-64 bg-black/95 backdrop-blur-2xl p-4 md:p-5 rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
                                     <p className="text-[11px] md:text-[12px] leading-relaxed text-gray-100 font-medium">
-                                        Noticing issues? 
+                                        Noticing issues?
                                     </p>
                                     <p className="mt-1.5 text-[11px] md:text-[12px] leading-relaxed text-gray-400">
                                         Try <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">capturing the image</span> and click the <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">album feature</span> for higher accuracy and details information.
@@ -594,8 +613,8 @@ export default function ARScannerApp() {
                                 src={flyAnim.src}
                                 alt="Captured frame"
                                 className={`fixed z-50 object-cover border-2 border-white/50 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${flyAnim.active
-                                        ? 'w-12 h-12 bottom-12 md:bottom-20 left-10 opacity-0 rounded-lg scale-50'
-                                        : 'w-[80vw] h-[60vh] top-[20vh] left-[10vw] opacity-100 rounded-3xl scale-100'
+                                    ? 'w-12 h-12 bottom-12 md:bottom-20 left-10 opacity-0 rounded-lg scale-50'
+                                    : 'w-[80vw] h-[60vh] top-[20vh] left-[10vw] opacity-100 rounded-3xl scale-100'
                                     }`}
                             />
                         )}
@@ -606,20 +625,28 @@ export default function ARScannerApp() {
             <div className="h-40 w-full flex flex-col items-center justify-end pb-8 z-20 bg-black text-white md:absolute md:bottom-0 md:bg-transparent md:h-auto md:pb-12 md:bg-gradient-to-t md:from-black/60 md:to-transparent md:pt-20">
 
                 <div className="flex space-x-6 text-xs font-medium text-gray-400 mb-6 drop-shadow-md">
-                    <span className="text-emerald-500">Recicla Multi-Scan Active</span>
+                    <span className="text-emerald-500">Capture</span>
                 </div>
 
                 <div className="w-full flex justify-between items-center px-10 max-w-2xl mx-auto">
-                    <div className={`w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md overflow-hidden relative border border-white/20 transition-transform duration-200 ${thumbPulse ? 'scale-125' : 'scale-100'}`}>
-                        {capturedImages.length > 0 && <img src={capturedImages[capturedImages.length - 1]} alt="Gallery latest" className="w-full h-full object-cover" />}
-                    </div>
+                    {/* NEW: Clickable Album feature pointing to /information */}
+                    {capturedImages.length > 0 ? (
+                        <Link
+                            href="/information"
+                            className={`block w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md overflow-hidden relative border border-white/20 transition-all duration-200 cursor-pointer hover:border-emerald-500 hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] ${thumbPulse ? 'scale-125' : 'scale-100'}`}
+                        >
+                            <img src={capturedImages[capturedImages.length - 1]} alt="Gallery latest" className="w-full h-full object-cover" />
+                        </Link>
+                    ) : (
+                        <div className="w-12 h-12 rounded-lg bg-white/10 md:bg-white/20 md:backdrop-blur-md border border-white/20 transition-transform duration-200" />
+                    )}
 
                     {activeMode === 'camera' ? (
                         <button
-                            onClick={toggleCaptureFreeze}
-                            className={`w-20 h-20 rounded-full border-4 transition-all duration-300 flex items-center justify-center shadow-lg ${isPaused ? 'border-yellow-500 bg-yellow-500/20 scale-95' : 'border-white bg-white/20 hover:bg-white/40 active:scale-95'}`}
+                            onClick={handleCapture}
+                            className={`w-20 h-20 rounded-full border-4 border-white bg-white/20 hover:bg-white/40 active:scale-95 transition-all duration-300 flex items-center justify-center shadow-lg`}
                         >
-                            <div className={`w-14 h-14 rounded-full transition-all duration-300 ${isPaused ? 'bg-yellow-500' : 'bg-white'}`}></div>
+                            <div className={`w-14 h-14 rounded-full bg-white transition-all duration-300`}></div>
                         </button>
                     ) : (
                         <div className="w-20 h-20"></div>
