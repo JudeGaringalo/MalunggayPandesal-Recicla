@@ -111,7 +111,6 @@ export default function ARScannerApp() {
         const loadModels = async () => {
             try {
                 await tf.ready();
-                // Replace the hardcoded URL with this:
                 const URL = process.env.NEXT_PUBLIC_TM_URL as string;
                 const loadedTM = await tmImage.load(URL + "model.json", URL + "metadata.json");
                 const loadedCoco = await cocoSsd.load();
