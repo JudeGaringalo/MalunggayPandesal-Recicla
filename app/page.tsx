@@ -200,12 +200,12 @@ export default function LandingPage(): React.JSX.Element {
                     >
                       {/* Full-width gradient container with padding applied internally for a smooth, tall fade */}
                       <div className="w-full pt-32 pb-8 md:pb-16 px-6 md:px-12 bg-gradient-to-t from-white via-white/90 to-transparent text-center">
-                        
+
                         {/* Added 'capitalize', adjusted text color, and added leading-relaxed */}
                         <p className="text-[#2A2A2A] text-[13px] sm:text-base md:text-[22px] font-medium leading-relaxed max-w-lg mx-auto capitalize">
                           {feature.description}
                         </p>
-                        
+
                       </div>
                     </div>
                   ))}
