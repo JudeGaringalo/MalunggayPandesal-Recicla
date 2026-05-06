@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // <-- Added for programmatic routing
+import { useRouter } from 'next/navigation'; 
 import { ReactLenis } from '@studio-freight/react-lenis';
 import VineScrollbar from './components/VineScrollbar';
 import BackToTop from './components/BackToTop'; 
@@ -56,9 +56,9 @@ const FEATURES = [
 ]; 
 
 export default function LandingPage(): React.JSX.Element {
-  const router = useRouter(); // <-- Hook for navigation
+  const router = useRouter(); 
   const [activeArea, setActiveArea] = useState(0); 
-  const [isSucked, setIsSucked] = useState(false); // <-- Animation State for the button effect
+  const [isSucked, setIsSucked] = useState(false); 
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -68,12 +68,9 @@ export default function LandingPage(): React.JSX.Element {
     return () => clearInterval(timer);
   }, [activeArea]);
 
-  // <-- Handler to intercept the click and run the animation
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault(); // Stop instant navigation
-    setIsSucked(true);  // Trigger the CSS animation
-    
-    // Wait for the animation to finish (800ms) before pushing the new route
+    e.preventDefault(); 
+    setIsSucked(true);  
     setTimeout(() => {
       router.push('/scan');
     }, 800);
@@ -115,10 +112,7 @@ export default function LandingPage(): React.JSX.Element {
             }
           `}</style>
 
-          {/* --- HERO SECTION --- */}
           <section className="relative w-full min-h-screen overflow-hidden">
-            
-            {/* <-- Added wrapper div to handle the suck-in transition without breaking the infinite spin keyframes --> */}
             <div 
               className={`absolute top-0 left-0 w-full h-full pointer-events-none z-0 transition-all duration-700 ease-in origin-center
                 ${isSucked ? 'scale-0 opacity-0 translate-y-32 blur-md' : 'scale-100 opacity-100 translate-y-0 blur-0'}
@@ -151,7 +145,7 @@ export default function LandingPage(): React.JSX.Element {
               </h1>
               <Link
                 href="/scan"
-                onClick={handleGetStarted} // <-- Attached the intercept handler
+                onClick={handleGetStarted} 
                 className={`mt-2 bg-[#7C8D58] text-white font-semibold rounded-[30px] px-8 py-3 md:px-10 md:py-[15px] shadow-[inset_0px_-3px_0px_rgba(0,0,0,0.2),_0px_4px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:bg-[#6a794b] active:shadow-[inset_0px_2px_5px_rgba(0,0,0,0.3)]
                   ${isSucked ? 'scale-95 bg-[#6a794b] pointer-events-none' : 'hover:-translate-y-0.5 active:translate-y-[1px]'}
                 `}
@@ -178,8 +172,6 @@ export default function LandingPage(): React.JSX.Element {
             </svg>
           </div>
           </section>
-
-          {/* Rest of the landing page code stays exactly the same... */}
           
           <section className="relative z-10 w-full">
             <div className="relative w-full flex items-center justify-center overflow-hidden">
@@ -194,8 +186,7 @@ export default function LandingPage(): React.JSX.Element {
               </p>
             </div>
           </section>
-
-          {/* ... keeping your exact layout for FEATURES ... */}
+          
           <section className="relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-32 max-w-6xl">
             <div className="flex flex-col-reverse lg:flex-row overflow-hidden rounded-[20px] md:rounded-[40px] shadow-2xl border border-gray-100 bg-white">
               <div className="w-full lg:w-1/2 flex flex-col" role="tablist">
