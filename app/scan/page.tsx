@@ -50,12 +50,57 @@ export default function ARScannerApp() {
     const trackedObjectsRef = useRef<Array<{ bbox: number[], match: any, mapped: any }>>([]);
 
     const mapReciclaCategory = (className: string) => {
-        const categories: Record<string, { category: string; value: string; hazard: boolean, minConfidence: number }> = {
+       const categories: Record<string, { category: string; value: string; hazard: boolean; minConfidence: number }> = {
+            // --- High Value & Electronics ---
             "Electronics": { category: 'E-Waste', value: '₱50 - ₱500/unit', hazard: true, minConfidence: 0.70 },
-            "Bottle": { category: 'Plastic/Glass', value: '₱12/kg', hazard: false, minConfidence: 0.65 },
-            "Sachet": { category: 'Residual Waste', value: 'No value', hazard: false, minConfidence: 0.70 },
-            "Copperwire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false, minConfidence: 0.75 },
             "Battery": { category: 'Hazardous E-Waste', value: '₱100 - ₱300/kg (Lead)', hazard: true, minConfidence: 0.80 },
+            "Wire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false, minConfidence: 0.75 },
+            "Can": { category: 'Metal (Tin/Alu)', value: '₱40 - ₱60/kg', hazard: false, minConfidence: 0.75 },
+            "Copperwire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false, minConfidence: 0.75 },
+
+            // --- Plastics & Bottles ---
+            "Bottle": { category: 'Plastic/Glass', value: '₱12/kg', hazard: false, minConfidence: 0.65 },
+            "Plastic Cup": { category: 'Recyclable Plastic', value: '₱6 - ₱10/kg', hazard: false, minConfidence: 0.70 },
+            "Plastic": { category: 'Mixed Plastic', value: '₱8 - ₱12/kg', hazard: false, minConfidence: 0.70 },
+            "Tupperware": { category: 'High-Grade Plastic', value: '₱15 - ₱20/kg', hazard: false, minConfidence: 0.75 },
+            "Bucket": { category: 'Hard Plastic', value: '₱10 - ₱15/kg', hazard: false, minConfidence: 0.75 },
+            "Plastic Spoon": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false, minConfidence: 0.70 },
+            "Plastic Fork": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false, minConfidence: 0.70 },
+
+            // --- Paper & Fiber ---
+            "Cardboard": { category: 'Paper', value: '₱4 - ₱6/kg', hazard: false, minConfidence: 0.80 },
+            "Newspaper": { category: 'Paper', value: '₱5 - ₱8/kg', hazard: false, minConfidence: 0.80 },
+            "Paper Plate": { category: 'Paper / Compostable', value: 'No value (if soiled)', hazard: false, minConfidence: 0.75 },
+            "Paper Cup": { category: 'Mixed Waste', value: 'No value (wax-lined)', hazard: false, minConfidence: 0.75 },
+
+            // --- Residual & Special Waste ---
+            "Sachet": { category: 'Residual Waste', value: 'No value', hazard: false, minConfidence: 0.70 },
+            "Styrofoam": { category: 'Residual Waste', value: 'No local scrap value', hazard: false, minConfidence: 0.80 },
+            "Tire": { category: 'Special Waste', value: '₱10 - ₱50/unit', hazard: false, minConfidence: 0.85 },
+            "Cigarette": { category: 'Residual Waste', value: 'No value', hazard: false, minConfidence: 0.80 },
+            "Bulb": { category: 'Hazardous Waste', value: 'No value', hazard: true, minConfidence: 0.85 },
+
+            // --- Household & Textiles ---
+            "Cloth": { category: 'Textile', value: '₱0 - ₱5/kg (rags)', hazard: false, minConfidence: 0.75 },
+            "Shoe": { category: 'Textile/Rubber', value: 'No local scrap value', hazard: false, minConfidence: 0.75 },
+            "Bag": { category: 'Textile/Plastic', value: 'No value', hazard: false, minConfidence: 0.75 },
+            "Hanger": { category: 'Mixed Plastic/Metal', value: '₱5 - ₱10/kg', hazard: false, minConfidence: 0.80 },
+            "Flipflops": { category: 'Rubber', value: 'No value', hazard: false, minConfidence: 0.80 },
+
+            // --- Bulky & Kitchen ---
+            "Chair": { category: 'Bulky Waste', value: '₱20 - ₱100/unit', hazard: false, minConfidence: 0.85 },
+            "Cabinet": { category: 'Bulky Waste', value: '₱50 - ₱200/unit', hazard: false, minConfidence: 0.85 },
+            "Sofa": { category: 'Bulky Waste', value: '₱50 - ₱150/unit', hazard: false, minConfidence: 0.85 },
+            "Pan": { category: 'Scrap Metal', value: '₱30 - ₱50/kg', hazard: false, minConfidence: 0.80 },
+            "Knife": { category: 'Sharp Metal', value: 'No scrap value', hazard: true, minConfidence: 0.85 },
+            "Plate": { category: 'Ceramic/Glass', value: 'No scrap value', hazard: false, minConfidence: 0.80 },
+            "Glass": { category: 'Ceramic/Glass', value: 'No scrap value', hazard: false, minConfidence: 0.70 },
+
+            // --- Others ---
+            "Clock": { category: 'Small Electronics', value: '₱10 - ₱30/unit', hazard: false, minConfidence: 0.80 },
+            "Watch": { category: 'Small Electronics', value: '₱10 - ₱50/unit', hazard: false, minConfidence: 0.80 },
+            "Accessories": { category: 'Mixed Material', value: 'No value', hazard: false, minConfidence: 0.75 },
+            "Food": { category: 'Organic', value: 'Compostable', hazard: false, minConfidence: 0.85 },
             "Background": { category: 'none', value: 'no value', hazard: false, minConfidence: 0.0 },
         };
         return categories[className] || { category: 'Unknown', value: 'Analyzing...', hazard: false, minConfidence: 0.70 };
@@ -184,7 +229,7 @@ export default function ARScannerApp() {
         // Run AI at 5 FPS to allow the browser to process multiple items without freezing
         const fpsInterval = 1000 / 5; 
 
-        const classifyFrame = async (timestamp: number) => {
+                const classifyFrame = async (timestamp: number) => {
             if (activeMode === 'camera' && videoRef.current && model && objectDetector && !isPaused) {
                 const video = videoRef.current;
 
@@ -197,35 +242,49 @@ export default function ARScannerApp() {
                     isDetecting.current = true; 
 
                     try {
-                        // 1. Find ALL objects in the entire video frame
-                        const detections = await objectDetector.detect(video);
+                        // IMPROVEMENT 2: Only grab boxes COCO-SSD is at least 60% confident about
+                        const detections = await objectDetector.detect(video, 20, 0.6); 
                         
                         // Filter out 'person' and grab up to the 3 most prominent items
                         const validTargets = detections.filter(d => d.class !== 'person').slice(0, 3);
                         const activeTrackers = [];
 
-                        // We create an invisible canvas for Teachable Machine to look at
                         const cropCanvas = document.createElement('canvas');
                         cropCanvas.width = 224;
                         cropCanvas.height = 224;
                         const cropCtx = cropCanvas.getContext('2d');
 
                         if (cropCtx) {
-                            // Loop through every object found on screen
                             for (const target of validTargets) {
-                                const [vidX, vidY, vidWidth, vidHeight] = target.bbox;
-                                
-                                // Prevent crashing on 0px objects
-                                if (vidWidth <= 0 || vidHeight <= 0) continue;
+                                const [rawX, rawY, rawWidth, rawHeight] = target.bbox;
 
-                                // 2. Crop just this specific object from the video
+                                // IMPROVEMENT 1: Calculate a perfect square around the object
+                                const baseSize = Math.max(rawWidth, rawHeight);
+                                const size = baseSize * 1.8;
+                                const centerX = rawX + rawWidth / 2;
+                                const centerY = rawY + rawHeight / 2;
+                                
+                                let squareX = centerX - size / 2;
+                                let squareY = centerY - size / 2;
+
+                                // IMPROVEMENT 3: Clamp coordinates so they never go off-screen
+                                squareX = Math.max(0, squareX);
+                                squareY = Math.max(0, squareY);
+                                const safeSize = Math.min(
+                                    size, 
+                                    video.videoWidth - squareX, 
+                                    video.videoHeight - squareY
+                                );
+
+                                if (safeSize <= 0) continue;
+
+                                // Crop the PERFECT SQUARE to send to Teachable Machine
                                 cropCtx.drawImage(
                                     video,
-                                    vidX, vidY, vidWidth, vidHeight, 
+                                    squareX, squareY, safeSize, safeSize, 
                                     0, 0, 224, 224
                                 );
 
-                                // 3. Ask Teachable Machine what this specific object is
                                 const predictions = await model.predict(cropCanvas);
                                 predictions.sort((a, b) => b.probability - a.probability);
                                 const bestMatch = predictions[0];
@@ -233,10 +292,10 @@ export default function ARScannerApp() {
                                 const mappedData = mapReciclaCategory(bestMatch.className);
                                 const threshold = mappedData.minConfidence;
 
-                                // If TM is confident it's trash, add it to our tracking list
+                                // If TM is confident, track it!
                                 if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
                                     activeTrackers.push({
-                                        bbox: target.bbox,
+                                        bbox: target.bbox, // Pass the original tight rectangle to the HUD
                                         match: bestMatch,
                                         mapped: mappedData
                                     });
@@ -244,7 +303,37 @@ export default function ARScannerApp() {
                             }
                         }
                         
-                        // Update our live tracker state
+                                    if (validTargets.length === 0) {
+                        const fallbackSize = Math.min(video.videoWidth, video.videoHeight) * 0.6;
+                        const fallbackX = (video.videoWidth - fallbackSize) / 2;
+                        const fallbackY = (video.videoHeight - fallbackSize) / 2;
+
+                        // ADDED: The safety check for TypeScript
+                        if (cropCtx) {
+                            cropCtx.drawImage(
+                                video,
+                                fallbackX, fallbackY, fallbackSize, fallbackSize,
+                                0, 0, 224, 224
+                            );
+
+                            const predictions = await model.predict(cropCanvas);
+                            predictions.sort((a, b) => b.probability - a.probability);
+                            const bestMatch = predictions[0];
+
+                            const mappedData = mapReciclaCategory(bestMatch.className);
+                            const threshold = mappedData.minConfidence;
+
+                            if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
+                                // Create a "fake" bounding box in the center of the screen
+                                activeTrackers.push({
+                                    bbox: [fallbackX, fallbackY, fallbackSize, fallbackSize], 
+                                    match: bestMatch,
+                                    mapped: mappedData
+                                });
+                            }
+                        }
+                    }
+
                         trackedObjectsRef.current = activeTrackers;
 
                     } catch (error) {
@@ -254,7 +343,9 @@ export default function ARScannerApp() {
                     }
                 }
             }
-            if (activeMode === 'camera' && !isPaused) {
+            
+            // BUG FIX: Always request the next frame so the loop doesn't die when paused
+            if (activeMode === 'camera') {
                 requestRef.current = requestAnimationFrame(classifyFrame);
             }
         };
