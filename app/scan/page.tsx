@@ -66,7 +66,7 @@ export default function ARScannerApp() {
         const loadModels = async () => {
             try {
                 await tf.ready();
-                const URL = "techable.machine.api";
+                const URL = process.env.NEXT_PUBLIC_TEACHABLE_MACHINE_URL;
                 const loadedTM = await tmImage.load(URL + "model.json", URL + "metadata.json");
                 const loadedCoco = await cocoSsd.load();
                 setModel(loadedTM);
