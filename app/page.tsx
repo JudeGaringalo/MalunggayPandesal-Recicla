@@ -78,11 +78,13 @@ export default function LandingPage(): React.JSX.Element {
 
           {/* --- HERO CONTENT --- */}
           <div className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center text-center gap-6 px-6">
-            <span className="font-inter uppercase tracking-[2px] text-[#7C8D58] text-base md:text-xl font-bold">
-              RECICLA
-            </span>
+            <img 
+  src="/images/recicla.png" 
+  alt="RECICLA" 
+  className="h-8 md:h-12 w-auto inline-block align-middle"
+/>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#4A4A4A] leading-[1.2] mb-4">
+            <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#4A4A4A] leading-[1.2] mb-4">
               Recycle from anywhere,<br />Value from anything
             </h1>
 
