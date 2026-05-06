@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 import Image from 'next/image';
 import { ReactLenis } from '@studio-freight/react-lenis';
+import VineScrollbar from './components/VineScrollbar'; // Adjust path if needed
 
 export default function LandingPage(): React.JSX.Element {
 
@@ -21,9 +22,13 @@ export default function LandingPage(): React.JSX.Element {
 
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
-      <div className="bg-white">
+      
+      {/* Our Custom Animated Vine Scrollbar */}
+      <VineScrollbar />
 
-        <main className="relative bg-white text-[#4A4A4A] font-sans">
+      <div className="bg-white">
+        {/* Added 'no-scrollbar' class here */}
+        <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
 
           <style>{`
             @keyframes spin {
