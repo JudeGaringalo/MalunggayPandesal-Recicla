@@ -22,12 +22,9 @@ export default function LandingPage(): React.JSX.Element {
 
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
-      
-      {/* Our Custom Animated Vine Scrollbar */}
       <VineScrollbar />
 
       <div className="bg-white">
-        {/* Added 'no-scrollbar' class here */}
         <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
 
           <style>{`
