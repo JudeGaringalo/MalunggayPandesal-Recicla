@@ -9,6 +9,7 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 export default function ARScannerApp() {
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [showHelp, setShowHelp] = useState(false);
 
     // --- Camera Features States ---
     const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
@@ -530,6 +531,29 @@ export default function ARScannerApp() {
                                 className="absolute w-full h-full object-cover pointer-events-none z-10"
                             />
                         </div>
+                        {/* --- NOT WORKING HELP DROPDOWN (Fixed for Desktop) --- */}
+<div className="absolute top-4 right-4 md:top-24 md:right-6 z-[110] flex flex-col items-end pointer-events-auto">
+    <button
+        onClick={(e) => {
+            e.stopPropagation(); // Prevents click from bubbling to camera
+            setShowHelp(!showHelp);
+        }}
+        className="text-white bg-black/50 hover:bg-black/80 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 rounded-full border border-white/20 transition-all hover:border-emerald-500 active:scale-95 text-[10px] md:text-[11px] font-bold uppercase tracking-wider shadow-2xl"
+    >
+        Not accurate?
+    </button>
+
+    {showHelp && (
+        <div className="mt-2 w-52 md:w-64 bg-black/95 backdrop-blur-2xl p-4 md:p-5 rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
+            <p className="text-[11px] md:text-[12px] leading-relaxed text-gray-100 font-medium">
+                Noticing issues? 
+            </p>
+            <p className="mt-1.5 text-[11px] md:text-[12px] leading-relaxed text-gray-400">
+                Try <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">capturing the image</span> and click the <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">album feature</span> for higher accuracy.
+            </p>
+        </div>
+    )}
+</div>
 
                         {zoomRange && (
                             <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40 flex flex-col items-center pointer-events-auto w-12">
