@@ -160,10 +160,10 @@ export default function LandingPage(): React.JSX.Element {
           {/* Forced side-by-side row layout matching web view */}
           <div className="sticky-box w-5/12 self-start sticky top-10 md:top-40 h-auto">
             <div className="w-full">
-              <div className="text-[12px] sm:text-xs md:text-sm tracking-widest uppercase text-[#7C8D58] font-bold mb-2 md:mb-8 flex items-center gap-1 sm:gap-4">
+              <div className="text-[12px] sm:text-xs md:text-xl tracking-widest uppercase text-[#7C8D58] font-bold mb-2 md:mb-8 flex items-center gap-1 sm:gap-4">
                 How It Works
               </div>
-              <h2 className="text-[18px] sm:text-4xl md:text-7xl font-bold leading-[1.1] text-[#4A4A4A] tracking-tighter mb-2 md:mb-8">
+              <h2 className="text-[18px] sm:text-4xl md:text-5xl font-bold leading-[1.1] text-[#4A4A4A] tracking-tighter mb-2 md:mb-8">
                 Three Simple Steps To <br />
                 <span className="text-[#7C8D58]">A Cleaner Planet.</span>
               </h2>
