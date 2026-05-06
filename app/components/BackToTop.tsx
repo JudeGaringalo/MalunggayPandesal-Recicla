@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 const BackToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
+  
   useEffect(() => {
     const toggleVisibility = () => {
       if (window.scrollY > 300) {
@@ -29,7 +30,7 @@ const BackToTop = () => {
       onClick={scrollToTop}
       aria-label="Back to top"
       className={`
-        fixed bottom-6 right-15 md:bottom-10 md:right-16 z-50 p-4 md:p-5 bg-[#8b9c64] hover:bg-[#81915A] text-white 
+        fixed bottom-6 right-4 md:bottom-10 md:right-16 z-50 p-4 md:p-5 bg-[#8b9c64] hover:bg-[#81915A] text-white 
         rounded-full shadow-lg hover:scale-110 transition-all duration-300 ease-in-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}
       `}
@@ -48,4 +49,3 @@ const BackToTop = () => {
 };
 
 export default BackToTop;
-
