@@ -549,7 +549,7 @@ export default function ARScannerApp() {
                 Noticing issues? 
             </p>
             <p className="mt-1.5 text-[11px] md:text-[12px] leading-relaxed text-gray-400">
-                Try <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">capturing the image</span> and click the <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">album feature</span> for higher accuracy.
+                Try <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">capturing the image</span> and click the <span className="text-emerald-400 font-bold underline underline-offset-4 decoration-emerald-500/30">album feature</span> for higher accuracy and details information.
             </p>
         </div>
     )}
