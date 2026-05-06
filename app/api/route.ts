@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             content: [
               { 
                 type: "text", 
-                text: "Analyze this waste item for the Philippines. Look extremely closely at any visible logos or text on the device (e.g., ASUS, Dell, HP, LG) to identify the exact brand. Distinguish carefully between a 'Computer Monitor' and a 'Television'. If the brand name is too blurry or unreadable, do NOT guess a brand; instead, use a highly specific generic name like 'Computer Monitor'. Return ONLY JSON: {\"match\": {\"className\": \"Specific Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱0\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
+               text: "Analyze the primary, most prominent waste item centered in the foreground of this image for the Philippines. Ignore background objects. Look for logos. Distinguish between 'Smartphone', 'Tablet', 'Computer Monitor', or 'Television'. If no brand is readable, use a generic name like 'Smartphone'. For the 'value' field, calculate a realistic estimated scrap or defective resale value in Philippine Pesos (e.g., '₱500 - ₱1500/unit' for phones/electronics, or '₱15/kg' for plastics). Return ONLY JSON: {\"match\": {\"className\": \"Specific Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱ Price Range\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
               },
               { 
                 type: "image_url", 
