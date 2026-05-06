@@ -442,10 +442,7 @@ export default function ARScannerApp() {
             </main>
         ); 
     } 
-
-    // ==========================================
-    // RENDER: NATIVE CAMERA UI
-    // ==========================================
+    
     return (
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden overscroll-none">
             
@@ -606,4 +603,4 @@ export default function ARScannerApp() {
 
         </main>
     );
-}
+} 
