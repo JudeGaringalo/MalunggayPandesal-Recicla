@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // <-- Added for programmatic routing
 import { ReactLenis } from '@studio-freight/react-lenis';
 import VineScrollbar from './components/VineScrollbar';
 import BackToTop from './components/BackToTop'; 
@@ -55,9 +56,10 @@ const FEATURES = [
 ]; 
 
 export default function LandingPage(): React.JSX.Element {
-  const [activeArea, setActiveArea] = useState(0); // Animation State[cite: 1]
+  const router = useRouter(); // <-- Hook for navigation
+  const [activeArea, setActiveArea] = useState(0); 
+  const [isSucked, setIsSucked] = useState(false); // <-- Animation State for the button effect
 
-  // --- ADD THE EFFECT HERE ---
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveArea((prevArea) => (prevArea + 1) % FEATURES.length);
@@ -65,6 +67,17 @@ export default function LandingPage(): React.JSX.Element {
 
     return () => clearInterval(timer);
   }, [activeArea]);
+
+  // <-- Handler to intercept the click and run the animation
+  const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault(); // Stop instant navigation
+    setIsSucked(true);  // Trigger the CSS animation
+    
+    // Wait for the animation to finish (800ms) before pushing the new route
+    setTimeout(() => {
+      router.push('/scan');
+    }, 800);
+  };
 
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
@@ -104,7 +117,13 @@ export default function LandingPage(): React.JSX.Element {
 
           {/* --- HERO SECTION --- */}
           <section className="relative w-full min-h-screen overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+            
+            {/* <-- Added wrapper div to handle the suck-in transition without breaking the infinite spin keyframes --> */}
+            <div 
+              className={`absolute top-0 left-0 w-full h-full pointer-events-none z-0 transition-all duration-700 ease-in origin-center
+                ${isSucked ? 'scale-0 opacity-0 translate-y-32 blur-md' : 'scale-100 opacity-100 translate-y-0 blur-0'}
+              `}
+            >
               <img
                 src="/images/Group 8.png"
                 alt="Outer floating items"
@@ -122,6 +141,7 @@ export default function LandingPage(): React.JSX.Element {
                   filter: 'blur(100px)'
                 }}
               ></div>
+              
             </div>
 
             <div className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center text-center gap-6 px-6">
@@ -131,13 +151,36 @@ export default function LandingPage(): React.JSX.Element {
               </h1>
               <Link
                 href="/scan"
-                className="mt-2 bg-[#7C8D58] text-white font-semibold rounded-[30px] px-8 py-3 md:px-10 md:py-[15px] shadow-[inset_0px_-3px_0px_rgba(0,0,0,0.2),_0px_4px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 transition-colors hover:bg-[#6a794b] hover:-translate-y-0.5 active:translate-y-[1px] active:shadow-[inset_0px_2px_5px_rgba(0,0,0,0.3)]"
+                onClick={handleGetStarted} // <-- Attached the intercept handler
+                className={`mt-2 bg-[#7C8D58] text-white font-semibold rounded-[30px] px-8 py-3 md:px-10 md:py-[15px] shadow-[inset_0px_-3px_0px_rgba(0,0,0,0.2),_0px_4px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:bg-[#6a794b] active:shadow-[inset_0px_2px_5px_rgba(0,0,0,0.3)]
+                  ${isSucked ? 'scale-95 bg-[#6a794b] pointer-events-none' : 'hover:-translate-y-0.5 active:translate-y-[1px]'}
+                `}
               >
                 Get Started
               </Link>
             </div>
+            <div 
+            className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-opacity duration-500 z-20 pointer-events-none
+              ${isSucked ? 'opacity-0' : 'opacity-100'}
+            `}
+          >
+            <span className="text-[12px] md:text-xs uppercase tracking-[0.25em] text-[#4A4A4A]/90 font-bold">
+              Scroll
+            </span>
+            <svg 
+              className="w-4 h-4 text-[#7C8D58] animate-bounce" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
           </section>
 
+          {/* Rest of the landing page code stays exactly the same... */}
+          
           <section className="relative z-10 w-full">
             <div className="relative w-full flex items-center justify-center overflow-hidden">
               <img src="/images/Rectangle 50.png" alt="Header" className="w-full md:w-[110%] scale-110 md:scale-100 max-w-none h-auto drop-shadow-xl unzoomable object-cover" />
@@ -152,10 +195,9 @@ export default function LandingPage(): React.JSX.Element {
             </div>
           </section>
 
+          {/* ... keeping your exact layout for FEATURES ... */}
           <section className="relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-32 max-w-6xl">
-            {/* Changed flex-col to flex-col-reverse to fix mobile order */}
             <div className="flex flex-col-reverse lg:flex-row overflow-hidden rounded-[20px] md:rounded-[40px] shadow-2xl border border-gray-100 bg-white">
-
               <div className="w-full lg:w-1/2 flex flex-col" role="tablist">
                 {FEATURES.map((feature, index) => {
                   const isActive = activeArea === index;
@@ -165,7 +207,6 @@ export default function LandingPage(): React.JSX.Element {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setActiveArea(index)}
-                      // The background color is now controlled purely by the isActive ternary operator below
                       className={`flex-1 flex flex-col items-center justify-center text-center gap-1 md:gap-4 py-6 px-4 border-b border-r border-white last:border-b-0 transition-all duration-500 outline-none group 
                         ${isActive ? 'bg-[#81915A] z-10 scale-[1.02] shadow-xl' : 'bg-[#404828] hover:brightness-110'}
                       `}
@@ -195,19 +236,14 @@ export default function LandingPage(): React.JSX.Element {
                   {FEATURES.map((feature, index) => (
                     <div
                       key={`text-${feature.id}`}
-                      // Removed the p-6 md:p-12 from this parent wrapper
                       className={`absolute inset-0 flex items-end justify-center transition-all duration-[800ms] ease-out
                         ${activeArea === index ? 'opacity-100 translate-y-0 pointer-events-auto z-10 delay-200' : 'opacity-0 translate-y-12 pointer-events-none z-0'}
                       `}
                     >
-                      {/* Full-width gradient container with padding applied internally for a smooth, tall fade */}
                       <div className="w-full pt-32 pb-8 md:pb-16 px-6 md:px-12 bg-gradient-to-t from-white via-white/90 to-transparent text-center">
-
-                        {/* Added 'capitalize', adjusted text color, and added leading-relaxed */}
                         <p className="text-[#2A2A2A] text-[13px] sm:text-base md:text-[22px] font-medium leading-relaxed max-w-lg mx-auto capitalize">
                           {feature.description}
                         </p>
-
                       </div>
                     </div>
                   ))}
@@ -261,7 +297,7 @@ export default function LandingPage(): React.JSX.Element {
               <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
-                  { name: "Jude", role: "Full-Stack Developer", img: "/images/Team/Jude.jpg" },
+                  { name: "Jude", role: "Full-Stack Software Developer", img: "/images/Team/Jude.jpg" },
                   { name: "Volt", role: "UI / UX Designer", img: "/images/Team/Ruy.jpg" },
                   { name: "Sai", role: "Project Manager", img: "/images/Team/Sai.jpg" }
                 ].map((member, idx) => (

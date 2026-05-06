@@ -14,8 +14,6 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
 
   const isBio = mapped.biodegradable;
   const recommendedAction = mapped.action;
-
-  // Dynamic styles based on hazard status as defined in project requirements
   const themeColor = isHazard ? 'bg-red-500' : 'bg-[#8b9c64]';
   const badgeColor = isHazard ? 'bg-red-100 text-red-900' : 'bg-[#a8b884] text-gray-900';
   const textColor = isHazard ? 'text-red-600' : 'text-[#6b7a4a]';
