@@ -177,7 +177,7 @@ export default function LandingPage(): React.JSX.Element {
                 })}
               </div>
 
-              <div className="w-full lg:w-1/2 relative bg-[#E8E6D9] min-h-[300px] sm:min-h-[400px] md:min-h-[550px] overflow-hidden">
+              <div className="w-full lg:w-1/2 relative bg-[#E8E6D9] min-h-[450px] sm:min-h-[500px] md:min-h-[600px] overflow-hidden">
                 {FEATURES.map((feature, index) => (
                   <div
                     key={`img-${feature.id}`}
@@ -237,8 +237,8 @@ export default function LandingPage(): React.JSX.Element {
                 { num: "03", title: "Review Results", desc: "Review the item's detailed profile and get directions to the nearest verified junk shop or specialized e-waste bin.", img: "/images/step3.png" }
               ].map((step, idx) => (
                 <div key={idx} className="reveal-up group">
-                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden rounded-[10px] md:rounded-[30px] mb-3 md:mb-8 relative cursor-pointer shadow-lg">
-                    <Image src={step.img} alt={step.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105 unzoomable border-10 border-[#7E8C54] rounded-[30px]" />
+                  <div className="aspect-[4/3] bg-gray-100 rounded-[10px] md:rounded-[30px] mb-3 md:mb-8 relative overflow-hidden cursor-pointer shadow-lg">
+                    <Image src={step.img} alt={step.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105 unzoomable border-10 border-[#7E8C54] " />
                     <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
                   </div>
                   <div className="flex gap-2 sm:gap-4 md:gap-8 items-start border-b border-gray-100 pb-3 md:pb-8">
