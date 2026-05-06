@@ -119,7 +119,7 @@ export default function LandingPage(): React.JSX.Element {
 
             <div className="container mx-auto px-6 mt-8 md:mt-16 max-w-4xl text-center">
               <p className="text-[#4A4A4A] text-[12px] sm:text-sm md:text-xl leading-relaxed font-medium">
-                Recicla is a real-time, AI-driven web application designed to bridge the gap between waste segregation and financial incentive. By leveraging high-speed, client-side object detection, Recicla empowers users to instantly identify the value and risks of their household waste. We focus specifically on the untapped potential of e-waste and precious metal recovery, transforming the act of "throwing things away" into a deliberate step toward environmental sustainability and personal profit.
+                Recicla is a real-time, AI-driven web application that transforms the way you approach household waste and intentional decluttering. By leveraging high-speed, client-side object detection, Recicla empowers you to instantly analyze everyday items—especially aging electronics—to understand their material composition and proper disposal methods. We take the guesswork out of waste segregation, turning the simple act of cleaning out your home into a meaningful contribution to environmental sustainability. 
               </p>
             </div>
           </section>
@@ -133,11 +133,11 @@ export default function LandingPage(): React.JSX.Element {
                   <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Zero-Latency AI</h3>
                 </div>
                 <div className="bg-[#455130] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-b border-r border-white">
-                  <img src="/images/Frame 60.png" alt="Valuation Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
+                  <img src="/images/Frame 61.png" alt="Valuation Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
                   <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Instant Valuation</h3>
                 </div>
                 <div className="bg-[#3D4829] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-b border-r border-white">
-                  <img src="/images/Frame 61.png" alt="Routing Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
+                  <img src="/images/Frame 60.png" alt="Routing Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
                   <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Hazard Routing</h3>
                 </div>
                 <div className="bg-[#353D22] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-r border-white">
@@ -148,13 +148,13 @@ export default function LandingPage(): React.JSX.Element {
 
               <div className="w-1/2 relative bg-[#E8E6D9] min-h-[220px] sm:min-h-[350px] md:min-h-[500px] flex items-end">
                 <img
-                  src="/images/feature-person.png"
+                  src="/images/feature-showcase.png"
                   alt="Feature showcase"
                   className="absolute inset-0 w-full h-full object-cover unzoomable"
                 />
                 <div className="relative z-10 w-full p-3 sm:p-6 md:p-12 pt-16 sm:pt-24 md:pt-32 bg-gradient-to-t from-[#f1f0e8] via-[#f1f0e8]/90 to-transparent text-center">
                   <p className="text-[#4A4A4A] text-[10px] sm:text-base md:text-2xl font-medium leading-tight max-w-md mx-auto">
-                    Our Model Runs Directly In Your Browser For Instant Identification.
+                    No waiting for server uploads. Our lightweight model runs directly in your browser for instant identification.
                   </p>
                 </div>
               </div>
@@ -168,25 +168,25 @@ export default function LandingPage(): React.JSX.Element {
             <div className="sticky-box w-5/12 self-start sticky top-10 md:top-40 h-auto">
               <div className="w-full">
                 <div className="text-[12px] sm:text-xs md:text-xl tracking-widest uppercase text-[#7C8D58] font-bold mb-2 md:mb-8 flex items-center gap-1 sm:gap-4">
-                  How It Works
+                  How Recicla Works
                 </div>
                 <h2 className="text-[18px] sm:text-4xl md:text-5xl font-bold leading-[1.1] text-[#4A4A4A] tracking-tighter mb-2 md:mb-8">
-                  Three Simple Steps To <br />
-                  <span className="text-[#7C8D58]">A Cleaner Planet.</span>
+                  Three Simple Steps to <br />
+                  <span className="text-[#7C8D58]">Responsible Disposal for a Cleaner Planet</span>
                 </h2>
                 <p className="text-[12px] sm:text-base md:text-xl text-gray-800 font-light leading-relaxed max-w-md">
-                  Recicla simplifies the path from waste to wealth.
+                  Recicla simplifies the path from waste to resource. 
                 </p>
               </div>
             </div>
 
             <div className="w-7/12 flex flex-col gap-6 sm:gap-16 md:gap-32 md:pb-[10vh]">
               {[
-                { num: "01", title: "The Scan", desc: "Open the Recicla Web App and point your camera at any item.", img: "/images/step-1.png" },
-                { num: "02", title: "The Value Check", desc: "The app overlays a dynamic 'Value Card' that displays the item's current local scrap price.", img: "/images/step-2.png" },
-                { num: "03", title: "The Drop-Off", desc: "With one tap, Recicla maps out the nearest verified destination.", img: "/images/step-3.png" }
+                { num: "01", title: "Capture the Item", desc: "Open the Recicla web app and choose your preferred input. You can use the Live Camera for an instant real-time scan or Upload from Photos to analyze items you’ve already set aside during your decluttering session.", img: "/images/step1.png" }, 
+                { num: "02", title: "Instant Analysis", desc: "In the blink of an eye, our on-device AI identifies the object. Recicla goes beyond simple identification by automatically classifying the material type and checking for potential environmental hazards, ensuring you have all the facts before you let go.", img: "/images/step2.png" }, 
+                { num: "03", title: "Review Results", desc: "Review the item's detailed profile, including clear handling instructions for safe disposal and its estimated local scrap value. With one tap, get directions to the nearest verified junk shop or specialized e-waste bin, ensuring your \"pre-loved\" items stay within the circular economy.", img: "/images/step3.png" }
               ].map((step, idx) => (
-                <div key={idx} className="reveal-up group">
+                <div key={idx} className="reveal-up group"> 
                   <div className="aspect-[4/3] bg-gray-100 overflow-hidden rounded-[10px] md:rounded-[30px] mb-3 md:mb-8 relative cursor-pointer shadow-lg">
                     <Image src={step.img} alt={step.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105 unzoomable" />
                     <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
