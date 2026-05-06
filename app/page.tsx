@@ -98,18 +98,18 @@ export default function LandingPage(): React.JSX.Element {
         {/* --- ABOUT CONTENT --- */}
         <section className="relative z-10 w-full">
           <div className="relative w-full flex items-center justify-center overflow-hidden">
-            <img
-              src="/images/Rectangle 50.png"
-              alt="About Section Header"
-              className="w-full md:w-[110%] max-w-none h-auto drop-shadow-xl unzoomable object-cover"
-            />
+            <img 
+  src="/images/Rectangle 50.png" 
+  alt="About Section Header" 
+  className="w-full md:w-[110%] scale-110 md:scale-100 max-w-none h-auto drop-shadow-xl unzoomable object-cover" 
+/>
             <h2 className="absolute inset-0 flex items-center justify-center text-white text-xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-2 md:mb-4 px-4 text-center">
               About Recicla
             </h2>
           </div>
 
           <div className="container mx-auto px-6 mt-8 md:mt-16 max-w-4xl text-center">
-            <p className="text-[#4A4A4A] text-[11px] sm:text-sm md:text-xl leading-relaxed font-medium">
+            <p className="text-[#4A4A4A] text-[12px] sm:text-sm md:text-xl leading-relaxed font-medium">
               Recicla is a real-time, AI-driven web application designed to bridge the gap between waste segregation and financial incentive. By leveraging high-speed, client-side object detection, Recicla empowers users to instantly identify the value and risks of their household waste. We focus specifically on the untapped potential of e-waste and precious metal recovery, transforming the act of "throwing things away" into a deliberate step toward environmental sustainability and personal profit.
             </p>
           </div>
@@ -122,19 +122,19 @@ export default function LandingPage(): React.JSX.Element {
             <div className="w-1/2 flex flex-col">
               <div className="bg-[#81915A] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-b border-r border-white">
                 <img src="/images/Frame 59.png" alt="AI Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
-                <h3 className="text-white font-bold text-[8px] sm:text-sm md:text-xl uppercase tracking-wider">Zero-Latency AI</h3>
+                <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Zero-Latency AI</h3>
               </div>
               <div className="bg-[#455130] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-b border-r border-white">
                 <img src="/images/Frame 60.png" alt="Valuation Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
-                <h3 className="text-white font-bold text-[8px] sm:text-sm md:text-xl uppercase tracking-wider">Instant Valuation</h3>
+                <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Instant Valuation</h3>
               </div>
               <div className="bg-[#3D4829] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-b border-r border-white">
                 <img src="/images/Frame 61.png" alt="Routing Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
-                <h3 className="text-white font-bold text-[8px] sm:text-sm md:text-xl uppercase tracking-wider">Hazard Routing</h3>
+                <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Hazard Routing</h3>
               </div>
               <div className="bg-[#353D22] py-3 px-2 sm:py-6 sm:px-6 md:py-8 md:px-10 flex flex-col items-center justify-center text-center gap-1 md:gap-4 border-r border-white">
                 <img src="/images/Frame 62.png" alt="Web Icon" className="w-8 h-8 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain unzoomable" />
-                <h3 className="text-white font-bold text-[8px] sm:text-sm md:text-xl uppercase tracking-wider">Frictionless Access</h3>
+                <h3 className="text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider">Frictionless Access</h3>
               </div>
             </div>
 
@@ -160,14 +160,14 @@ export default function LandingPage(): React.JSX.Element {
           {/* Forced side-by-side row layout matching web view */}
           <div className="sticky-box w-5/12 self-start sticky top-10 md:top-40 h-auto">
             <div className="w-full">
-              <div className="text-[7px] sm:text-xs md:text-sm tracking-widest uppercase text-[#7C8D58] font-bold mb-2 md:mb-8 flex items-center gap-1 sm:gap-4">
+              <div className="text-[12px] sm:text-xs md:text-sm tracking-widest uppercase text-[#7C8D58] font-bold mb-2 md:mb-8 flex items-center gap-1 sm:gap-4">
                 How It Works
               </div>
-              <h2 className="text-xl sm:text-4xl md:text-7xl font-bold leading-[1.1] text-[#4A4A4A] tracking-tighter mb-2 md:mb-8">
+              <h2 className="text-[18px] sm:text-4xl md:text-7xl font-bold leading-[1.1] text-[#4A4A4A] tracking-tighter mb-2 md:mb-8">
                 Three Simple Steps To <br />
                 <span className="text-[#7C8D58]">A Cleaner Planet.</span>
               </h2>
-              <p className="text-[9px] sm:text-base md:text-xl text-gray-600 font-light leading-relaxed max-w-md">
+              <p className="text-[12px] sm:text-base md:text-xl text-gray-800 font-light leading-relaxed max-w-md">
                 Recicla simplifies the path from waste to wealth.
               </p>
             </div>
@@ -187,8 +187,8 @@ export default function LandingPage(): React.JSX.Element {
                 <div className="flex gap-2 sm:gap-4 md:gap-8 items-start border-b border-gray-100 pb-3 md:pb-8">
                   <div className="text-lg sm:text-3xl md:text-4xl font-bold text-[#7C8D58]">{step.num}</div>
                   <div>
-                    <h3 className="text-sm sm:text-2xl md:text-3xl font-bold mb-1 md:mb-4 text-[#4A4A4A]">{step.title}</h3>
-                    <p className="text-gray-500 font-light text-[8px] sm:text-sm md:text-lg leading-snug md:leading-relaxed">{step.desc}</p>
+                    <h3 className="text-[18px] sm:text-2xl md:text-3xl font-bold mb-1 md:mb-4 text-[#4A4A4A]">{step.title}</h3>
+                    <p className="text-gray-500 font-light text-[12px] sm:text-sm md:text-lg leading-snug md:leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function LandingPage(): React.JSX.Element {
                   <img
                     src={logo.src}
                     alt={logo.name}
-                    className="h-6 w-16 sm:h-10 sm:w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable"
+                    className="h-15 w-25 sm:h-10 sm:w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable"
                   />
                 </div>
               ))}
