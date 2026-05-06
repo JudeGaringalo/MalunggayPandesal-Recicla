@@ -131,28 +131,28 @@ export default function ResultsPage() {
   }, []);
 
   const analyzeImageWithVisionAI = async (base64Image: string) => {
-    try {
-      const response = await fetch('/api/analyze-waste', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64Image })
-      });
+  try {
+    // Corrected to hit the root /api route
+    const response = await fetch('/api', { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64Image })
+    });
 
-      const result = await response.json();
-      
-      if (result.success) {
-        setAiData(result.aiData);
-        // Replace local preview with public cloud URL from Supabase
-        setScannedImage(result.imageUrl); 
-      } else {
-        setErrorMessage(result.error || "Unknown server error");
-      }
-    } catch (error: any) {
-      setErrorMessage("Network or Fetch Error: " + error.message);
-    } finally {
-      setIsAnalyzing(false);
+    const result = await response.json();
+    
+    if (result.success) {
+      setAiData(result.aiData);
+      setScannedImage(result.imageUrl); 
+    } else {
+      setErrorMessage(result.error);
     }
-  };
+  } catch (error) {
+    setErrorMessage("Connection failed.");
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
 
   if (!mounted) return null;
 

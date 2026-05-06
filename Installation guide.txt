@@ -5,5 +5,3 @@ npm install framer-motion
 npm install gsap
 npm install @studio-freight/react-lenis
 npm install @tensorflow-models/coco-ssd
-npm install @google/generative-ai @supabase/supabase-js
-npm install @google/generative-ai@latest
