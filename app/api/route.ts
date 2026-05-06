@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             content: [
               { 
                 type: "text", 
-                text: "Analyze this waste item for the Philippines. Return ONLY JSON: {\"match\": {\"className\": \"Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱0\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
+                text: "Analyze this waste item for the Philippines. Look extremely closely at any visible logos or text on the device (e.g., ASUS, Dell, HP, LG) to identify the exact brand. Distinguish carefully between a 'Computer Monitor' and a 'Television'. If the brand name is too blurry or unreadable, do NOT guess a brand; instead, use a highly specific generic name like 'Computer Monitor'. Return ONLY JSON: {\"match\": {\"className\": \"Specific Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱0\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
               },
               { 
                 type: "image_url", 

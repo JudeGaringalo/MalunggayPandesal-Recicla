@@ -234,7 +234,7 @@ export default function ARScannerApp() {
                 ctx.drawImage(canvasRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
             }
 
-            const imgData = tempCanvas.toDataURL('image/jpeg', 0.5);
+            const imgData = tempCanvas.toDataURL('image/jpeg', 0.8);
 
            localStorage.removeItem('lastScanResults'); 
             localStorage.setItem('lastCapturedImage', imgData);
