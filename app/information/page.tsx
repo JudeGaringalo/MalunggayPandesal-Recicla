@@ -201,7 +201,7 @@ export default function ResultsPage() {
                 {isAnalyzing && (
                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-white">
                       <div className="w-12 h-12 border-4 border-[#7E8C54] border-t-transparent rounded-full animate-spin mb-4"></div>
-                      <p className="font-semibold tracking-widest uppercase text-xs animate-pulse text-center px-4">Gemini is Analyzing Object...</p>
+                      <p className="font-semibold tracking-widest uppercase text-xs animate-pulse text-center px-4">Analyzing Object</p>
                    </div>
                 )}
               </div>
