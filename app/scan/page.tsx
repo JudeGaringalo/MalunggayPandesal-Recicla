@@ -440,12 +440,9 @@ export default function ARScannerApp() {
                     <img alt="Tropical Leaves" className="w-full h-[40vh] md:h-[53vh] object-cover object-top pointer-events-none drop-shadow-2xl" src="/images/footer.png" />
                 </footer>
             </main>
-        );
-    }
-
-    // ==========================================
-    // RENDER: NATIVE CAMERA UI
-    // ==========================================
+        ); 
+    } 
+    
     return (
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden overscroll-none">
             
