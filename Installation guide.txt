@@ -1,5 +1,6 @@
 npm install @tensorflow/tfjs @teachablemachine/image
 npm install @tensorflow/tfjs@latest --legacy-peer-deps
-@tensorflow-models/coco-ssd --legacy-peer-deps
+npm install @tensorflow-models/coco-ssd --legacy-peer-deps
 npm install framer-motion
 npm install gsap
+npm install @studio-freight/react-lenis
