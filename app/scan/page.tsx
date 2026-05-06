@@ -61,7 +61,6 @@ export default function ARScannerApp() {
         return categories[className] || { category: 'Unknown', value: 'Analyzing...', hazard: false, minConfidence: 0.70 };
     };
 
-    // --- 1. Boot up the AI Models ---
     useEffect(() => {
         const loadModels = async () => {
             try {
