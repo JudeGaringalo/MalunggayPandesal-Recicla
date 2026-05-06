@@ -14,6 +14,9 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
   const { match, mapped } = itemData;
   const isHazard = mapped.hazard;
 
+  const isBio = mapped.biodegradable;
+  const recommendedAction = mapped.action;
+
   // Dynamic styles based on hazard status as defined in project requirements
   const themeColor = isHazard ? 'bg-red-500' : 'bg-[#8b9c64]';
   const badgeColor = isHazard ? 'bg-red-100 text-red-900' : 'bg-[#a8b884] text-gray-900';
@@ -22,7 +25,7 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
   return (
     <div className="w-full h-full flex-1 bg-white shadow-sm flex flex-col overflow-hidden">
       
-      {/* Scanned Photo Header */}
+     {/* Scanned Photo Header */}
       <div className={`${themeColor} p-6 text-white rounded-tr-2xl transition-colors duration-300`}>
         <p className="text-[10px] tracking-wider uppercase font-semibold mb-1 text-white/80">
           Scanned Item
@@ -35,22 +38,31 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
             <span className={`w-2 h-2 rounded-full mr-2 shadow-sm animate-pulse ${isHazard ? 'bg-red-600' : 'bg-[#00FF00]'}`}></span>
             {isHazard ? 'Hazardous Material' : 'Low / Non-Toxic'}
           </div>
+          
           <div className={`inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-full ${badgeColor}`}>
              <span className="font-bold mr-1.5">{Math.round(match.probability * 100)}%</span> Match
+          </div>
+
+          <div className={`inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-full ${isBio ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+            <span className="mr-1.5">{isBio ? '🌱' : '♻️'}</span>
+            {isBio ? 'Biodegradable' : 'Non-Biodegradable'}
+          </div>
+
+          <div className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-full bg-blue-100 text-blue-900 uppercase tracking-widest">
+            {recommendedAction || 'Dispose'}
           </div>
         </div>
       </div>
 
-      {/* Details Section */}
       <div className="p-6 md:p-8 flex flex-col pb-6 bg-white">
         
-        {/* Dynamic Scrap Value Estimator */}
+        
         <div className="flex justify-between items-center border-b border-gray-200 pb-5 mb-6">
           <span className="text-sm font-semibold text-gray-500">Estimated Scrap Value</span>
           <span className={`text-xl font-bold ${textColor}`}>{mapped.value}</span>
         </div>
 
-        {/* Conditional Hazard Alerts & Handling Instructions */}
+        
         <div className="mb-6">
           <h3 className={`text-sm font-bold mb-2 ${isHazard ? 'text-red-500' : 'text-gray-400'}`}>
             {isHazard ? '⚠️ Safety Warning' : 'Handling Instructions'}
@@ -62,7 +74,7 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
           </p>
         </div>
 
-        {/* Localized Routing */}
+        
         <div className="mb-8">
           <h3 className="text-sm font-bold text-gray-400 mb-3">
             Nearest {isHazard ? 'E-Waste Drop-off' : 'Disposal / Junk Shop'}
@@ -83,7 +95,7 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
           </div>
         </div>
 
-        {/* Call to Action Buttons */}
+        
         <div className="flex flex-col sm:flex-row gap-3">
           <button className={`flex-1 transition-colors text-white font-semibold py-3 px-4 rounded-xl text-sm shadow-sm ${isHazard ? 'bg-red-500 hover:bg-red-600' : 'bg-[#8b9c64] hover:bg-[#788856]'}`}>
             Get Directions
@@ -94,7 +106,7 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
         </div>
       </div>
 
-      {/* Map Implementation */}
+      
       <div className="w-full flex-1 min-h-[200px] bg-gray-200 relative overflow-hidden rounded-br-2xl"> 
         <div className="absolute inset-0 bg-blue-50/50 flex items-center justify-center">
           <img src="/api/placeholder/600/800" alt="Map View" className="w-full h-full object-cover" />
@@ -119,8 +131,16 @@ export default function ResultsPage() {
   useEffect(() => {
     setMounted(true);
     const savedImage = localStorage.getItem('lastCapturedImage');
+    const savedResults = localStorage.getItem('lastScanResults'); // 1. Check for cached results
 
-    if (savedImage && !analysisStarted.current) {
+    if (savedResults) {
+      // 2. If results exist, load them instantly. No API call needed!
+      const parsed = JSON.parse(savedResults);
+      setAiData(parsed.aiData);
+      setScannedImage(parsed.imageUrl);
+      setIsAnalyzing(false);
+    } else if (savedImage && !analysisStarted.current) {
+      // 3. Only run analysis if we have an image AND no cached results
       analysisStarted.current = true;
       setScannedImage(savedImage); 
       analyzeImageWithVisionAI(savedImage);
@@ -131,28 +151,33 @@ export default function ResultsPage() {
   }, []);
 
   const analyzeImageWithVisionAI = async (base64Image: string) => {
-  try {
-    // Corrected to hit the root /api route
-    const response = await fetch('/api', { 
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: base64Image })
-    });
+    try {
+      const response = await fetch('/api', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64Image })
+      });
 
-    const result = await response.json();
-    
-    if (result.success) {
-      setAiData(result.aiData);
-      setScannedImage(result.imageUrl); 
-    } else {
-      setErrorMessage(result.error);
+      const result = await response.json();
+      
+      if (result.success) {
+        setAiData(result.aiData);
+        setScannedImage(result.imageUrl); 
+        
+        // 4. Save the successful result to localStorage
+        localStorage.setItem('lastScanResults', JSON.stringify({
+          aiData: result.aiData,
+          imageUrl: result.imageUrl
+        }));
+      } else {
+        setErrorMessage(result.error);
+      }
+    } catch (error) {
+      setErrorMessage("Connection failed.");
+    } finally {
+      setIsAnalyzing(false);
     }
-  } catch (error) {
-    setErrorMessage("Connection failed.");
-  } finally {
-    setIsAnalyzing(false);
-  }
-};
+  };
 
   if (!mounted) return null;
 

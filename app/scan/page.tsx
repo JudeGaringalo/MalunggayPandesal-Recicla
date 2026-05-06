@@ -221,7 +221,17 @@ export default function ARScannerApp() {
 
             // Save to localStorage so /information can access it
             // Inside handleCapture() in your ARScannerApp:
+           localStorage.removeItem('lastScanResults'); 
+            // Save the newly captured image
             localStorage.setItem('lastCapturedImage', imgData);
+            // ==========================================
+
+            // ADD THIS LINE: Save the top tracked object's data (if any exist)
+            if (trackedObjectsRef.current.length > 0) {
+                localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
+            } else {
+                localStorage.removeItem('lastAnalyzedItem'); // Clear it if nothing was detected
+            }
 
             // ADD THIS LINE: Save the top tracked object's data (if any exist)
             if (trackedObjectsRef.current.length > 0) {

@@ -46,7 +46,9 @@ export async function POST(request: Request) {
             content: [
               { 
                 type: "text", 
-                text: "Analyze this waste item for the Philippines. Return ONLY JSON: {\"match\": {\"className\": \"Name\"}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱0\", \"hazard\": false}}" 
+                // Change your content text in route.ts to this:
+                // Replace the existing text property with this updated prompt:
+                text: "Analyze this waste item for the Philippines. Return ONLY JSON: {\"match\": {\"className\": \"Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱0\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
               },
               { 
                 type: "image_url", 
