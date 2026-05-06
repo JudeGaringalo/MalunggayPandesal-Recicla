@@ -6,8 +6,6 @@ import Image from 'next/image';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import VineScrollbar from '@/app/components/VineScrollbar'; 
 
-// --- THE RESULT CARD COMPONENT ---
-// Fixed the 'any' type error by explicitly defining the parameter type
 const ScanResultCard = ({ itemData }: { itemData: any }) => {
   if (!itemData) return null;
 
