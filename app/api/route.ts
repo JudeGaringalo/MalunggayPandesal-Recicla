@@ -15,12 +15,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'No image provided' }, { status: 400 });
     }
 
-    // Prepare image data for upload
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
     const fileName = `scan_${Date.now()}.jpg`;
-
-    // 1. UPLOAD TO SUPABASE
     const { error: uploadError } = await supabase.storage
       .from('scans')
       .upload(fileName, buffer, { contentType: 'image/jpeg' });
@@ -29,7 +26,6 @@ export async function POST(request: Request) {
     
     const { data: { publicUrl } } = supabase.storage.from('scans').getPublicUrl(fileName);
 
-    // 2. ANALYZE WITH GROQ (Llama 3.2 Vision)
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -37,7 +33,6 @@ export async function POST(request: Request) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        // CHANGE THIS LINE:
         model: "meta-llama/llama-4-scout-17b-16e-instruct", 
         messages: [
           {
@@ -45,8 +40,6 @@ export async function POST(request: Request) {
             content: [
               { 
                 type: "text", 
-                // Change your content text in route.ts to this:
-                // Replace the existing text property with this updated prompt:
                 text: "Analyze this waste item for the Philippines. Return ONLY JSON: {\"match\": {\"className\": \"Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱0\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
               },
               { 
