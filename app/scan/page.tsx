@@ -5,8 +5,10 @@ import Link from 'next/link';
 import * as tf from '@tensorflow/tfjs';
 import * as tmImage from '@teachablemachine/image';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import { useRouter } from 'next/navigation';
 
 export default function ARScannerApp() {
+    const router = useRouter();
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [showHelp, setShowHelp] = useState(false);
@@ -122,6 +124,21 @@ export default function ARScannerApp() {
         loadModels();
     }, []);
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            
+            localStorage.setItem('lastCapturedImage', base64);
+            localStorage.removeItem('lastScanResults'); 
+            router.push('/information');
+        };
+        reader.readAsDataURL(file);
+    };
+
     // --- 2. Live Camera Logic ---
     const startCamera = async () => {
         setActiveMode('camera');
@@ -219,21 +236,15 @@ export default function ARScannerApp() {
 
             const imgData = tempCanvas.toDataURL('image/jpeg', 0.5);
 
-            // Save to localStorage so /information can access it
-            // Inside handleCapture() in your ARScannerApp:
            localStorage.removeItem('lastScanResults'); 
-            // Save the newly captured image
             localStorage.setItem('lastCapturedImage', imgData);
-            // ==========================================
 
-            // ADD THIS LINE: Save the top tracked object's data (if any exist)
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
             } else {
-                localStorage.removeItem('lastAnalyzedItem'); // Clear it if nothing was detected
+                localStorage.removeItem('lastAnalyzedItem'); 
             }
 
-            // ADD THIS LINE: Save the top tracked object's data (if any exist)
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
             } else {
@@ -504,7 +515,13 @@ export default function ARScannerApp() {
                             <img src="/images/photos_icon.png" alt="Photos Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
                             <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Upload Photo</h3>
                             <p className="text-xs md:text-sm">Analyze from camera roll.</p>
-                            <input type="file" accept="image/*" className="hidden" disabled={isModelLoading} />
+                            <input 
+    type="file" 
+    accept="image/*" 
+    className="hidden" 
+    disabled={isModelLoading}
+    onChange={handleFileUpload} // Add this line
+/>
                         </label>
                     </div>
                 </div>
