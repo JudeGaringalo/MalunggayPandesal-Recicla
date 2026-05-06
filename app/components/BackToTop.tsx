@@ -4,11 +4,8 @@ import React, { useState, useEffect } from 'react';
 
 const BackToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
-
-  // Listen for scroll events to hide/show the button
   useEffect(() => {
     const toggleVisibility = () => {
-      // Show button when the user scrolls down 300px
       if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
@@ -17,12 +14,9 @@ const BackToTop = () => {
     };
 
     window.addEventListener('scroll', toggleVisibility);
-    
-    // Cleanup the event listener when the component unmounts
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
-  // Function to scroll smoothly to the top
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,

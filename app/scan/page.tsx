@@ -12,54 +12,37 @@ export default function ARScannerApp() {
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [showHelp, setShowHelp] = useState(false);
-
-    // --- Camera Features States ---
     const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
-
-    // --- Zoom States ---
     const [zoomValue, setZoomValue] = useState<number>(1);
     const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
     const [zoomType, setZoomType] = useState<'hardware' | 'software'>('software');
     const [isZooming, setIsZooming] = useState(false);
-
     const zoomValueRef = useRef<number>(1);
     const sliderRef = useRef<HTMLDivElement>(null);
     const isDraggingRef = useRef<boolean>(false);
-
-    // --- Gallery & Screenshot States ---
     const [capturedImages, setCapturedImages] = useState<string[]>([]);
     const [flashActive, setFlashActive] = useState(false);
     const [flyAnim, setFlyAnim] = useState<{ src: string, active: boolean } | null>(null);
     const [thumbPulse, setThumbPulse] = useState(false);
-
-    // --- Refs ---
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const requestRef = useRef<number | null>(null);
     const renderRef = useRef<number | null>(null);
-
     const isDetecting = useRef<boolean>(false);
-
-    // AI States
     const [model, setModel] = useState<tmImage.CustomMobileNet | null>(null);
     const [objectDetector, setObjectDetector] = useState<cocoSsd.ObjectDetection | null>(null);
     const [isModelLoading, setIsModelLoading] = useState(true);
     const lastHardwareUpdateTime = useRef<number>(0);
-
-    // Store multiple tracked objects instead of just one
     const trackedObjectsRef = useRef<Array<{ bbox: number[], match: any, mapped: any }>>([]);
 
     const mapReciclaCategory = (className: string) => {
         const categories: Record<string, { category: string; value: string; hazard: boolean; minConfidence: number }> = {
-            // --- High Value & Electronics ---
             "Electronics": { category: 'E-Waste', value: '₱50 - ₱500/unit', hazard: true, minConfidence: 0.70 },
             "Battery": { category: 'Hazardous E-Waste', value: '₱100 - ₱300/kg (Lead)', hazard: true, minConfidence: 0.80 },
             "Wire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false, minConfidence: 0.75 },
             "Can": { category: 'Metal (Tin/Alu)', value: '₱40 - ₱60/kg', hazard: false, minConfidence: 0.75 },
             "Copperwire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false, minConfidence: 0.75 },
-
-            // --- Plastics & Bottles ---
             "Bottle": { category: 'Plastic/Glass', value: '₱12/kg', hazard: false, minConfidence: 0.65 },
             "Plastic Cup": { category: 'Recyclable Plastic', value: '₱6 - ₱10/kg', hazard: false, minConfidence: 0.70 },
             "Plastic": { category: 'Mixed Plastic', value: '₱8 - ₱12/kg', hazard: false, minConfidence: 0.70 },
@@ -67,28 +50,20 @@ export default function ARScannerApp() {
             "Bucket": { category: 'Hard Plastic', value: '₱10 - ₱15/kg', hazard: false, minConfidence: 0.75 },
             "Plastic Spoon": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false, minConfidence: 0.70 },
             "Plastic Fork": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false, minConfidence: 0.70 },
-
-            // --- Paper & Fiber ---
             "Cardboard": { category: 'Paper', value: '₱4 - ₱6/kg', hazard: false, minConfidence: 0.80 },
             "Newspaper": { category: 'Paper', value: '₱5 - ₱8/kg', hazard: false, minConfidence: 0.80 },
             "Paper Plate": { category: 'Paper / Compostable', value: 'No value (if soiled)', hazard: false, minConfidence: 0.75 },
             "Paper Cup": { category: 'Mixed Waste', value: 'No value (wax-lined)', hazard: false, minConfidence: 0.75 },
-
-            // --- Residual & Special Waste ---
             "Sachet": { category: 'Residual Waste', value: 'No value', hazard: false, minConfidence: 0.70 },
             "Styrofoam": { category: 'Residual Waste', value: 'No local scrap value', hazard: false, minConfidence: 0.80 },
             "Tire": { category: 'Special Waste', value: '₱10 - ₱50/unit', hazard: false, minConfidence: 0.85 },
             "Cigarette": { category: 'Residual Waste', value: 'No value', hazard: false, minConfidence: 0.80 },
             "Bulb": { category: 'Hazardous Waste', value: 'No value', hazard: true, minConfidence: 0.85 },
-
-            // --- Household & Textiles ---
             "Cloth": { category: 'Textile', value: '₱0 - ₱5/kg (rags)', hazard: false, minConfidence: 0.75 },
             "Shoe": { category: 'Textile/Rubber', value: 'No local scrap value', hazard: false, minConfidence: 0.75 },
             "Bag": { category: 'Textile/Plastic', value: 'No value', hazard: false, minConfidence: 0.75 },
             "Hanger": { category: 'Mixed Plastic/Metal', value: '₱5 - ₱10/kg', hazard: false, minConfidence: 0.80 },
             "Flipflops": { category: 'Rubber', value: 'No value', hazard: false, minConfidence: 0.80 },
-
-            // --- Bulky & Kitchen ---
             "Chair": { category: 'Bulky Waste', value: '₱20 - ₱100/unit', hazard: false, minConfidence: 0.85 },
             "Cabinet": { category: 'Bulky Waste', value: '₱50 - ₱200/unit', hazard: false, minConfidence: 0.85 },
             "Sofa": { category: 'Bulky Waste', value: '₱50 - ₱150/unit', hazard: false, minConfidence: 0.85 },
@@ -96,8 +71,6 @@ export default function ARScannerApp() {
             "Knife": { category: 'Sharp Metal', value: 'No scrap value', hazard: true, minConfidence: 0.85 },
             "Plate": { category: 'Ceramic/Glass', value: 'No scrap value', hazard: false, minConfidence: 0.80 },
             "Glass": { category: 'Ceramic/Glass', value: 'No scrap value', hazard: false, minConfidence: 0.70 },
-
-            // --- Others ---
             "Clock": { category: 'Small Electronics', value: '₱10 - ₱30/unit', hazard: false, minConfidence: 0.80 },
             "Watch": { category: 'Small Electronics', value: '₱10 - ₱50/unit', hazard: false, minConfidence: 0.80 },
             "Accessories": { category: 'Mixed Material', value: 'No value', hazard: false, minConfidence: 0.75 },
@@ -131,15 +104,14 @@ export default function ARScannerApp() {
         const reader = new FileReader();
         reader.onload = (event) => {
             const base64 = event.target?.result as string;
-            
+
             localStorage.setItem('lastCapturedImage', base64);
-            localStorage.removeItem('lastScanResults'); 
+            localStorage.removeItem('lastScanResults');
             router.push('/information');
         };
         reader.readAsDataURL(file);
     };
 
-    // --- 2. Live Camera Logic ---
     const startCamera = async () => {
         setActiveMode('camera');
         try {
@@ -214,48 +186,39 @@ export default function ARScannerApp() {
         }
     };
 
-    // NEW: Replaced toggleCaptureFreeze with handleCapture (removes pause logic)
     const handleCapture = () => {
         if (videoRef.current && canvasRef.current) {
-            // Flash effect
             setFlashActive(true);
             setTimeout(() => setFlashActive(false), 150);
-
-            // Create a composite canvas to capture BOTH the video and the AR HUD overlay
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = videoRef.current.videoWidth;
             tempCanvas.height = videoRef.current.videoHeight;
             const ctx = tempCanvas.getContext('2d');
 
             if (ctx) {
-                // Draw the actual camera feed first
                 ctx.drawImage(videoRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
-                // Draw the AR boxes on top
                 ctx.drawImage(canvasRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
             }
 
             const imgData = tempCanvas.toDataURL('image/jpeg', 0.8);
 
-           localStorage.removeItem('lastScanResults'); 
+            localStorage.removeItem('lastScanResults');
             localStorage.setItem('lastCapturedImage', imgData);
 
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
             } else {
-                localStorage.removeItem('lastAnalyzedItem'); 
+                localStorage.removeItem('lastAnalyzedItem');
             }
 
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
             } else {
-                localStorage.removeItem('lastAnalyzedItem'); // Clear it if nothing was detected
+                localStorage.removeItem('lastAnalyzedItem');
             }
 
-            // Trigger flying animation to the album
             setFlyAnim({ src: imgData, active: false });
             setTimeout(() => setFlyAnim(prev => prev ? { ...prev, active: true } : null), 50);
-
-            // Clean up animation and update gallery
             setTimeout(() => {
                 setCapturedImages(prev => [...prev, imgData]);
                 setFlyAnim(null);
@@ -265,7 +228,6 @@ export default function ARScannerApp() {
         }
     };
 
-    // --- 3. The Multi-Target Detection Loop ---
     useEffect(() => {
         let lastFrameTime = 0;
         const fpsInterval = 1000 / 5;
@@ -386,7 +348,6 @@ export default function ARScannerApp() {
         return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
     }, [model, objectDetector, activeMode]);
 
-    // --- 4. The UI Render Loop ---
     useEffect(() => {
         const drawFrame = () => {
             if (activeMode === 'camera' && videoRef.current && canvasRef.current) {
@@ -515,13 +476,13 @@ export default function ARScannerApp() {
                             <img src="/images/photos_icon.png" alt="Photos Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
                             <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Upload Photo</h3>
                             <p className="text-xs md:text-sm">Analyze from camera roll.</p>
-                            <input 
-    type="file" 
-    accept="image/*" 
-    className="hidden" 
-    disabled={isModelLoading}
-    onChange={handleFileUpload} // Add this line
-/>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={isModelLoading}
+                                onChange={handleFileUpload}
+                            />
                         </label>
                     </div>
                 </div>
@@ -532,9 +493,6 @@ export default function ARScannerApp() {
         );
     }
 
-    // ==========================================
-    // RENDER: SCANNER VIEW
-    // ==========================================
     return (
         <main className="fixed inset-0 w-[100vw] h-[100dvh] bg-black flex flex-col font-sans overflow-hidden overscroll-none">
 

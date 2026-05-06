@@ -20,15 +20,11 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
 
   return (
     <div className="w-full h-full flex-1 bg-white shadow-sm flex flex-col overflow-hidden">
-      
-     {/* Scanned Photo Header */}
       <div className={`${themeColor} p-6 text-white rounded-tr-2xl transition-colors duration-300`}>
         <p className="text-[10px] tracking-wider uppercase font-semibold mb-1 text-white/80">
           Scanned Item
         </p>
         <h2 className="text-3xl font-bold mb-4 capitalize">{match.className}</h2>
-        
-        {/* Badges for Classification and Accuracy */}
         <div className="flex flex-wrap gap-3">
           <div className={`inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-full ${badgeColor}`}>
             <span className={`w-2 h-2 rounded-full mr-2 shadow-sm animate-pulse ${isHazard ? 'bg-red-600' : 'bg-[#00FF00]'}`}></span>
@@ -113,30 +109,25 @@ const ScanResultCard = ({ itemData }: { itemData: any }) => {
   );
 };
 
-// --- THE MAIN RESULTS PAGE ASSEMBLY ---
 export default function ResultsPage() {
   const [mounted, setMounted] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
   const [aiData, setAiData] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  // Ref to prevent double execution during React Strict Mode development
   const analysisStarted = useRef(false);
 
   useEffect(() => {
     setMounted(true);
     const savedImage = localStorage.getItem('lastCapturedImage');
-    const savedResults = localStorage.getItem('lastScanResults'); // 1. Check for cached results
+    const savedResults = localStorage.getItem('lastScanResults'); 
 
     if (savedResults) {
-      // 2. If results exist, load them instantly. No API call needed!
       const parsed = JSON.parse(savedResults);
       setAiData(parsed.aiData);
       setScannedImage(parsed.imageUrl);
       setIsAnalyzing(false);
     } else if (savedImage && !analysisStarted.current) {
-      // 3. Only run analysis if we have an image AND no cached results
       analysisStarted.current = true;
       setScannedImage(savedImage); 
       analyzeImageWithVisionAI(savedImage);
@@ -159,8 +150,7 @@ export default function ResultsPage() {
       if (result.success) {
         setAiData(result.aiData);
         setScannedImage(result.imageUrl); 
-        
-        // 4. Save the successful result to localStorage
+      
         localStorage.setItem('lastScanResults', JSON.stringify({
           aiData: result.aiData,
           imageUrl: result.imageUrl
@@ -184,16 +174,14 @@ export default function ResultsPage() {
         <main className="flex-grow flex flex-col">
           <section className="relative min-h-screen pt-24 pb-8 px-4 md:px-8 flex flex-col justify-center">
             <div className="w-[90%] lg:w-[85%] max-w-none h-auto lg:h-full lg:max-h-[85vh] mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch">
-              
-              {/* --- LEFT SIDE: Captured Photo --- */}
+          
               <div className="w-full lg:w-[45%] flex flex-col items-center justify-center relative border-gray-200 rounded-tl-2xl rounded-bl-2xl shadow-sm overflow-hidden min-h-[40vh] bg-black">
                 {scannedImage ? (
                   <img src={scannedImage} alt="Scanned Item" className="w-full h-full object-contain transition-opacity duration-500" style={{ opacity: isAnalyzing ? 0.5 : 1 }}/>
                 ) : (
                   <p className="text-white/50 text-sm">No image captured.</p>
                 )}
-                
-                {/* Analysis State Overlay */}
+
                 {isAnalyzing && (
                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-white">
                       <div className="w-12 h-12 border-4 border-[#7E8C54] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -202,7 +190,6 @@ export default function ResultsPage() {
                 )}
               </div>
 
-              {/* --- RIGHT SIDE: Details Card --- */}
               <div className="w-full lg:w-[55%] h-auto lg:h-full flex flex-col pt-2 lg:pt-0 rounded-tr-2xl rounded-br-2xl">
                 {isAnalyzing ? (
                    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 border border-gray-100 rounded-r-2xl p-6 text-center">
