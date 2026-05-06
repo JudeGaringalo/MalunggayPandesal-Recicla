@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@studio-freight/react-lenis": "^0.0.47",
     "@teachablemachine/image": "^0.8.5",
     "@tensorflow-models/coco-ssd": "^2.2.3",
     "@tensorflow/tfjs": "^4.22.0",
