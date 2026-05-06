@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import * as tf from '@tensorflow/tfjs';
-import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import * as tmImage from '@teachablemachine/image';
 
 export default function ARScannerApp() {
     // --- App States ---
@@ -23,7 +23,7 @@ export default function ARScannerApp() {
     
     const zoomValueRef = useRef<number>(1);
     const sliderRef = useRef<HTMLDivElement>(null);
-const isDraggingRef = useRef<boolean>(false); 
+    const isDraggingRef = useRef<boolean>(false); 
 
     // --- Gallery & Screenshot States ---
     const [capturedImages, setCapturedImages] = useState<string[]>([]);
@@ -37,26 +37,67 @@ const isDraggingRef = useRef<boolean>(false);
     const streamRef = useRef<MediaStream | null>(null);
     const requestRef = useRef<number | null>(null);
     
-    const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
+    const streakCount = useRef<number>(0);
+    const lastGuess = useRef<string>("");
+
+    const [model, setModel] = useState<tmImage.CustomMobileNet | null>(null);
+    const [topPrediction, setTopPrediction] = useState<{ label: string, confidence: number } | null>(null);
     const lastHardwareUpdateTime = useRef<number>(0);
 
-    const mapWasteCategory = (detectedClass: string) => {
-        const eWasteHigh = ['laptop', 'tv', 'cell phone', 'refrigerator'];
-        const eWasteLow = ['mouse', 'keyboard', 'remote', 'microwave', 'oven'];
-        const plasticsGlass = ['bottle', 'cup', 'bowl', 'vase'];
-        
-        if (eWasteHigh.includes(detectedClass)) return { category: 'High-Value E-Waste', value: '₱150 - ₱500/unit', hazard: true };
-        if (eWasteLow.includes(detectedClass)) return { category: 'Peripherals / Tech', value: '₱20 - ₱50/unit', hazard: false };
-        if (plasticsGlass.includes(detectedClass)) return { category: 'Recyclables (Plastic/Glass)', value: '₱12 - ₱20/kg', hazard: false };
-        
-        return { category: 'General / Non-Scrap', value: 'No local scrap value', hazard: false };
+    const mapReciclaCategory = (className: string) => {
+        const categories: Record<string, { category: string; value: string; hazard: boolean }> = {
+            "Electronics": { category: 'E-Waste', value: '₱50 - ₱500/unit', hazard: true },
+            "Bottle": { category: 'Plastic/Glass', value: '₱12/kg', hazard: false },
+            "Sachet": { category: 'Residual Waste', value: 'No value', hazard: false },
+            "Copperwire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false },
+            "Styrofoam": { category: 'Residual Waste', value: 'No local scrap value', hazard: false },
+            "Paper Plate": { category: 'Paper / Compostable', value: 'No value (if soiled)', hazard: false },
+            "Plastic Cup": { category: 'Recyclable Plastic', value: '₱6 - ₱10/kg', hazard: false },
+            "Plastic Spoon": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false },
+            "Plastic Fork": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false },
+            "Paper Cup": { category: 'Mixed Waste', value: 'No value (wax-lined)', hazard: false },
+            "Newspaper": { category: 'Paper', value: '₱5 - ₱8/kg', hazard: false },
+            "Cardboard": { category: 'Paper', value: '₱4 - ₱6/kg', hazard: false },
+            "Tire": { category: 'Special Waste', value: '₱10 - ₱50/unit', hazard: false },
+            "Tupperware": { category: 'High-Grade Plastic', value: '₱15 - ₱20/kg', hazard: false },
+            "Hanger": { category: 'Mixed Plastic/Metal', value: '₱5 - ₱10/kg', hazard: false },
+            "Cloth": { category: 'Textile', value: '₱0 - ₱5/kg (rags)', hazard: false },
+            "Bucket": { category: 'Hard Plastic', value: '₱10 - ₱15/kg', hazard: false },
+            "Shoe": { category: 'Textile/Rubber', value: 'No local scrap value', hazard: false },
+            "Battery": { category: 'Hazardous E-Waste', value: '₱100 - ₱300/kg (Lead)', hazard: true },
+            "Wires": { category: 'Metal', value: '₱150 - ₱250/kg (Copper)', hazard: false },
+            "Can": { category: 'Metal (Tin/Alu)', value: '₱40 - ₱60/kg', hazard: false },
+            "Cigarette": { category: 'Residual Waste', value: 'No value', hazard: false },
+            "Plastic": { category: 'Mixed Plastic', value: '₱8 - ₱12/kg', hazard: false },
+            "Bag": { category: 'Textile/Plastic', value: 'No value', hazard: false },
+            "Chair": { category: 'Bulky Waste', value: '₱20 - ₱100/unit', hazard: false },
+            "Plate": { category: 'Ceramic/Glass', value: 'No scrap value', hazard: false },
+            "Bulb": { category: 'Hazardous Waste', value: 'No value', hazard: true },
+            "Sofa": { category: 'Bulky Waste', value: '₱50 - ₱150/unit', hazard: false },
+            "Cabinet": { category: 'Bulky Waste', value: '₱50 - ₱200/unit', hazard: false },
+            "LPG Tank": { category: 'Pressurized Metal', value: '₱300 - ₱800/unit', hazard: true },
+            "Pan": { category: 'Scrap Metal', value: '₱30 - ₱50/kg', hazard: false },
+            "Knife": { category: 'Sharp Metal', value: 'No scrap value', hazard: true },
+            "Food": { category: 'Organic', value: 'Compostable', hazard: false },
+            "Flipflops": { category: 'Rubber', value: 'No value', hazard: false },
+            "Clock": { category: 'Small Electronics', value: '₱10 - ₱30/unit', hazard: false },
+            "Watch": { category: 'Small Electronics', value: '₱10 - ₱50/unit', hazard: false },
+            "Accessories": { category: 'Mixed Material', value: 'No value', hazard: false },
+            "Background": {category: 'none', value: 'no value', hazard: false},
+        };
+        return categories[className] || { category: 'Unknown', value: 'Analyzing...', hazard: false };
     };
 
     // --- 1. Boot up the AI ---
     useEffect(() => {
         const loadModel = async () => {
             await tf.ready();
-            const loadedModel = await cocoSsd.load();
+            // Replace this with your actual shareable link from the Export popup
+            const URL = "https://teachablemachine.withgoogle.com/models/PvwXcyo1l/"; 
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            
+            const loadedModel = await tmImage.load(modelURL, metadataURL);
             setModel(loadedModel);
         };
         loadModel();
@@ -220,91 +261,90 @@ const isDraggingRef = useRef<boolean>(false);
     };
 
     // --- 3. The HUD Detection Loop ---
+    // --- 3. The HUD Detection Loop (Updated in page_11.tsx) ---
+    // --- 3. The HUD Detection Loop ---
+    // --- 3. The HUD Detection Loop (Supercharged) ---
     useEffect(() => {
-        const detectFrame = async () => {
+        const classifyFrame = async () => {
             if (activeMode === 'camera' && videoRef.current && canvasRef.current && model) {
                 const video = videoRef.current;
                 const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
 
-                if (canvas.clientWidth !== canvas.width || canvas.clientHeight !== canvas.height) {
-                    canvas.width = canvas.clientWidth;
-                    canvas.height = canvas.clientHeight;
-                }
+                if (video.readyState === 4 && ctx) {
+                    // Sync internal resolution
+                    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                        canvas.width = canvas.clientWidth;
+                        canvas.height = canvas.clientHeight;
+                    }
 
-                if (video.readyState === 4) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        const predictions = await model.detect(video);
+                    // --- UPGRADE 1: THE TARGET CROP ---
+                    // Create an invisible 224x224 canvas in memory
+                    const cropCanvas = document.createElement('canvas');
+                    cropCanvas.width = 224; 
+                    cropCanvas.height = 224;
+                    const cropCtx = cropCanvas.getContext('2d');
+                    
+                    if (cropCtx) {
+                        // Calculate center square of the camera feed
+                        const size = Math.min(video.videoWidth, video.videoHeight);
+                        const startX = (video.videoWidth - size) / 2;
+                        const startY = (video.videoHeight - size) / 2;
+                        
+                        // Draw ONLY the center of the video onto our square canvas
+                        cropCtx.drawImage(video, startX, startY, size, size, 0, 0, 224, 224);
+
+                        // Predict using the cropped square instead of the whole room
+                        const predictions = await model.predict(cropCanvas);
+                        predictions.sort((a, b) => b.probability - a.probability);
+                        const bestMatch = predictions[0];
+
+                        // Clear the previous frame
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                        const scale = Math.max(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
-                        const scaledWidth = video.videoWidth * scale;
-                        const scaledHeight = video.videoHeight * scale;
-                        const offsetX = (canvas.width - scaledWidth) / 2;
-                        const offsetY = (canvas.height - scaledHeight) / 2;
+                        // --- UPGRADE 3: DYNAMIC THRESHOLDS ---
+                        // We check your mapReciclaCategory, or default to 0.75 if minConfidence isn't set
+                        const mappedData = mapReciclaCategory(bestMatch.className) as any;
+                        const threshold = mappedData.minConfidence || 0.75; 
 
-                        predictions.forEach(prediction => {
-                            if (prediction.score < 0.65 || prediction.class === 'person') return;
-
-                            const [rawX, rawY, rawW, rawH] = prediction.bbox;
-                            const x = rawX * scale + offsetX;
-                            const y = rawY * scale + offsetY;
-                            const width = rawW * scale;
-                            const height = rawH * scale;
-
-                            const centerX = x + width / 2;
-                            const centerY = y + height / 2;
-                            if (centerX < 0 || centerX > canvas.width || centerY < 0 || centerY > canvas.height) return; 
-
-                            const mapped = mapWasteCategory(prediction.class);
-                            const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
-
-                            ctx.strokeStyle = primaryColor;
-                            ctx.lineWidth = 3;
-                            const cornerLength = 25;
-
-                            ctx.beginPath();
-                            ctx.moveTo(x, y + cornerLength); ctx.lineTo(x, y); ctx.lineTo(x + cornerLength, y);
-                            ctx.moveTo(x + width - cornerLength, y); ctx.lineTo(x + width, y); ctx.lineTo(x + width, y + cornerLength);
-                            ctx.moveTo(x, y + height - cornerLength); ctx.lineTo(x, y + height); ctx.lineTo(x + cornerLength, y + height);
-                            ctx.moveTo(x + width - cornerLength, y + height); ctx.lineTo(x + width, y + height); ctx.lineTo(x + width, y + height - cornerLength);
-                            ctx.stroke();
-
-                            const label = `${prediction.class.toUpperCase()} ${(prediction.score * 100).toFixed(0)}%`;
-                            ctx.font = 'bold 14px sans-serif';
-                            const textWidth = Math.max(ctx.measureText(label).width, 180);
+                        // --- UPGRADE 2: SUSTAINED BUFFER ---
+                        // Ignore the "Background" class completely, and check threshold
+                        if (bestMatch.probability > threshold && bestMatch.className !== "Background") {
                             
-                            ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
-                            ctx.beginPath();
-                            ctx.roundRect ? ctx.roundRect(x, y - 65, textWidth + 20, 55, 6) : ctx.rect(x, y - 65, textWidth + 20, 55);
-                            ctx.fill();
-                            
-                            ctx.fillStyle = primaryColor;
-                            ctx.fillText(label, x + 10, y - 45);
-
-                            ctx.fillStyle = '#d4d4d8';
-                            ctx.font = '12px sans-serif';
-                            ctx.fillText(`Value: ${mapped.value}`, x + 10, y - 25);
-
-                            if (mapped.hazard) {
-                                ctx.fillStyle = '#ef4444';
-                                ctx.fillText(`! Hazard: Handle carefully`, x + 10, y - 8);
+                            // Check if the AI is guessing the same item as the last frame
+                            if (bestMatch.className === lastGuess.current) {
+                                streakCount.current += 1;
+                            } else {
+                                streakCount.current = 1;
+                                lastGuess.current = bestMatch.className;
                             }
-                        });
+
+                            // ONLY show the HUD if the AI guessed it 5 frames in a row
+                            if (streakCount.current >= 5) {
+                                if (!topPrediction || topPrediction.label !== bestMatch.className) {
+                                    setTopPrediction({ 
+                                        label: bestMatch.className, 
+                                        confidence: bestMatch.probability 
+                                    });
+                                }
+                                drawHUD(ctx, canvas, bestMatch);
+                            }
+                        } else {
+                            // If confidence drops or it sees "Background", reset the streak
+                            streakCount.current = 0;
+                        }
                     }
                 }
             }
             if (activeMode === 'camera') {
-                requestRef.current = requestAnimationFrame(detectFrame);
+                requestRef.current = requestAnimationFrame(classifyFrame);
             }
         };
 
         if (model && activeMode === 'camera') {
-            requestRef.current = requestAnimationFrame(detectFrame);
+            requestRef.current = requestAnimationFrame(classifyFrame);
         }
-        return () => {
-            if (requestRef.current) cancelAnimationFrame(requestRef.current);
-        };
+        return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
     }, [model, activeMode]);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,6 +357,61 @@ const isDraggingRef = useRef<boolean>(false);
         }
     };
 
+    const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, match: any) => {
+    const mapped = mapReciclaCategory(match.className);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
+
+    ctx.save(); 
+
+    // --- NEW: Add a faint scanning area background ---
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    // Draw dark overlay over the whole screen...
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // ...but cut out a clear hole in the middle for the "Target Area"
+    ctx.clearRect(centerX - 120, centerY - 120, 240, 240);
+
+    // 1. Draw Corner Reticle
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 4;
+    const size = 120; // Slightly larger target area
+    const corner = 30;
+    
+    // Corners
+    ctx.beginPath(); ctx.moveTo(centerX - size, centerY - size + corner); ctx.lineTo(centerX - size, centerY - size); ctx.lineTo(centerX - size + corner, centerY - size); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(centerX + size - corner, centerY - size); ctx.lineTo(centerX + size, centerY - size); ctx.lineTo(centerX + size, centerY - size + corner); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(centerX - size, centerY + size - corner); ctx.lineTo(centerX - size, centerY + size); ctx.lineTo(centerX - size + corner, centerY + size); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(centerX + size - corner, centerY + size); ctx.lineTo(centerX + size, centerY + size); ctx.lineTo(centerX + size, centerY + size - corner); ctx.stroke();
+
+    // 2. Info Box Background (Attached to the bottom of the reticle)
+    const boxW = 240;
+    const boxH = 75;
+    const boxX = centerX - boxW / 2;
+    const boxY = centerY + size + 10; // Placed right under the clear box
+
+    ctx.fillStyle = 'rgba(10, 10, 10, 0.9)';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    
+    ctx.fillStyle = primaryColor;
+    ctx.fillRect(boxX, boxY, 4, boxH);
+
+    // 3. HUD Labels
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(match.className.toUpperCase(), boxX + 15, boxY + 28);
+
+    ctx.fillStyle = '#d4d4d8';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(mapped.category, boxX + 15, boxY + 48);
+
+    ctx.fillStyle = primaryColor;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(mapped.value, boxX + 15, boxY + 65);
+
+    ctx.restore();
+};
     // ==========================================
     // RENDER: SELECTION SCREEN
     // ==========================================
