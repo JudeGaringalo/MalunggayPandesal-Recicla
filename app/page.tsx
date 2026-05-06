@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { ReactLenis } from '@studio-freight/react-lenis';
-import VineScrollbar from './components/VineScrollbar'; 
+import VineScrollbar from './components/VineScrollbar';
 
 const techLogos = [
   { name: "Next.js", src: "/images/next.png" },
@@ -142,63 +142,63 @@ export default function LandingPage(): React.JSX.Element {
           </section>
 
           <section className="relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-32 max-w-6xl">
-  {/* Changed flex-col to flex-col-reverse to fix mobile order */}
-  <div className="flex flex-col-reverse lg:flex-row overflow-hidden rounded-[20px] md:rounded-[40px] shadow-2xl border border-gray-100 bg-white">
+            {/* Changed flex-col to flex-col-reverse to fix mobile order */}
+            <div className="flex flex-col-reverse lg:flex-row overflow-hidden rounded-[20px] md:rounded-[40px] shadow-2xl border border-gray-100 bg-white">
 
-    <div className="w-full lg:w-1/2 flex flex-col" role="tablist">
-      {FEATURES.map((feature, index) => {
-        const isActive = activeArea === index;
-        return (
-          <button
-            key={feature.id}
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => setActiveArea(index)}
-            className={`flex-1 flex flex-col items-center justify-center text-center gap-1 md:gap-4 py-6 px-4 border-b border-r border-white last:border-b-0 transition-all duration-500 outline-none group 
+              <div className="w-full lg:w-1/2 flex flex-col" role="tablist">
+                {FEATURES.map((feature, index) => {
+                  const isActive = activeArea === index;
+                  return (
+                    <button
+                      key={feature.id}
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActiveArea(index)}
+                      className={`flex-1 flex flex-col items-center justify-center text-center gap-1 md:gap-4 py-6 px-4 border-b border-r border-white last:border-b-0 transition-all duration-500 outline-none group 
               ${feature.bgColor} 
               ${isActive ? 'brightness-110 z-10 scale-[1.02] shadow-xl' : 'hover:brightness-95'}
             `}
-          >
-            <img src={feature.icon} alt={feature.title} className={`w-8 h-8 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain unzoomable transition-transform duration-500 ${isActive ? 'scale-110' : 'scale-100'}`} />
-            <h3 className={`text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-70'}`}>
-              {feature.title}
-            </h3>
-          </button>
-        );
-      })}
-    </div>
+                    >
+                      <img src={feature.icon} alt={feature.title} className={`w-8 h-8 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain unzoomable transition-transform duration-500 ${isActive ? 'scale-110' : 'scale-100'}`} />
+                      <h3 className={`text-white font-bold text-[10px] sm:text-sm md:text-xl uppercase tracking-wider transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                        {feature.title}
+                      </h3>
+                    </button>
+                  );
+                })}
+              </div>
 
-    <div className="w-full lg:w-1/2 relative bg-[#E8E6D9] min-h-[300px] sm:min-h-[400px] md:min-h-[550px] overflow-hidden">
-      {FEATURES.map((feature, index) => (
-        <div
-          key={`img-${feature.id}`}
-          className={`absolute inset-0 transition-all duration-[1200ms] ease-in-out 
+              <div className="w-full lg:w-1/2 relative bg-[#E8E6D9] min-h-[300px] sm:min-h-[400px] md:min-h-[550px] overflow-hidden">
+                {FEATURES.map((feature, index) => (
+                  <div
+                    key={`img-${feature.id}`}
+                    className={`absolute inset-0 transition-all duration-[1200ms] ease-in-out 
             ${activeArea === index ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-125 z-0'}
           `}
-        >
-          <Image src={feature.image} alt={feature.title} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover unzoomable" />
-        </div>
-      ))}
+                  >
+                    <Image src={feature.image} alt={feature.title} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover unzoomable" />
+                  </div>
+                ))}
 
-      <div className="absolute inset-0 z-20 flex items-end">
-        {FEATURES.map((feature, index) => (
-          <div
-            key={`text-${feature.id}`}
-            className={`absolute inset-0 p-6 md:p-12 flex items-end justify-center transition-all duration-[800ms] ease-out
+                <div className="absolute inset-0 z-20 flex items-end">
+                  {FEATURES.map((feature, index) => (
+                    <div
+                      key={`text-${feature.id}`}
+                      className={`absolute inset-0 p-6 md:p-12 flex items-end justify-center transition-all duration-[800ms] ease-out
               ${activeArea === index ? 'opacity-100 translate-y-0 pointer-events-auto z-10 delay-200' : 'opacity-0 translate-y-12 pointer-events-none z-0'}
             `}
-          >
-            <div className="w-full p-4 md:p-8 bg-gradient-to-t from-[#f1f0e8] via-[#f1f0e8]/95 to-transparent text-center">
-              <p className="text-[#4A4A4A] text-[10px] sm:text-base md:text-2xl font-medium leading-tight max-w-md mx-auto">
-                {feature.description}
-              </p>
+                    >
+                      <div className="w-full p-4 md:p-8 bg-gradient-to-t from-[#f1f0e8] via-[#f1f0e8]/95 to-transparent text-center">
+                        <p className="text-[#4A4A4A] text-[10px] sm:text-base md:text-2xl font-medium leading-tight max-w-md mx-auto">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-</section>
+          </section>
 
           <section className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-12 py-10 md:py-32 flex flex-row gap-4 sm:gap-12 md:gap-20 relative items-start perspective-[1000px]">
             <div className="sticky-box w-5/12 self-start sticky top-10 md:top-40 h-auto">
