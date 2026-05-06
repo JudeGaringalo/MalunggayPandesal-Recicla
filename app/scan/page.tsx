@@ -7,7 +7,6 @@ import * as tmImage from '@teachablemachine/image';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
 export default function ARScannerApp() {
-    // --- App States ---
     const [activeMode, setActiveMode] = useState<'selection' | 'camera' | 'upload'>('selection');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
