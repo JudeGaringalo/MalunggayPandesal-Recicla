@@ -379,16 +379,16 @@ export default function ARScannerApp() {
                 </nav>
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full max-w-4xl mx-auto pb-32">
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full ">
-                        <button onClick={startCamera} disabled={isModelLoading} className="w-full aspect-[1.2/1] flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all disabled:opacity-50">
-                            <img src="/images/camera_icon.png" alt="Camera Icon" className="w-18 h-18 mb-6 mx-auto" />
-                            <h3 className="text-xl font-bold mb-2">Live Camera</h3>
-                            <p className="text-sm">Real-time AR HUD scanning.</p>
+                    <div className="grid grid-cols-2 gap-4 md:gap-6 w-full">
+                        <button onClick={startCamera} disabled={isModelLoading} className="w-full h-full py-6 md:py-12 px-3 md:px-6 text-center flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all disabled:opacity-50">
+                            <img src="/images/camera_icon.png" alt="Camera Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
+                            <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Live Camera</h3>
+                            <p className="text-xs md:text-sm">Real-time AR HUD scanning.</p>
                         </button>
-                        <label className={`w-full aspect-[1.2/1] flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all text-center ${isModelLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                            <img src="/images/photos_icon.png" alt="Photos Icon" className="w-18 h-18 mb-6 mx-auto" />
-                            <h3 className="text-xl font-bold mb-2">Upload Photo</h3>
-                            <p className="text-sm">Analyze from camera roll.</p>
+                        <label className={`w-full h-full py-6 md:py-12 px-3 md:px-6 flex flex-col items-center justify-center bg-[#7E8C54] border-[#6b7747] border-b-8 text-white hover:bg-[#6b7747] hover:border-[#7E8C54] border-b-8 rounded-2xl transition-all text-center ${isModelLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                            <img src="/images/photos_icon.png" alt="Photos Icon" className="w-10 h-10 md:w-18 md:h-18 mb-2 md:mb-6 mx-auto" />
+                            <h3 className="text-base md:text-xl font-bold mb-1 md:mb-2">Upload Photo</h3>
+                            <p className="text-xs md:text-sm">Analyze from camera roll.</p>
                             <input type="file" accept="image/*" className="hidden" disabled={isModelLoading} />
                         </label>
                     </div>
