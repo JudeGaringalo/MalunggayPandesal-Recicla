@@ -1,6 +1,6 @@
 <div align="center">
 
-# ♻️ Recicla AI
+# ♻️ Recicla
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=24&pause=1000&color=7C8D58&center=true&vCenter=true&width=850&lines=AI-Powered+Waste+Recognition+Platform;Smart+Recycling+for+the+Philippines;Real-Time+Computer+Vision+%2B+Location+Intelligence;Sustainable+Disposal+Powered+by+Artificial+Intelligence" alt="Typing SVG" />
 
