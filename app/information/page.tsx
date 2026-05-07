@@ -251,13 +251,19 @@ export default function ResultsPage() {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
                 
+<<<<<<< Updated upstream
                 const newLoc: [number, number] = [lat, lon];
+=======
+>>>>>>> Stashed changes
                 setIsManualOverride(true);
                 setUserLoc([lat, lon]);
                 
                 // NEW: Calculate a fresh destination near the newly searched address!
                 setDestLoc(generateNearbyDest(lat, lon, isHazard));
+<<<<<<< Updated upstream
                 setUserLoc(newLoc);
+=======
+>>>>>>> Stashed changes
             } else {
                 setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
             }
@@ -278,6 +284,7 @@ export default function ResultsPage() {
                     if (data.routes && data.routes.length > 0) {
                         const route = data.routes[0];
                         const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+                        
                         setRoutePath(coordinates);
                         setDistance((route.distance / 1000).toFixed(2));
                     }
