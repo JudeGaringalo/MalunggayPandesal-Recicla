@@ -155,7 +155,7 @@ export default function LandingPage(): React.JSX.Element {
   const router = useRouter(); 
   const [activeArea, setActiveArea] = useState(0); 
   
-  // Initialize to true so it starts "sucked in" before spitting out
+  const [isLoading, setIsLoading] = useState(true);
   const [isSucked, setIsSucked] = useState(true); 
 
   const marqueeRef = useRef<HTMLDivElement>(null);
@@ -171,17 +171,12 @@ export default function LandingPage(): React.JSX.Element {
     document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   }, []);
 
-  // Timer for Hero animations
-  useEffect(() => {
-    // "Spit out" the rings shortly after the page mounts
-    const loadTimer = setTimeout(() => {
+  const handleLoadingComplete = () => {
+    setIsLoading(false);
+    setTimeout(() => {
       setIsSucked(false);
-    }, 150);
-
-    return () => {
-      clearTimeout(loadTimer);
-    };
-  }, []);
+    }, 150); 
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -216,9 +211,12 @@ export default function LandingPage(): React.JSX.Element {
       animationFrameId = requestAnimationFrame(scroll);
     };
     
-    animationFrameId = requestAnimationFrame(scroll);
+    if (!isLoading) {
+      animationFrameId = requestAnimationFrame(scroll);
+    }
+    
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isDraggingMarquee]);
+  }, [isDraggingMarquee, isLoading]);
 
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault(); 
@@ -270,12 +268,10 @@ export default function LandingPage(): React.JSX.Element {
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
       <VineScrollbar />
       <BackToTop />
-
       <div className="bg-white animate-rise">
         <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
 
           <style>{`
-            /* Adjusted keyframes: Removed translation so they scale/center perfectly via Flexbox without breaking */
             @keyframes spin {
               from { transform: rotate(0deg); }
               to { transform: rotate(360deg); }
@@ -299,7 +295,6 @@ export default function LandingPage(): React.JSX.Element {
 
           <section className="relative w-full min-h-screen overflow-hidden flex items-center justify-center">
             
-            {/* SCALE CONTAINER: Handles the suck in / spit out physics independently */}
             <div 
               className={`absolute inset-0 flex items-center justify-center pointer-events-none z-0 transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] origin-center
                 ${isSucked ? 'scale-[0.05] opacity-0 translate-y-40 blur-2xl' : 'scale-100 opacity-100 translate-y-0 blur-0'}
@@ -492,7 +487,9 @@ export default function LandingPage(): React.JSX.Element {
                 <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight drop-shadow-md">Meet Our Team</h2>
                 <h3 className="text-[#E8E6D9] text-[12px] sm:text-2xl md:text-3xl font-medium mb-8 md:mb-24 tracking-wide">Malunggay Pandesal</h3>
               </FadeIn>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
+              
+              {/* Force the 2-column grid format for all screen sizes with a max-width so it doesn't stretch too wide on desktop */}
+              <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-10 max-w-4xl mx-auto">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
                   { name: "Jude", role: "Full-Stack Software Developer", img: "/images/Team/Jude.jpg" },
@@ -500,12 +497,12 @@ export default function LandingPage(): React.JSX.Element {
                   { name: "Sai", role: "Project Manager", img: "/images/Team/Sai.jpg" }
                 ].map((member, idx) => (
                   <FadeIn key={idx} delay={idx * 200} className="flex flex-col items-center group">
-                    <div className="w-full flex flex-col items-center p-4 sm:p-6 md:p-8 rounded-[24px] md:rounded-[40px] bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-white/20 transition-all duration-300 transform group-hover:-translate-y-2">
+                    <div className="w-full h-full flex flex-col items-center p-4 sm:p-6 md:p-8 rounded-[24px] md:rounded-[40px] bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-white/20 transition-all duration-300 transform group-hover:-translate-y-2">
                       <div className="w-16 h-16 sm:w-28 sm:h-28 md:w-48 md:h-48 bg-[#D9D9D9] rounded-full mb-3 md:mb-8 overflow-hidden relative shadow-xl border-2 border-white/30">
                         <Image src={member.img} alt={member.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                       </div>
                       <h3 className="text-white text-[12px] sm:text-lg md:text-2xl font-bold mb-1 md:mb-2 tracking-wide">{member.name}</h3>
-                      <p className="text-white/80 text-[10px] sm:text-sm md:text-lg font-medium leading-tight px-1">{member.role}</p>
+                      <p className="text-white/80 text-[10px] sm:text-sm md:text-lg font-medium leading-tight px-1 text-center">{member.role}</p>
                     </div>
                   </FadeIn>
                 ))}
