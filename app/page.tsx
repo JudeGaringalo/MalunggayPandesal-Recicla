@@ -292,7 +292,8 @@ export default function LandingPage(): React.JSX.Element {
 
           <section className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             <div className="container mx-auto px-2 sm:px-6 text-center">
-              <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold mb-6 md:mb-20 tracking-tight">Meet Our Team</h2>
+              <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
+              <h3 className="text-[12px] sm:text-2xl md:text-3xl font-semibold mb-6 md:mb-20 text-[#4A4A4A]">Malunggay Pandesal</h3>
               <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },

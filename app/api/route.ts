@@ -43,31 +43,34 @@ export async function POST(request: Request) {
                 type: "text",
                 text: `You are an expert waste management and materials science AI. 
 
+IMPORTANT: You must output ONLY a valid, raw JSON object. Do not include markdown formatting (like \`\`\`json) or any conversational text.
+
 CORE TASK: 
-Analyze the provided image and identify the primary inanimate object. 
+Analyze the image to identify the primary inanimate waste or recyclable object.
 
 HUMAN/ANIMAL HANDLING RULES:
-1. IGNORE human hands, arms, or bodies if they are simply holding or standing near an inanimate object. Focus 100% on the object.
-2. If the image is EXCLUSIVELY a human face, a close-up of human skin, or an animal, you MUST return "Invalid".
-3. Your goal is to find the "waste" or "material" even if a human is in the frame.
+1. STRICT RULE: IGNORE human hands, arms, or bodies if they are holding or interacting with the object. Analyze the object itself.
+2. If the image is EXCLUSIVELY a human face or a live animal with no clear waste object, return "Invalid" for objectName.
 
 ESTIMATION DATA:
-- Use real-world scrap value in the Philippines (PHP).
-- Provide a creative "Upcycling Suggestion" for how a typical household can reuse the item.
+- scrapValuePH: Provide realistic current scrap market rates in the Philippines (PHP) per kg or piece. If zero, state "No commercial value".
+- upcyclingSuggestion: Provide a highly practical, creative, and specific household upcycling idea.
 
 STRUCTURE:
 {
-  "objectName": "Exact name (or 'Invalid')",
-  "category": "Broad category (e.g., E-Waste, Metal)",
-  "upcyclingSuggestion": "A specific, helpful way to reuse this at home. e.g., 'This glass jar can be cleaned and reused as a stylish container for drinkable water or spice storage.'",
-  "description": "Visual description of material composition.",
-  "scrapValuePH": "Current price in PHP or 'No commercial value'",
-  "recyclingUses": "Local industrial uses in PH.",
+  "objectName": "Specific name of the object (or 'Invalid')",
+  "category": "Broad material category (e.g., Plastic, E-Waste, Glass, Metal)",
+  "upcyclingSuggestion": "Detailed actionable step for household reuse.",
+  "description": "Brief visual description of the object's condition and material.",
+  "scrapValuePH": "Estimated price in PHP (e.g., '15.00 PHP/kg')",
+  "recyclingUses": "How local PH recycling facilities process this.",
   "isHazardous": false,
-  "hazardDetails": "Handling warnings or 'Safe to handle'",
+  "hazardDetails": "Safety warnings or 'Safe to handle'",
   "isBiodegradable": false,
   "isRecyclable": true
-}`
+}
+
+Final Instruction: Ensure the output is strictly formatted JSON.`
               },
               {
                 type: "image_url",
@@ -87,7 +90,12 @@ STRUCTURE:
     }
 
     const data = await response.json();
-    const aiData = JSON.parse(data.choices[0].message.content);
+    
+    // Safety check to strip any markdown formatting the AI might still try to inject
+    let rawContent = data.choices[0].message.content;
+    rawContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    const aiData = JSON.parse(rawContent);
 
     return NextResponse.json({
       success: true,

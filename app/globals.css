@@ -12,19 +12,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-inter: "Inter", sans-serif; 
-  
-  /* Marquee Animations */
-  --animate-marquee: marquee 30s linear infinite;
-  --animate-marquee2: marquee2 30s linear infinite;
-
-  @keyframes marquee {
-    0% { transform: translateX(0%); }
-    100% { transform: translateX(-100%); }
-  }
-  @keyframes marquee2 {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(0%); }
-  }
 }
 
 @media (prefers-color-scheme: dark) {

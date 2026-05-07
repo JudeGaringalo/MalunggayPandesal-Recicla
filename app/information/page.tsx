@@ -42,35 +42,6 @@ function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: num
     return (R * c).toFixed(2);
 }
 
-// Added Component: SimilarImagesMarquee
-const SimilarImagesMarquee = () => {
-    return (
-        <div className="w-full bg-white py-8 border-y border-gray-100 overflow-hidden mt-12 mb-8 rounded-2xl shadow-sm">
-            <div className="flex flex-col items-center mb-6">
-                <span className="text-[10px] tracking-[0.2em] uppercase font-bold text-gray-400">Visual References</span>
-                <h2 className="text-xl font-bold text-gray-800">Similar Images</h2>
-            </div>
-            <div className="relative flex overflow-x-hidden group">
-                <div className="animate-marquee whitespace-nowrap flex gap-4 pl-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="w-48 h-48 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden border border-gray-200">
-                            <img src={`/api/placeholder/200/200?text=Item+${i}`} alt="Similar" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                    ))}
-                </div>
-                {/* Mirroring the list for a seamless loop */}
-                <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex gap-4 ml-8">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={`dup-${i}`} className="w-48 h-48 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden border border-gray-200">
-                            <img src={`/api/placeholder/200/200?text=Item+${i}`} alt="Similar" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const ScanResultCard = ({
     itemData,
     onNewScan,
@@ -534,11 +505,6 @@ export default function ResultsPage() {
                                 )}
 
                             </div>
-
-                            {/* Added Similar Images Marquee below Map */}
-                            {aiData && aiData.objectName !== "Invalid" && (
-                                <SimilarImagesMarquee />
-                            )}
 
                         </div>
                     </section>
