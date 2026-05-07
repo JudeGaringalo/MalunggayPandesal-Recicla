@@ -26,10 +26,10 @@ interface DetailedAIResponse {
 }
 
 const VERIFIED_LOCAL_SHOPS = [
-    { name: "RTC Junkshop", lat: 14.5815, lng: 121.0335, type: "general" },
-    { name: "Bubot's Junkshop", lat: 14.5775, lng: 121.0345, type: "general" },
+    { name: "RTC Junkshop", lat: 14.580908135114187, lng: 121.02906286784032, type: "general" },
+    { name: "Bubot's Junkshop", lat: 14.578748087923936, lng: 121.02833400832058, type: "general" },
     { name: "VGM Junkshop", lat: 14.5650, lng: 121.0400, type: "general" },
-    { name: "SM Megamall E-Waste Drop-off", lat: 14.5844, lng: 121.0565, type: "hazard" }
+    { name: "SM Megamall E-Waste Drop-off", lat: 14.582978880149252, lng: 121.05666829907726, type: "hazard" }
 ];
 
 function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: number) {
