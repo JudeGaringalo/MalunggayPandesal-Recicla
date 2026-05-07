@@ -477,31 +477,24 @@ export default function LandingPage(): React.JSX.Element {
             </div>
           </section>
 
-          <section className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden">
-            <div className="absolute inset-0 bg-[url('/images/pattern-overlay.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
-
-            <div className="container mx-auto px-4 sm:px-6 text-center relative z-10">
-              <FadeIn>
-                <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight drop-shadow-md">Meet Our Team</h2>
-                <h3 className="text-[#E8E6D9] text-[12px] sm:text-2xl md:text-3xl font-medium mb-8 md:mb-24 tracking-wide">Malunggay Pandesal</h3>
-              </FadeIn>
-              
-              <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-10 max-w-4xl mx-auto">
+          <section className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
+            <div className="container mx-auto px-2 sm:px-6 text-center">
+              <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
+              <h3 className="text-[12px] sm:text-2xl md:text-3xl font-semibold mb-6 md:mb-20 text-gray-800">Malunggay Pandesal</h3>
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
                   { name: "Jude", role: "Full-Stack Software Developer", img: "/images/Team/Jude.jpg" },
                   { name: "Volt", role: "UI / UX Designer", img: "/images/Team/Ruy.jpg" },
                   { name: "Sai", role: "Project Manager", img: "/images/Team/Sai.jpg" }
                 ].map((member, idx) => (
-                  <FadeIn key={idx} delay={idx * 200} className="flex flex-col items-center group">
-                    <div className="w-full h-full flex flex-col items-center p-4 sm:p-6 md:p-8 rounded-[24px] md:rounded-[40px] bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-white/20 transition-all duration-300 transform group-hover:-translate-y-2">
-                      <div className="w-16 h-16 sm:w-28 sm:h-28 md:w-48 md:h-48 bg-[#D9D9D9] rounded-full mb-3 md:mb-8 overflow-hidden relative shadow-xl border-2 border-white/30">
-                        <Image src={member.img} alt={member.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                      </div>
-                      <h3 className="text-white text-[12px] sm:text-lg md:text-2xl font-bold mb-1 md:mb-2 tracking-wide">{member.name}</h3>
-                      <p className="text-white/80 text-[10px] sm:text-sm md:text-lg font-medium leading-tight px-1 text-center">{member.role}</p>
+                  <div key={idx} className="flex flex-col items-center group">
+                    <div className="w-14 h-14 sm:w-24 sm:h-24 md:w-56 md:h-56 bg-[#D9D9D9] rounded-full mb-2 md:mb-6 overflow-hidden relative shadow-lg">
+                      <Image src={member.img} alt={member.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                     </div>
-                  </FadeIn>
+                    <h3 className="text-white text-[10px] sm:text-sm md:text-2xl font-bold mb-0.5 md:mb-1">{member.name}</h3>
+                    <p className="text-white/90 text-[8px] sm:text-xs md:text-lg font-light leading-tight px-1">{member.role}</p>
+                  </div>
                 ))}
               </div>
             </div>
