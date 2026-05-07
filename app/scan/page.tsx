@@ -36,7 +36,7 @@ export default function ARScannerApp() {
     const lastHardwareUpdateTime = useRef<number>(0);
     const trackedObjectsRef = useRef<Array<{ bbox: number[], match: any, mapped: any }>>([]);
 
-    // --- ADDED: Wipe memory when scan page loads ---
+   
     useEffect(() => {
         localStorage.removeItem('lastCapturedImage');
         localStorage.removeItem('lastScanResults');
@@ -107,22 +107,47 @@ export default function ARScannerApp() {
     }, []);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const base64 = event.target?.result as string;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const rawBase64 = event.target?.result as string;
 
-            localStorage.setItem('lastCapturedImage', base64);
-            localStorage.removeItem('lastScanResults');
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
             
-            document.cookie = "scan_in_progress=true; max-age=600; path=/";
+            const MAX_WIDTH = 800;
+            const scaleSize = MAX_WIDTH / img.width;
+            
+            if (scaleSize < 1) {
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+            } else {
+                canvas.width = img.width;
+                canvas.height = img.height;
+            }
 
-            router.push('/information');
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+            try {
+                localStorage.setItem('lastCapturedImage', compressedBase64);
+                localStorage.removeItem('lastScanResults');
+                document.cookie = "scan_in_progress=true; max-age=600; path=/";
+                router.push('/information');
+            } catch (err) {
+                console.error("Storage quota still exceeded after compression:", err);
+                alert("This image is still too large to process. Please try a smaller photo.");
+            }
         };
-        reader.readAsDataURL(file);
+        img.src = rawBase64;
     };
+    reader.readAsDataURL(file);
+};
 
     const startCamera = async () => {
         setActiveMode('camera');
