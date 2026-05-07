@@ -410,7 +410,7 @@ If you found this project useful:
 
 # 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed for CodeKada Online Hackathon 2026.
 
 ---
 
