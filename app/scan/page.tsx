@@ -84,7 +84,7 @@ export default function ARScannerApp() {
         const loadModels = async () => {
             try {
                 await tf.ready();
-                const URL = process.env.NEXT_PUBLIC_TM_URL as string;
+                const URL = "/model/"; 
                 const loadedTM = await tmImage.load(URL + "model.json", URL + "metadata.json");
                 const loadedCoco = await cocoSsd.load();
                 setModel(loadedTM);
@@ -204,12 +204,6 @@ export default function ARScannerApp() {
 
             localStorage.removeItem('lastScanResults');
             localStorage.setItem('lastCapturedImage', imgData);
-
-            if (trackedObjectsRef.current.length > 0) {
-                localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
-            } else {
-                localStorage.removeItem('lastAnalyzedItem');
-            }
 
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
