@@ -25,7 +25,6 @@ interface DetailedAIResponse {
     isRecyclable: boolean;
 }
 
-// Keep this as a fallback just in case the routing API fails
 function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -215,6 +214,13 @@ export default function ResultsPage() {
     const isHazard = aiData?.isHazardous ?? false;
     const destName = isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop';
 
+    // Helper to calculate a dynamic, nearby location based on provided coordinates
+    const generateNearbyDest = (lat: number, lng: number, hazard: boolean): [number, number] => {
+        const latOffset = hazard ? 0.005 + (Math.random() * 0.005) : -0.003 - (Math.random() * 0.004);
+        const lngOffset = hazard ? 0.005 + (Math.random() * 0.005) : -0.003 - (Math.random() * 0.004);
+        return [lat + latOffset, lng + lngOffset];
+    };
+
     const handleNewScan = () => {
         document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         localStorage.removeItem('lastCapturedImage');
@@ -244,11 +250,12 @@ export default function ResultsPage() {
             if (data && data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-                const newLoc: [number, number] = [lat, lon];
-
+                
                 setIsManualOverride(true);
-                setUserLoc(newLoc);
-                // Note: the Route effect below will automatically recalculate the path and distance when userLoc changes!
+                setUserLoc([lat, lon]);
+                
+                // NEW: Calculate a fresh destination near the newly searched address!
+                setDestLoc(generateNearbyDest(lat, lon, isHazard));
             } else {
                 setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
             }
@@ -259,28 +266,23 @@ export default function ResultsPage() {
         }
     };
 
-    // NEW EFFECT: Fetch realistic street route whenever locations change
     useEffect(() => {
         if (userLoc && destLoc) {
             const fetchRoute = async () => {
                 try {
-                    // OSRM requires coordinates in longitude,latitude format
                     const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${userLoc[1]},${userLoc[0]};${destLoc[1]},${destLoc[0]}?overview=full&geometries=geojson`);
                     const data = await response.json();
                     
                     if (data.routes && data.routes.length > 0) {
                         const route = data.routes[0];
-                        // Convert [lng, lat] back to Leaflet's [lat, lng]
                         const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
                         
                         setRoutePath(coordinates);
-                        
-                        // OSRM gives us true driving distance in meters, convert to KM!
                         setDistance((route.distance / 1000).toFixed(2));
                     }
                 } catch (error) {
                     console.error("Routing failed, falling back to straight line:", error);
-                    setRoutePath(null); // MapComponent will fall back to straight line
+                    setRoutePath(null); 
                     setDistance(calculateDistanceKM(userLoc[0], userLoc[1], destLoc[0], destLoc[1]));
                 }
             };
@@ -289,7 +291,6 @@ export default function ResultsPage() {
         }
     }, [userLoc, destLoc]);
 
-    // Initial GPS location setup
     useEffect(() => {
         setMounted(true);
 
@@ -311,16 +312,7 @@ export default function ResultsPage() {
 
                     if (!fixedDestLoc) {
                         const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
-                        let targetLat, targetLng;
-                        if (isHazardousItem) {
-                            targetLat = lat + 0.008; 
-                            targetLng = lng + 0.008;
-                        } else {
-                            targetLat = lat - 0.005;
-                            targetLng = lng - 0.005;
-                        }
-
-                        fixedDestLoc = [targetLat, targetLng];
+                        fixedDestLoc = generateNearbyDest(lat, lng, isHazardousItem);
                         setDestLoc(fixedDestLoc);
                     }
                     setIsLocating(false);
@@ -332,10 +324,7 @@ export default function ResultsPage() {
                     setUserLoc([fallbackUserLat, fallbackUserLng]);
 
                     const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
-                    const fallbackDestLat = isHazardousItem ? 14.5844 : 14.5710; 
-                    const fallbackDestLng = isHazardousItem ? 121.0565 : 121.0380;
-                    
-                    setDestLoc([fallbackDestLat, fallbackDestLng]);
+                    setDestLoc(generateNearbyDest(fallbackUserLat, fallbackUserLng, isHazardousItem));
                     setIsLocating(false);
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -494,10 +483,14 @@ export default function ResultsPage() {
                                         destinationLocation={destLoc}
                                         isHazardous={isHazard}
                                         destinationName={destName}
-                                        routePath={routePath} // PASSING THE NEW PATH DOWN
+                                        routePath={routePath} 
                                         onUserLocationChange={(newLoc) => {
                                             setIsManualOverride(true);
                                             setUserLoc(newLoc);
+                                            // If you drag the pin far away (more than 3km), bring the junk shop with you!
+                                            if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 3) {
+                                                setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
+                                            }
                                         }}
                                     />
                                 ) : (
