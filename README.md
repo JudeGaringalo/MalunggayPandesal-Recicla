@@ -227,11 +227,9 @@ flowchart LR
 
 | AI Detection | Material Analysis |
 |---|---|
-| <img src="./public/screenshots/detection.png" width="400"/> | <img src="./public/screenshots/analysis.png" width="400"/> |
 
 | Smart Recycling Map | Route Navigation |
 |---|---|
-| <img src="./public/screenshots/map.png" width="400"/> | <img src="./public/screenshots/navigation.png" width="400"/> |
 
 </div>
 
