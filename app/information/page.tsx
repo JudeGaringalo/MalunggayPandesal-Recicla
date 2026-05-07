@@ -311,8 +311,7 @@ export default function ResultsPage() {
 
                         </div>
                     </section>
-                    
-                    {/* RESTORED FIXED FOOTER */}
+
                     <footer className="relative w-full h-[40vh] md:h-screen bg-white flex items-end justify-center overflow-hidden">
                         <div className="absolute inset-0 flex items-center justify-center z-0 px-4 md:px-6 w-full">
                             <svg className="w-full max-w-[1600px] h-auto drop-shadow-sm unzoomable" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid meet">
