@@ -29,7 +29,7 @@
 
 ### 🌱 Intelligent Waste Recognition & Recycling Platform for the Philippines
 
-Recicla AI is a next-generation sustainability platform that combines:
+Recicla is a next-generation sustainability platform that combines:
 
 🤖 Artificial Intelligence  
 🧠 Computer Vision  
@@ -60,7 +60,7 @@ The platform enables users to:
 
 # 🤖 Real-Time AI Waste Recognition
 
-Recicla AI leverages advanced browser-based AI technologies including:
+Recicla leverages advanced browser-based AI technologies including:
 
 - TensorFlow.js
 - COCO-SSD
@@ -353,7 +353,7 @@ recicla/
 
 # 🌱 Vision
 
-Recicla AI aims to encourage smarter recycling habits by making waste identification, valuation, and disposal more accessible through Artificial Intelligence and modern web technologies.
+Recicla aims to encourage smarter recycling habits by making waste identification, valuation, and disposal more accessible through Artificial Intelligence and modern web technologies.
 
 The platform bridges:
 - Sustainability
@@ -374,7 +374,7 @@ Millions of tons of recyclable waste are improperly disposed of every year due t
 - Limited waste identification knowledge
 - Inefficient disposal systems
 
-Recicla AI solves these challenges through:
+Recicla solves these challenges through:
 
 ✅ Artificial Intelligence  
 ✅ Computer Vision  
