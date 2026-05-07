@@ -275,7 +275,7 @@ export default function LandingPage(): React.JSX.Element {
               ].map((step, idx) => (
                 <div key={idx} className="reveal-up group">
                   <div className="aspect-[4/3] bg-gray-100 rounded-[10px] md:rounded-[30px] mb-3 md:mb-8 relative overflow-hidden cursor-pointer shadow-lg">
-                    <Image src={step.img} alt={step.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105 unzoomable border-10 border-[#7E8C54] " />
+                    <Image src={step.img} alt={step.title} fill className="rounded-[10px] md:rounded-[30px] object-cover transition-transform duration-700 group-hover:scale-105 unzoomable border-10 border-[#7E8C54] " />
                     <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
                   </div>
                   <div className="flex gap-2 sm:gap-4 md:gap-8 items-start border-b border-gray-100 pb-3 md:pb-8">
