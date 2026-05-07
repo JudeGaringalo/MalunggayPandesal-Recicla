@@ -409,7 +409,7 @@ If you found this project useful:
 
 # 📄 License
 
-This project is licensed for CodeKada Online Hackathon 2026.
+This project is unlicensed and was created exclusively for the CodeKada Online Hackathon 2026.
 
 ---
 
