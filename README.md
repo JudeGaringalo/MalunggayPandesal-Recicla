@@ -1,6 +1,8 @@
 <div align="center">
 
-# ♻️ Recicla
+<img src="https://recicla-devkada.vercel.app/images/icon.png" width="140" />
+
+# Recicla
 
 https://recicla-devkada.vercel.app/
 
@@ -29,24 +31,24 @@ https://recicla-devkada.vercel.app/
 
 <br/><br/>
 
-### 🌱 Intelligent Waste Recognition & Recycling Platform for the Philippines
+### Intelligent Waste Recognition & Recycling Platform for the Philippines
 
 Recicla is a next-generation sustainability platform that combines:
 
-🤖 Artificial Intelligence  
-🧠 Computer Vision  
-📍 Smart Geolocation  
-♻️ Sustainable Disposal Systems  
+- Artificial Intelligence  
+- Computer Vision  
+- Smart Geolocation  
+- Sustainable Disposal Systems  
 
 to modernize waste management and recycling accessibility in the Philippines.
 
 The platform enables users to:
 
-✅ Detect recyclable materials in real-time  
-✅ Estimate recyclable market value in Philippine Pesos (₱)  
-✅ Identify hazardous waste and e-waste  
-✅ Locate nearby recycling centers and junkshops  
-✅ Generate intelligent disposal routes instantly  
+- Detect recyclable materials in real-time  
+- Estimate recyclable market value in Philippine Pesos (₱)  
+- Identify hazardous waste and e-waste  
+- Locate nearby recycling centers and junkshops  
+- Generate intelligent disposal routes instantly  
 
 —all within a seamless and immersive web experience.
 
@@ -58,9 +60,9 @@ The platform enables users to:
 
 ---
 
-# ✨ Core Features
+# Core Features
 
-# 🤖 Real-Time AI Waste Recognition
+# Real-Time AI Waste Recognition
 
 Recicla leverages advanced browser-based AI technologies including:
 
@@ -82,11 +84,11 @@ to perform intelligent recyclable material recognition directly in the browser.
 
 ---
 
-# 💸 Smart Scrap Valuation System
+# Smart Scrap Valuation System
 
 The AI system analyzes recyclable materials and estimates their approximate value in:
 
-## 🇵🇭 Philippine Pesos (₱)
+## Philippine Pesos (₱)
 
 The analysis includes:
 - Material valuation
@@ -97,7 +99,7 @@ The analysis includes:
 
 ---
 
-# ⚠️ Hazard Detection & Safety Awareness
+# Hazard Detection & Safety Awareness
 
 Recicla detects potentially dangerous recyclable materials such as:
 
@@ -115,7 +117,7 @@ The platform then provides:
 
 ---
 
-# 📍 Smart Recycling Locator
+# Smart Recycling Locator
 
 Recicla intelligently locates nearby:
 
@@ -132,7 +134,7 @@ using:
 
 ---
 
-# 🗺️ Interactive Maps & Navigation
+# Interactive Maps & Navigation
 
 The navigation system is powered by:
 
@@ -149,7 +151,7 @@ The navigation system is powered by:
 
 ---
 
-# 🎨 Modern UI / UX Experience
+# Modern UI / UX Experience
 
 Recicla provides a modern and immersive user experience powered by:
 
@@ -170,23 +172,23 @@ Recicla provides a modern and immersive user experience powered by:
 
 ---
 
-# 🧠 System Workflow
+# System Workflow
 
 ```mermaid
 flowchart LR
-    A[📷 Scan Waste Item] --> B[🤖 AI Detection]
-    B --> C[🧠 Material Classification]
-    C --> D[💸 Scrap Value Estimation]
-    D --> E[⚠️ Hazard Detection]
-    E --> F[📍 Locate Nearby Facilities]
-    F --> G[🗺️ Generate Smart Route]
+    A[Scan Waste Item] --> B[AI Detection]
+    B --> C[Material Classification]
+    C --> D[Scrap Value Estimation]
+    D --> E[Hazard Detection]
+    E --> F[Locate Nearby Facilities]
+    F --> G[Generate Smart Route]
 ```
 
 ---
 
-# 🛠️ Complete Tech Stack
+# Complete Tech Stack
 
-# 🎨 Frontend & UI
+# Frontend & UI
 
 | Technology | Description |
 |---|---|
@@ -199,7 +201,7 @@ flowchart LR
 
 ---
 
-# 🤖 Artificial Intelligence & Machine Learning
+# Artificial Intelligence & Machine Learning
 
 | Technology | Description |
 |---|---|
@@ -211,7 +213,7 @@ flowchart LR
 
 ---
 
-# 🗺️ Mapping & Geolocation
+# Mapping & Geolocation
 
 | Technology | Description |
 |---|---|
@@ -225,7 +227,7 @@ flowchart LR
 
 ---
 
-# ☁️ Backend & Infrastructure
+# Backend & Infrastructure
 
 | Technology | Description |
 |---|---|
@@ -235,7 +237,7 @@ flowchart LR
 
 ---
 
-# 📸 Application Preview
+# Application Preview
 
 <div align="center">
 
@@ -249,9 +251,9 @@ flowchart LR
 
 ---
 
-# ⚙️ Installation & Setup
+# Installation & Setup
 
-# 1️⃣ Clone Repository
+# 1. Clone Repository
 
 ```bash
 git clone https://github.com/JudeGaringalo/recicla.git
@@ -261,7 +263,7 @@ cd recicla
 
 ---
 
-# 2️⃣ Install Dependencies
+# 2. Install Dependencies
 
 ```bash
 npm install
@@ -275,7 +277,7 @@ yarn install
 
 ---
 
-# 3️⃣ Configure Environment Variables
+# 3. Configure Environment Variables
 
 Create a `.env.local` file:
 
@@ -291,7 +293,7 @@ GROQ_API_KEY=your_groq_api_key
 
 ---
 
-# 4️⃣ Start Development Server
+# 4. Start Development Server
 
 ```bash
 npm run dev
@@ -305,7 +307,7 @@ http://localhost:3000
 
 ---
 
-# 📂 Project Structure
+# Project Structure
 
 ```bash
 recicla/
@@ -328,21 +330,21 @@ recicla/
 
 ---
 
-# 🚀 Future Improvements
+# Future Improvements
 
-- ♻️ Nationwide live junkshop database
-- 📱 Progressive Web App (PWA)
-- 🧠 Improved AI detection accuracy
-- 🌍 Carbon footprint analytics
-- 🏆 Gamified recycling rewards
-- 📊 Sustainability dashboard
-- 🔔 Recycling reminders
-- 🤝 Community-powered reporting system
-- 📦 Smart waste collection integration
+- Nationwide live junkshop database
+- Progressive Web App (PWA)
+- Improved AI detection accuracy
+- Carbon footprint analytics
+- Gamified recycling rewards
+- Sustainability dashboard
+- Recycling reminders
+- Community-powered reporting system
+- Smart waste collection integration
 
 ---
 
-# 👨‍💻 Team — Malunggay Pandesal
+# Team — Malunggay Pandesal
 
 | Member | Role |
 |---|---|
@@ -353,7 +355,7 @@ recicla/
 
 ---
 
-# 🌱 Vision
+# Vision
 
 Recicla aims to encourage smarter recycling habits by making waste identification, valuation, and disposal more accessible through Artificial Intelligence and modern web technologies.
 
@@ -367,7 +369,7 @@ to help build greener Filipino communities.
 
 ---
 
-# 📈 Why Recicla Matters
+# Why Recicla Matters
 
 Millions of tons of recyclable waste are improperly disposed of every year due to:
 
@@ -378,38 +380,38 @@ Millions of tons of recyclable waste are improperly disposed of every year due t
 
 Recicla solves these challenges through:
 
-✅ Artificial Intelligence  
-✅ Computer Vision  
-✅ Smart Geolocation  
-✅ Real-Time Waste Detection  
-✅ Intelligent Disposal Navigation  
+- Artificial Intelligence  
+- Computer Vision  
+- Smart Geolocation  
+- Real-Time Waste Detection  
+- Intelligent Disposal Navigation  
 
 ---
 
-# 🏆 Developed For
+# Developed For
 
 ## CodeKada Online Hackathon 2026
 
 <div align="center">
 
-# ♻️ Turning Waste Into Opportunity Through AI
+# Turning Waste Into Opportunity Through AI
 
 </div>
 
 ---
 
-# ⭐ Support The Project
+# Support The Project
 
 If you found this project useful:
 
-🌟 Star the repository  
-🍴 Fork the project  
-🛠️ Contribute improvements  
-♻️ Promote sustainable technology  
+- Star the repository  
+- Fork the project  
+- Contribute improvements  
+- Promote sustainable technology  
 
 ---
 
-# 📄 License
+# License
 
 This project is unlicensed and was created exclusively for the CodeKada Online Hackathon 2026.
 
@@ -417,11 +419,11 @@ This project is unlicensed and was created exclusively for the CodeKada Online H
 
 <div align="center">
 
-### Made with ♻️, AI, and Sustainability in Mind
+### Made with AI and Sustainability in Mind
 
 </div>
 
-> ⚠️ **Disclaimer**
+> **Disclaimer**
 >
 > Recicla is an experimental academic and sustainability-focused platform developed for the **CodeKada Online Hackathon 2026**.  
 >
@@ -443,4 +445,3 @@ This project is unlicensed and was created exclusively for the CodeKada Online H
 > - Improper disposal decisions made using the platform
 >
 > By using Recicla, users acknowledge that the platform is provided **“as is”** without warranties of any kind and should be used responsibly to support sustainable waste management practices.
-
