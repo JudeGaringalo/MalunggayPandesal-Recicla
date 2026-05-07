@@ -1,4 +1,4 @@
-# 🌿 Recicla
+# ♻ Recicla
 
 ### **Recycle from anywhere, Value anything.**
 
