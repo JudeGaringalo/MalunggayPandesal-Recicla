@@ -47,7 +47,7 @@ export async function POST(request: Request) {
           Estimate real-world data regarding scrap value in the Philippines (PHP), biodegradability, and recycling methods.
 
           SAFETY & PRIVACY GUARDRAIL: 
-          If the image contains a person, a human face, human limbs, or any animal, you MUST NOT provide an analysis. 
+          If the image contains a person, a human face, any animal, you MUST NOT provide an analysis. 
           Instead, return the JSON structure with "objectName" set to "Invalid" and all other string fields set to "N/A".
 
           REQUIREMENTS:
