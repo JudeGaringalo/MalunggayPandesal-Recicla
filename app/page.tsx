@@ -57,6 +57,68 @@ const FEATURES = [
   }
 ]; 
 
+// --- NEW COMPONENT: Text Scroll Reveal ---
+const TextScrollReveal = ({ text }: { text: string }) => {
+  const containerRef = useRef<HTMLParagraphElement>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // Start filling when element is 85% down the screen
+      const startReveal = windowHeight * 0.85; 
+      // Finish filling when element reaches 35% down the screen
+      const endReveal = windowHeight * 0.35;
+      
+      let currentProgress = (startReveal - rect.top) / (startReveal - endReveal);
+      // Clamp between 0 and 1
+      currentProgress = Math.max(0, Math.min(1, currentProgress));
+      setProgress(currentProgress);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check position on mount
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const words = text.split(" ");
+
+  return (
+    <p 
+      ref={containerRef} 
+      className="text-[#4A4A4A] text-[16px] sm:text-xl md:text-3xl leading-relaxed font-medium text-center"
+    >
+      {words.map((word, i) => {
+        const start = i / words.length;
+        const end = start + (1 / words.length);
+        
+        // Calculate smooth opacity per word
+        let opacity = 0.15; // Unfilled state opacity (looks light gray)
+        if (progress >= end) {
+          opacity = 1;
+        } else if (progress > start) {
+          opacity = 0.15 + ((progress - start) / (end - start)) * 0.85;
+        }
+
+        return (
+          <span 
+            key={i} 
+            style={{ opacity }} 
+            // The small transition duration smooths out any minor scroll jitters
+            className="transition-opacity duration-75 inline-block mr-[0.25em]"
+          >
+            {word}
+          </span>
+        );
+      })}
+    </p>
+  );
+};
+
 export default function LandingPage(): React.JSX.Element {
   const router = useRouter(); 
   const [activeArea, setActiveArea] = useState(0); 
@@ -162,6 +224,8 @@ export default function LandingPage(): React.JSX.Element {
     scrollPos.current = newScrollLeft; // Keep animation accumulator in sync
   };
 
+  const aboutReciclaText = "Recicla is a real-time, AI-driven web application that transforms the way you approach household waste and intentional decluttering. By leveraging high-speed, client-side object detection, Recicla empowers you to instantly analyze everyday items especially aging electronics to understand their material composition and proper disposal methods. We take the guesswork out of waste segregation, turning the simple act of cleaning out your home into a meaningful contribution to environmental sustainability.";
+
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
       <VineScrollbar />
@@ -253,17 +317,18 @@ export default function LandingPage(): React.JSX.Element {
             </div>
           </section>
           
-          <section className="relative z-10 w-full">
+          <section className="relative z-10 w-full mb-10 md:mb-20">
             <div className="relative w-full flex items-center justify-center overflow-hidden">
               <img src="/images/Rectangle 50.png" alt="Header" className="w-full md:w-[110%] scale-110 md:scale-100 max-w-none h-auto drop-shadow-xl unzoomable object-cover" />
               <h2 className="absolute inset-0 flex items-center justify-center text-white text-xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-2 md:mb-4 px-4 text-center">
                 About Recicla
               </h2>
             </div>
-            <div className="container mx-auto px-6 mt-8 md:mt-16 max-w-4xl text-center">
-              <p className="text-[#4A4A4A] text-[12px] sm:text-sm md:text-xl leading-relaxed font-medium">
-                Recicla is a real-time, AI-driven web application that transforms the way you approach household waste and intentional decluttering. By leveraging high-speed, client-side object detection, Recicla empowers you to instantly analyze everyday items especially aging electronics to understand their material composition and proper disposal methods. We take the guesswork out of waste segregation, turning the simple act of cleaning out your home into a meaningful contribution to environmental sustainability.
-              </p>
+            <div className="container mx-auto px-6 mt-12 md:mt-24 max-w-5xl text-center min-h-[300px]">
+              
+              {/* === REPLACED TEXT TAG WITH NEW SCROLL REVEAL === */}
+              <TextScrollReveal text={aboutReciclaText} />
+              
             </div>
           </section>
           
