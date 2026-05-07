@@ -50,7 +50,7 @@ The platform enables users to:
 - Locate nearby recycling centers and junkshops  
 - Generate intelligent disposal routes instantly  
 
-—all within a seamless and immersive web experience.
+all within a seamless and immersive web experience.
 
 <br/>
 
