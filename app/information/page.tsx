@@ -95,8 +95,7 @@ const ScanResultCard = ({
 
             <div className="p-6 md:p-8 flex flex-col flex-grow bg-white justify-between">
                 <div>
-
-                    <div className="flex justify-between items-center border-b border-gray-200 pb-5 mb-6">
+                    <div className="flex flex-col items-start sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 mb-6 gap-2 sm:gap-0">
                         <span className="text-sm font-semibold text-gray-500">
                             Estimated Scrap Value
                         </span>
