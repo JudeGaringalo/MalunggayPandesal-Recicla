@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
     const fileName = `scan_${Date.now()}.jpg`;
+    
     const { error: uploadError } = await supabase.storage
       .from('scans')
       .upload(fileName, buffer, { contentType: 'image/jpeg' });
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
             content: [
               { 
                 type: "text", 
-               text: "Analyze the primary, most prominent waste item centered in the foreground of this image for the Philippines. Ignore background objects. Look for logos. Distinguish between 'Smartphone', 'Tablet', 'Computer Monitor', or 'Television'. If no brand is readable, use a generic name like 'Smartphone'. For the 'value' field, calculate a realistic estimated scrap or defective resale value in Philippine Pesos (e.g., '₱500 - ₱1500/unit' for phones/electronics, or '₱15/kg' for plastics). Return ONLY JSON: {\"match\": {\"className\": \"Specific Name\", \"probability\": 0.95}, \"mapped\": {\"category\": \"Cat\", \"value\": \"₱ Price Range\", \"hazard\": false, \"biodegradable\": false, \"action\": \"Recycle\"}}"
+                text: "You are an expert waste management and materials science AI. Analyze the provided image and strictly identify the primary object in the center of the frame. Estimate accurate, real-world data regarding this material's economic scrap value specifically in the Philippines (in PHP), its chemical biodegradability, and exact recycling methods. Do not guess blindly; base the value on real Philippine junk shop and recycling rates. If a value fluctuates, provide the current market range. Return ONLY a valid, raw JSON object matching this exact structure: {\"objectName\": \"Exact name of the object seen\", \"category\": \"Broad material category (e.g., High-Value Metal, E-Waste)\", \"description\": \"A highly accurate visual description of what you see and what the material is made of.\", \"scrapValuePH\": \"Exact current scrap value in Philippine Peso (e.g., '₱350 - ₱400 per kg') or 'No commercial scrap value'\", \"recyclingUses\": \"Specific industrial or local ways this material is recycled or repurposed in the Philippines.\", \"isHazardous\": true, \"hazardDetails\": \"Specific toxic properties or handling warnings. Write 'Safe to handle' if non-hazardous.\", \"isBiodegradable\": false, \"isRecyclable\": true}"
               },
               { 
                 type: "image_url", 
@@ -49,7 +50,8 @@ export async function POST(request: Request) {
             ]
           }
         ],
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        temperature: 0.1
       })
     });
 
