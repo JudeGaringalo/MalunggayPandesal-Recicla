@@ -312,8 +312,22 @@ export default function ResultsPage() {
                         </div>
                     </section>
                     
-                    <footer className="relative w-full h-[20vh] md:h-[30vh] bg-white flex items-end justify-center overflow-hidden">
-                        <img src="/images/footer.png" alt="Tropical Leaves" className="relative z-10 w-full h-full object-cover object-bottom pointer-events-none drop-shadow-2xl" />
+                    {/* RESTORED FIXED FOOTER */}
+                    <footer className="relative w-full h-[40vh] md:h-screen bg-white flex items-end justify-center overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center z-0 px-4 md:px-6 w-full">
+                            <svg className="w-full max-w-[1600px] h-auto drop-shadow-sm unzoomable" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid meet">
+                                <defs>
+                                    <filter id="innerShadow">
+                                        <feOffset dx="8" dy="12" /><feGaussianBlur stdDeviation="8" result="offset-blur" />
+                                        <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+                                        <feFlood floodColor="black" floodOpacity="0.35" result="color" /><feComposite operator="in" in="color" in2="inverse" result="shadow" />
+                                        <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+                                    </filter>
+                                </defs>
+                                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#E8EBE4" className="font-inter font-bold uppercase" style={{ fontSize: '250px', letterSpacing: '14px' }} filter="url(#innerShadow)">RECICLA</text>
+                            </svg>
+                        </div>
+                        <img src="/images/footer.png" alt="Tropical Leaves" className="relative z-10 w-full h-[40vh] md:h-[85vh] object-cover object-bottom pointer-events-none unzoomable drop-shadow-2xl" />
                     </footer>
                 </main>
             </div>
