@@ -271,7 +271,7 @@ export default function LandingPage(): React.JSX.Element {
               {[
                 { num: "01", title: "Capture the Item", desc: "Open the Recicla web app and choose your preferred input. You can use the Live Camera for an instant real-time scan or Upload from Photos to analyze items you’ve already set aside.", img: "/images/step-1.png" },
                 { num: "02", title: "Instant Analysis", desc: "In the blink of an eye, our on-device AI identifies the object and automatically classifies the material type and checking for hazards.", img: "/images/step-2.png" },
-                { num: "03", title: "Review Results", desc: "Review the item's detailed profile and get directions to the nearest verified junk shop or specialized e-waste bin.", img: "/images/step3.png" }
+                { num: "03", title: "Review Results", desc: "Review the item's detailed profile and get directions to the nearest verified junk shop or specialized e-waste bin.", img: "/images/step-3.png" }
               ].map((step, idx) => (
                 <div key={idx} className="reveal-up group">
                   <div className="aspect-[4/3] bg-gray-100 rounded-[10px] md:rounded-[30px] mb-3 md:mb-8 relative overflow-hidden cursor-pointer shadow-lg">
