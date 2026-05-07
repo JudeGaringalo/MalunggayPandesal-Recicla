@@ -347,7 +347,7 @@ recicla/
 | **Jude** | Full-Stack Software Developer |
 | **Bam** | AI Engineer |
 | **Volt** | UI / UX Designer |
-| **Sai** | Project Manager |
+| **Sai** | QA Engineer |
 
 ---
 
