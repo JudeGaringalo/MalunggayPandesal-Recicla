@@ -29,13 +29,16 @@ const safeIcon = L.icon({
     popupAnchor: [1, -34],
 });
 
-function MapBounds({ userLoc, destLoc }: { userLoc: [number, number], destLoc: [number, number] }) {
+function MapBounds({ userLoc, destLoc }: { userLoc: [number, number], destLoc: [number, number] | null }) {
     const map = useMap();
     useEffect(() => {
         if (userLoc && destLoc) {
+            // Both locations available: fit bounds to show both
             const bounds = L.latLngBounds(userLoc, destLoc);
-            // Added slightly more padding so the route fits nicely
             map.fitBounds(bounds, { padding: [60, 60] });
+        } else if (userLoc) {
+            // Only user location available: center on user immediately
+            map.setView(userLoc, 15);
         }
     }, [map, userLoc, destLoc]);
     return null;
@@ -43,7 +46,7 @@ function MapBounds({ userLoc, destLoc }: { userLoc: [number, number], destLoc: [
 
 interface MapProps {
     userLocation: [number, number];
-    destinationLocation: [number, number];
+    destinationLocation: [number, number] | null; // Made nullable
     isHazardous: boolean;
     destinationName: string;
     routePath: [number, number][] | null; 
@@ -69,10 +72,6 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
         [onUserLocationChange]
     );
 
-    const positionsToDraw = routePath && routePath.length > 0 
-        ? routePath 
-        : [userLocation, destinationLocation];
-
     return (
         <MapContainer
             center={userLocation}
@@ -88,12 +87,15 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
 
             <MapBounds userLoc={userLocation} destLoc={destinationLocation} />
 
-            <Polyline 
-                positions={positionsToDraw} 
-                color={lineColor} 
-                weight={6} 
-                opacity={0.8}
-            />
+            {/* Only draw route if it exists */}
+            {routePath && routePath.length > 0 && (
+                <Polyline 
+                    positions={routePath} 
+                    color={lineColor} 
+                    weight={6} 
+                    opacity={0.8}
+                />
+            )}
 
             <Marker 
                 position={userLocation} 
@@ -108,12 +110,15 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
                 </Popup>
             </Marker>
 
-            <Marker position={destinationLocation} icon={destIcon}>
-                <Popup className="font-sans">
-                    <strong>{destinationName}</strong><br />
-                    Verified Drop-off
-                </Popup>
-            </Marker>
+            {/* Only draw destination marker if we have found one */}
+            {destinationLocation && (
+                <Marker position={destinationLocation} icon={destIcon}>
+                    <Popup className="font-sans">
+                        <strong>{destinationName}</strong><br />
+                        Verified Drop-off
+                    </Popup>
+                </Marker>
+            )}
         </MapContainer>
     );
 }

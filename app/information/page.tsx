@@ -205,7 +205,7 @@ export default function ResultsPage() {
     const [isAnalyzing, setIsAnalyzing] = useState(true);
     const [isLocating, setIsLocating] = useState(true);
 
-    // NEW STATE: Specific loading state just for the map
+   
     const [isMapLoading, setIsMapLoading] = useState(false);
 
     const analysisStarted = useRef(false);
@@ -245,15 +245,13 @@ export default function ResultsPage() {
             }
 
             const query = `
-                [out:json];
+                [out:json][timeout:3];
                 (
                   node["amenity"="recycling"](around:5000, ${lat}, ${lng});
                   way["amenity"="recycling"](around:5000, ${lat}, ${lng});
                   node["amenity"="waste_disposal"](around:5000, ${lat}, ${lng});
                   node["shop"="scrap"](around:5000, ${lat}, ${lng});
                   node["industrial"="scrap_yard"](around:5000, ${lat}, ${lng});
-                  node["name"~"junk shop|junkshop|scrap|recycling", i](around:5000, ${lat}, ${lng});
-                  way["name"~"junk shop|junkshop|scrap|recycling", i](around:5000, ${lat}, ${lng});
                 );
                 out center;
             `;
@@ -263,9 +261,23 @@ export default function ResultsPage() {
                 body: "data=" + encodeURIComponent(query),
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
-            
-            const data = await response.json();
-            
+
+           
+            if (!response.ok) {
+                console.warn(`Overpass API error: ${response.status} ${response.statusText}`);
+                return null; 
+            }
+
+          
+            let data;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                console.error("Failed to parse Overpass response. Received XML instead of JSON.");
+                return null; 
+            }
+
+           
             if (data && data.elements && data.elements.length > 0) {
                 let closestFacility = null;
                 let minDistance = Infinity;
@@ -327,7 +339,7 @@ export default function ResultsPage() {
         if (!addressInput.trim()) return;
 
         setIsSearching(true);
-        setIsMapLoading(true); // START MAP LOADING
+        setIsMapLoading(true);
         setSearchError(null);
 
         try {
@@ -358,7 +370,7 @@ export default function ResultsPage() {
             setSearchError("Error searching for address. Please try again.");
         } finally {
             setIsSearching(false);
-            setIsMapLoading(false); // END MAP LOADING
+            setIsMapLoading(false); 
         }
     };
 
@@ -594,7 +606,7 @@ export default function ResultsPage() {
                                     )}
                                 </div>
 
-                                {/* NEW: MAP LOADING OVERLAY */}
+                                
                                 {isMapLoading && (
                                     <div className="absolute inset-0 z-[2000] bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-300">
                                         <div className="w-12 h-12 border-4 border-[#7C8D58] border-t-transparent rounded-full animate-spin mb-4 shadow-sm"></div>
@@ -602,7 +614,7 @@ export default function ResultsPage() {
                                     </div>
                                 )}
 
-                                {userLoc && destLoc ? (
+                                {userLoc ? (
                                     <LiveMap
                                         userLocation={userLoc}
                                         destinationLocation={destLoc}
@@ -613,9 +625,9 @@ export default function ResultsPage() {
                                             setIsManualOverride(true);
                                             setUserLoc(newLoc);
                                             
-                                            // Trigger map loading state if we drag it far enough to recalculate
+                                            
                                             if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 0.5) {
-                                                setIsMapLoading(true); // START MAP LOADING
+                                                setIsMapLoading(true); 
                                                 (async () => {
                                                     setDestName('Relocating facility...');
                                                     const realFacility = await findNearestRealFacility(newLoc[0], newLoc[1], isHazard);
@@ -626,13 +638,13 @@ export default function ResultsPage() {
                                                         setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
                                                         setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
                                                     }
-                                                    setIsMapLoading(false); // END MAP LOADING
+                                                    setIsMapLoading(false); 
                                                 })();
                                             }
                                         }}
                                     />
                                 ) : (
-                                    // REPLACED THE BROKEN IMAGE WITH A SLEEK LOADING SKELETON
+                                    
                                     <div className="absolute inset-0 bg-[#E8EBE4] flex flex-col items-center justify-center z-0">
                                         <div className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full animate-spin mb-4"></div>
                                         <p className="text-gray-500 font-medium text-sm">Initializing Map Component...</p>
