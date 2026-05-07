@@ -402,7 +402,7 @@ export default function ResultsPage() {
                 </div>
             )}
 
-            <div className={`min-h-screen bg-[#f8f9fa] flex flex-col transition-opacity duration-700 ${isLoadingEverything ? 'opacity-0' : 'opacity-100'}`}>
+            <div className={`min-h-screen bg-[#E8EBE4] flex flex-col transition-opacity duration-700 ${isLoadingEverything ? 'opacity-0' : 'opacity-100'}`}>
 
                 <main className="flex-grow flex flex-col">
 
@@ -509,7 +509,7 @@ export default function ResultsPage() {
                         </div>
                     </section>
 
-                    <footer className="relative w-full h-[40vh] md:h-screen bg-white flex items-end justify-center overflow-hidden">
+                    <footer className="relative w-full h-[40vh] md:h-screen bg-[#E8EBE4] flex items-end justify-center overflow-hidden">
 
                         <div className="absolute inset-0 flex items-center justify-center z-0 px-4 md:px-6 w-full">
 
