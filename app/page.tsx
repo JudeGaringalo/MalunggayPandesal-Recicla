@@ -99,7 +99,7 @@ const Navbar = () => {
       ref={navRef}
       className="fixed top-0 left-0 w-full z-[100] flex justify-between items-center px-6 md:px-12 py-4 pointer-events-none opacity-0 -translate-y-[100px]"
     >
-      <div className="group cursor-pointer pointer-events-auto">
+      <div className="hidden md:block group cursor-pointer pointer-events-auto">
         <img
           src="/images/icon.png"
           alt="Recicla Icon"
@@ -107,7 +107,7 @@ const Navbar = () => {
         />
       </div>
 
-      <nav className="flex items-center gap-2 md:gap-4 pointer-events-auto">
+      <nav className="hidden md:flex items-center gap-4 pointer-events-auto">
         <div className={isDarkSection ? "text-white" : "text-black"}>
           <MagneticNavItem targetId="about">About</MagneticNavItem>
         </div>
