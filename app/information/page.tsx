@@ -15,7 +15,7 @@ const LiveMap = dynamic(() => import('@/app/components/MapComponent'), {
 interface DetailedAIResponse {
     objectName: string;
     category: string;
-    upcyclingSuggestion: string; // New field
+    upcyclingSuggestion: string;
     description: string;
     scrapValuePH: string;
     recyclingUses: string;
@@ -25,20 +25,13 @@ interface DetailedAIResponse {
     isRecyclable: boolean;
 }
 
+// Keep this as a fallback just in case the routing API fails
 function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
-
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
     return (R * c).toFixed(2);
 }
 
@@ -46,12 +39,14 @@ const ScanResultCard = ({
     itemData,
     onNewScan,
     distanceKM,
-    onGetDirections
+    onGetDirections,
+    destName
 }: {
     itemData: DetailedAIResponse,
     onNewScan: () => void,
     distanceKM: string | null,
-    onGetDirections: () => void
+    onGetDirections: () => void,
+    destName: string
 }) => {
 
     if (!itemData || itemData.objectName === "Invalid") return null;
@@ -63,7 +58,6 @@ const ScanResultCard = ({
     const themeColor = isHazard ? 'bg-red-500' : 'bg-[#8b9c64]';
     const badgeColor = isHazard ? 'bg-red-100 text-red-900' : 'bg-[#a8b884] text-gray-900';
     const textColor = isHazard ? 'text-red-600' : 'text-[#6b7a4a]';
-    const destName = isHazard ? 'SM Cyberzone E-Waste Bin' : 'M. Santos Junk Shop';
 
     return (
         <div className="w-full h-full flex-1 bg-white flex flex-col h-full">
@@ -105,7 +99,6 @@ const ScanResultCard = ({
                         </span>
                     </div>
 
-                    {/* NEW: Upcycling Suggestion Section */}
                     {itemData.upcyclingSuggestion && (
                         <div className="mb-6 p-4 bg-[#f9faf7] rounded-xl border border-[#edf1e5]">
                             <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center ${textColor}`}>
@@ -166,7 +159,7 @@ const ScanResultCard = ({
                                 </p>
 
                                 <p className="text-xs text-gray-500 font-medium mt-0.5">
-                                    {distanceKM ? `${distanceKM} KM Away` : 'Calculating distance...'}
+                                    {distanceKM ? `${distanceKM} KM (Driving Distance)` : 'Calculating distance...'}
                                 </p>
                             </div>
                         </div>
@@ -211,6 +204,16 @@ export default function ResultsPage() {
     const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
     const [destLoc, setDestLoc] = useState<[number, number] | null>(null);
     const [distance, setDistance] = useState<string | null>(null);
+    const [routePath, setRoutePath] = useState<[number, number][] | null>(null);
+
+    const [isManualOverride, setIsManualOverride] = useState(false);
+    
+    const [addressInput, setAddressInput] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+
+    const isHazard = aiData?.isHazardous ?? false;
+    const destName = isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop';
 
     const handleNewScan = () => {
         document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -220,152 +223,167 @@ export default function ResultsPage() {
     };
 
     const openGoogleMapsDirections = () => {
-
         if (!userLoc || !destLoc) return;
-
         const [userLat, userLng] = userLoc;
         const [destLat, destLng] = destLoc;
-
-        const mapsUrl =
-            `https://www.google.com/maps/dir/?api=1` +
-            `&origin=${userLat},${userLng}` +
-            `&destination=${destLat},${destLng}` +
-            `&travelmode=driving`;
-
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
         window.open(mapsUrl, "_blank");
     };
 
-    useEffect(() => {
+    const handleAddressSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!addressInput.trim()) return;
 
+        setIsSearching(true);
+        setSearchError(null);
+
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput)}`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                const newLoc: [number, number] = [lat, lon];
+
+                setIsManualOverride(true);
+                setUserLoc(newLoc);
+                // Note: the Route effect below will automatically recalculate the path and distance when userLoc changes!
+            } else {
+                setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
+            }
+        } catch (error) {
+            setSearchError("Error searching for address. Please try again.");
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // NEW EFFECT: Fetch realistic street route whenever locations change
+    useEffect(() => {
+        if (userLoc && destLoc) {
+            const fetchRoute = async () => {
+                try {
+                    // OSRM requires coordinates in longitude,latitude format
+                    const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${userLoc[1]},${userLoc[0]};${destLoc[1]},${destLoc[0]}?overview=full&geometries=geojson`);
+                    const data = await response.json();
+                    
+                    if (data.routes && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        // Convert [lng, lat] back to Leaflet's [lat, lng]
+                        const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+                        
+                        setRoutePath(coordinates);
+                        
+                        // OSRM gives us true driving distance in meters, convert to KM!
+                        setDistance((route.distance / 1000).toFixed(2));
+                    }
+                } catch (error) {
+                    console.error("Routing failed, falling back to straight line:", error);
+                    setRoutePath(null); // MapComponent will fall back to straight line
+                    setDistance(calculateDistanceKM(userLoc[0], userLoc[1], destLoc[0], destLoc[1]));
+                }
+            };
+
+            fetchRoute();
+        }
+    }, [userLoc, destLoc]);
+
+    // Initial GPS location setup
+    useEffect(() => {
         setMounted(true);
 
         const savedImage = localStorage.getItem('lastCapturedImage');
         const savedResults = localStorage.getItem('lastScanResults');
+        
+        let watchId: number;
+        let fixedDestLoc: [number, number] | null = null; 
 
         if ("geolocation" in navigator) {
-
-            navigator.geolocation.getCurrentPosition(
-
+            watchId = navigator.geolocation.watchPosition(
                 (position) => {
+                    if (isManualOverride) return; 
 
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-
+                    
                     setUserLoc([lat, lng]);
 
-                    const isHazardousItem =
-                        savedResults
-                            ? JSON.parse(savedResults).aiData?.isHazardous
-                            : false;
+                    if (!fixedDestLoc) {
+                        const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
+                        let targetLat, targetLng;
+                        if (isHazardousItem) {
+                            targetLat = lat + 0.008; 
+                            targetLng = lng + 0.008;
+                        } else {
+                            targetLat = lat - 0.005;
+                            targetLng = lng - 0.005;
+                        }
 
-                    let targetLat;
-                    let targetLng;
-
-                    if (isHazardousItem) {
-                        targetLat = 14.6565;
-                        targetLng = 121.0313;
-                    } else {
-                        targetLat = 14.6810;
-                        targetLng = 121.0450;
+                        fixedDestLoc = [targetLat, targetLng];
+                        setDestLoc(fixedDestLoc);
                     }
-
-                    setDestLoc([targetLat, targetLng]);
-
-                    setDistance(
-                        calculateDistanceKM(
-                            lat,
-                            lng,
-                            targetLat,
-                            targetLng
-                        )
-                    );
-
                     setIsLocating(false);
                 },
-
                 (error) => {
+                    console.warn("Location access denied or unavailable. Falling back to Mandaluyong.");
+                    const fallbackUserLat = 14.5776;
+                    const fallbackUserLng = 121.0345;
+                    setUserLoc([fallbackUserLat, fallbackUserLng]);
 
-                    console.error("Location access denied.");
-
-                    setUserLoc([14.6760, 121.0437]);
-
-                    setDestLoc([14.6810, 121.0450]);
-
-                    setDistance("0.65");
-
+                    const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
+                    const fallbackDestLat = isHazardousItem ? 14.5844 : 14.5710; 
+                    const fallbackDestLng = isHazardousItem ? 121.0565 : 121.0380;
+                    
+                    setDestLoc([fallbackDestLat, fallbackDestLng]);
                     setIsLocating(false);
                 },
-
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
-
         } else {
-
             setIsLocating(false);
         }
 
         if (savedResults) {
-
             const parsed = JSON.parse(savedResults);
-
             setAiData(parsed.aiData);
             setScannedImage(parsed.imageUrl);
-
             setIsAnalyzing(false);
-
         } else if (savedImage && !analysisStarted.current) {
-
             analysisStarted.current = true;
-
             setScannedImage(savedImage);
-
             analyzeImageWithVisionAI(savedImage);
-
         } else if (!savedImage) {
-
             router.push('/scan');
         }
 
-    }, [router]);
+        return () => {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+        };
+
+    }, [router, isManualOverride]);
 
     const analyzeImageWithVisionAI = async (base64Image: string) => {
-
         try {
-
             const response = await fetch('/api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: base64Image })
             });
-
             const result = await response.json();
-
             if (result.success) {
-
                 setAiData(result.aiData);
-
                 setScannedImage(result.imageUrl || base64Image);
-
                 localStorage.setItem('lastScanResults', JSON.stringify({
                     aiData: result.aiData,
                     imageUrl: result.imageUrl || base64Image
                 }));
-
             } else {
-
                 setErrorMessage(result.error);
             }
-
         } catch (error) {
-
             setErrorMessage("Connection failed.");
-
         } finally {
-
             setIsAnalyzing(false);
         }
     };
@@ -374,12 +392,6 @@ export default function ResultsPage() {
 
     const isLoadingEverything = isAnalyzing || isLocating;
 
-    const isHazard = aiData?.isHazardous ?? false;
-
-    const destName = isHazard
-        ? 'SM Cyberzone E-Waste Bin'
-        : 'M. Santos Junk Shop';
-
     return (
         <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
 
@@ -387,17 +399,11 @@ export default function ResultsPage() {
 
             {isLoadingEverything && (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-
                     <div className="w-16 h-16 border-4 border-[#7C8D58] border-t-transparent rounded-full animate-spin mb-6"></div>
-
-                    <h2 className="text-xl font-bold text-gray-800 mb-2">
-                        Analyzing Item & Mapping Location
-                    </h2>
-
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">Analyzing Item & Mapping Location</h2>
                     <p className="text-sm text-gray-500 max-w-md text-center px-4">
                         Please allow location access in your browser prompt so we can route you to the nearest verified disposal facility.
                     </p>
-
                 </div>
             )}
 
@@ -408,51 +414,36 @@ export default function ResultsPage() {
                     <div className="absolute top-0 left-0 w-full z-20">
                         <nav className="w-full p-6 flex justify-between items-center">
                             <Link href="/scan" className="text-black hover:text-gray-400 transition-colors text-sm uppercase tracking-widest">
-                                &#8592; Back
+                                ← Back
                             </Link>
                         </nav>
                     </div>
 
                     <section className="relative pt-24 pb-16 px-4 md:px-8">
-
                         <div className="w-[90%] lg:w-[85%] mx-auto flex flex-col gap-8">
-
                             <div className="flex flex-col lg:flex-row shadow-sm rounded-2xl overflow-hidden bg-white border border-gray-100">
 
                                 <div className="w-full lg:w-[45%] flex flex-col items-center justify-center relative min-h-[40vh] lg:min-h-[60vh] bg-black">
-
                                     {scannedImage ? (
-                                        <img
-                                            src={scannedImage}
-                                            alt="Scanned Item"
-                                            className="w-full h-full object-contain transition-opacity duration-500"
-                                            style={{ opacity: 1 }}
-                                        />
+                                        <img src={scannedImage} alt="Scanned Item" className="w-full h-full object-contain transition-opacity duration-500" />
                                     ) : (
-                                        <p className="text-white/50 text-sm">
-                                            No image captured.
-                                        </p>
+                                        <p className="text-white/50 text-sm">No image captured.</p>
                                     )}
-
                                 </div>
 
                                 <div className="w-full lg:w-[55%] flex flex-col">
-
                                     {aiData && aiData.objectName !== "Invalid" ? (
-
                                         <ScanResultCard
                                             itemData={aiData}
                                             onNewScan={handleNewScan}
                                             distanceKM={distance}
                                             onGetDirections={openGoogleMapsDirections}
+                                            destName={destName}
                                         />
-
                                     ) : aiData && aiData.objectName === "Invalid" ? (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
                                             <div className="text-red-500 font-bold bg-red-50 p-6 rounded-lg border border-red-200">
-                                                <p className="mb-2 uppercase tracking-wider text-xs text-red-400">
-                                                    Invalid Subject Detected
-                                                </p>
+                                                <p className="mb-2 uppercase tracking-wider text-xs text-red-400">Invalid Subject Detected</p>
                                                 <p>Faces and live animals cannot be processed for waste analysis.</p>
                                                 <button onClick={handleNewScan} className="mt-4 px-6 py-2 bg-red-100 text-red-800 rounded-lg text-sm hover:bg-red-200 transition-colors">
                                                     Scan Again
@@ -460,60 +451,68 @@ export default function ResultsPage() {
                                             </div>
                                         </div>
                                     ) : (
-
                                         <div className="w-full h-full flex items-center justify-center bg-gray-50 p-6 text-center">
-
                                             <div className="text-red-500 font-bold bg-red-50 p-4 rounded-lg border border-red-200">
-
-                                                <p className="mb-2 uppercase tracking-wider text-xs text-red-400">
-                                                    Analysis Failed
-                                                </p>
-
+                                                <p className="mb-2 uppercase tracking-wider text-xs text-red-400">Analysis Failed</p>
                                                 <p>{errorMessage}</p>
-
                                             </div>
-
                                         </div>
                                     )}
-
                                 </div>
                             </div>
 
                             <div className="w-full h-[60vh] lg:h-[75vh] rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-gray-200 relative">
+                                
+                                <div className="absolute top-4 left-4 z-[1000] w-full max-w-xs sm:max-w-md pointer-events-auto">
+                                    <form onSubmit={handleAddressSearch} className="flex flex-col sm:flex-row gap-2 w-full bg-white/95 backdrop-blur p-2 rounded-xl shadow-lg border border-gray-200">
+                                        <input
+                                            type="text"
+                                            value={addressInput}
+                                            onChange={(e) => setAddressInput(e.target.value)}
+                                            placeholder="Enter address (e.g., Mandaluyong)"
+                                            className="flex-grow px-3 py-2 text-sm text-black outline-none bg-white rounded-lg border border-gray-200 focus:border-[#8b9c64] focus:ring-1 focus:ring-[#8b9c64] transition-all"
+                                            disabled={isSearching}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={isSearching}
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors ${isHazard ? 'bg-red-500 hover:bg-red-600' : 'bg-[#8b9c64] hover:bg-[#788856]'} disabled:opacity-50 whitespace-nowrap`}
+                                        >
+                                            {isSearching ? '...' : 'Search'}
+                                        </button>
+                                    </form>
+                                    {searchError && (
+                                        <div className="mt-2 bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-md border border-red-200 inline-block">
+                                            <p className="text-red-500 text-xs font-semibold">{searchError}</p>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {userLoc && destLoc ? (
-
                                     <LiveMap
                                         userLocation={userLoc}
                                         destinationLocation={destLoc}
                                         isHazardous={isHazard}
                                         destinationName={destName}
+                                        routePath={routePath} // PASSING THE NEW PATH DOWN
+                                        onUserLocationChange={(newLoc) => {
+                                            setIsManualOverride(true);
+                                            setUserLoc(newLoc);
+                                        }}
                                     />
-
                                 ) : (
-
-                                    <div className="absolute inset-0 bg-blue-50/50 flex items-center justify-center">
-
-                                        <img
-                                            src="/api/placeholder/1200/800"
-                                            alt="Map View Placeholder"
-                                            className="w-full h-full object-cover"
-                                        />
-
+                                    <div className="absolute inset-0 bg-blue-50/50 flex items-center justify-center z-0">
+                                        <img src="/api/placeholder/1200/800" alt="Map View Placeholder" className="w-full h-full object-cover" />
                                     </div>
                                 )}
-
                             </div>
 
                         </div>
                     </section>
 
                     <footer className="relative w-full h-[40vh] md:h-screen bg-[#E8EBE4] flex items-end justify-center overflow-hidden">
-
                         <div className="absolute inset-0 flex items-center justify-center z-0 px-4 md:px-6 w-full">
-
                             <svg className="w-full max-w-[1600px] h-auto drop-shadow-sm unzoomable" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid meet">
-
                                 <defs>
                                     <filter id="innerShadow">
                                         <feOffset dx="8" dy="12" />
@@ -524,32 +523,12 @@ export default function ResultsPage() {
                                         <feComposite operator="over" in="shadow" in2="SourceGraphic" />
                                     </filter>
                                 </defs>
-
-                                <text
-                                    x="50%"
-                                    y="50%"
-                                    dominantBaseline="middle"
-                                    textAnchor="middle"
-                                    fill="#E8EBE4"
-                                    className="font-inter font-bold uppercase"
-                                    style={{
-                                        fontSize: '250px',
-                                        letterSpacing: '14px'
-                                    }}
-                                    filter="url(#innerShadow)"
-                                >
+                                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#E8EBE4" className="font-inter font-bold uppercase" style={{ fontSize: '250px', letterSpacing: '14px' }} filter="url(#innerShadow)">
                                     RECICLA
                                 </text>
-
                             </svg>
                         </div>
-
-                        <img
-                            src="/images/footer.png"
-                            alt="Tropical Leaves"
-                            className="relative z-10 w-full h-[40vh] md:h-[85vh] object-cover object-bottom pointer-events-none unzoomable drop-shadow-2xl"
-                        />
-
+                        <img src="/images/footer.png" alt="Tropical Leaves" className="relative z-10 w-full h-[40vh] md:h-[85vh] object-cover object-bottom pointer-events-none unzoomable drop-shadow-2xl" />
                     </footer>
 
                 </main>

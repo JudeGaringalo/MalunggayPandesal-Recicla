@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useMemo, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
+// Restored Icon Definitions
 const userIcon = L.icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -34,7 +35,8 @@ function MapBounds({ userLoc, destLoc }: { userLoc: [number, number], destLoc: [
     useEffect(() => {
         if (userLoc && destLoc) {
             const bounds = L.latLngBounds(userLoc, destLoc);
-            map.fitBounds(bounds, { padding: [50, 50] });
+            // Added slightly more padding so the route fits nicely
+            map.fitBounds(bounds, { padding: [60, 60] });
         }
     }, [map, userLoc, destLoc]);
     return null;
@@ -45,10 +47,33 @@ interface MapProps {
     destinationLocation: [number, number];
     isHazardous: boolean;
     destinationName: string;
+    routePath: [number, number][] | null; // NEW: Array of coordinates for the road path
+    onUserLocationChange?: (newLoc: [number, number]) => void;
 }
 
-export default function MapComponent({ userLocation, destinationLocation, isHazardous, destinationName }: MapProps) {
+export default function MapComponent({ userLocation, destinationLocation, isHazardous, destinationName, routePath, onUserLocationChange }: MapProps) {
     const destIcon = isHazardous ? hazardIcon : safeIcon;
+    const lineColor = isHazardous ? "#EF4444" : "#4A7c59"; // Darkened the green slightly for better map contrast
+    
+    const markerRef = useRef<L.Marker>(null);
+
+    const eventHandlers = useMemo(
+        () => ({
+            dragend() {
+                const marker = markerRef.current;
+                if (marker && onUserLocationChange) {
+                    const newPos = marker.getLatLng();
+                    onUserLocationChange([newPos.lat, newPos.lng]);
+                }
+            },
+        }),
+        [onUserLocationChange]
+    );
+
+    // Use the road path if available, otherwise fallback to the straight line
+    const positionsToDraw = routePath && routePath.length > 0 
+        ? routePath 
+        : [userLocation, destinationLocation];
 
     return (
         <MapContainer
@@ -56,7 +81,7 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
             zoom={15}
             style={{ height: '100%', width: '100%', zIndex: 10 }}
             zoomControl={false}
-            attributionControl={false} // Absolutely no attribution box
+            attributionControl={false} 
         >
             <TileLayer
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -65,8 +90,25 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
 
             <MapBounds userLoc={userLocation} destLoc={destinationLocation} />
 
-            <Marker position={userLocation} icon={userIcon}>
-                <Popup className="font-sans"><strong>Your Location</strong></Popup>
+            {/* Changed to a solid, thicker line to look like a real navigation route */}
+            <Polyline 
+                positions={positionsToDraw} 
+                color={lineColor} 
+                weight={6} 
+                opacity={0.8}
+            />
+
+            <Marker 
+                position={userLocation} 
+                icon={userIcon}
+                draggable={true}
+                eventHandlers={eventHandlers}
+                ref={markerRef}
+            >
+                <Popup className="font-sans">
+                    <strong>Your Location</strong><br/>
+                    <span className="text-xs text-gray-500">(Drag to adjust)</span>
+                </Popup>
             </Marker>
 
             <Marker position={destinationLocation} icon={destIcon}>
