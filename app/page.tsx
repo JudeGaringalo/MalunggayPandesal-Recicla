@@ -42,7 +42,7 @@ const FEATURES = [
     title: "Hazard Routing",
     icon: "/images/Frame 60.png",
     bgColor: "bg-[#404828]",
-    description: "Unlike general recycling apps, we prioritize safety by flagging toxic materials—like bloated batteries—and routing them to specialized disposal centers instead of general bins.",
+    description: "Unlike general recycling apps, we prioritize safety by flagging toxic materials like bloated batteries and routing them to specialized disposal centers instead of general bins.",
     image: "/images/feature-3.png"
   },
   {
@@ -190,7 +190,7 @@ export default function LandingPage(): React.JSX.Element {
             </div>
             <div className="container mx-auto px-6 mt-8 md:mt-16 max-w-4xl text-center">
               <p className="text-[#4A4A4A] text-[12px] sm:text-sm md:text-xl leading-relaxed font-medium">
-                Recicla is a real-time, AI-driven web application that transforms the way you approach household waste and intentional decluttering. By leveraging high-speed, client-side object detection, Recicla empowers you to instantly analyze everyday items—especially aging electronics—to understand their material composition and proper disposal methods. We take the guesswork out of waste segregation, turning the simple act of cleaning out your home into a meaningful contribution to environmental sustainability.
+                Recicla is a real-time, AI-driven web application that transforms the way you approach household waste and intentional decluttering. By leveraging high-speed, client-side object detection, Recicla empowers you to instantly analyze everyday items especially aging electronics to understand their material composition and proper disposal methods. We take the guesswork out of waste segregation, turning the simple act of cleaning out your home into a meaningful contribution to environmental sustainability.
               </p>
             </div>
           </section>
@@ -293,7 +293,7 @@ export default function LandingPage(): React.JSX.Element {
           <section className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             <div className="container mx-auto px-2 sm:px-6 text-center">
               <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
-              <h3 className="text-[12px] sm:text-2xl md:text-3xl font-semibold mb-6 md:mb-20 text-[#4A4A4A]">Malunggay Pandesal</h3>
+              <h3 className="text-[12px] sm:text-2xl md:text-3xl font-semibold mb-6 md:mb-20 text-gray-800">Malunggay Pandesal</h3>
               <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
