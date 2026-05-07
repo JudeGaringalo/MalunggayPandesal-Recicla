@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -46,7 +46,7 @@ function MapBounds({ userLoc, destLoc }: { userLoc: [number, number], destLoc: [
 
 interface MapProps {
     userLocation: [number, number];
-    destinationLocation: [number, number] | null; // Made nullable
+    destinationLocation: [number, number] | null; 
     isHazardous: boolean;
     destinationName: string;
     routePath: [number, number][] | null; 
@@ -54,6 +54,8 @@ interface MapProps {
 }
 
 export default function MapComponent({ userLocation, destinationLocation, isHazardous, destinationName, routePath, onUserLocationChange }: MapProps) {
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
     const destIcon = isHazardous ? hazardIcon : safeIcon;
     const lineColor = isHazardous ? "#EF4444" : "#4A7c59"; 
     
@@ -72,52 +74,74 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
         [onUserLocationChange]
     );
 
+    const lightMapURL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+    const darkMapURL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
     return (
-        <MapContainer
-            center={userLocation}
-            zoom={15}
-            style={{ height: '100%', width: '100%', zIndex: 10 }}
-            zoomControl={false}
-            attributionControl={false} 
-        >
-            <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution="" 
-            />
+        <div className="relative w-full h-full">
 
-            <MapBounds userLoc={userLocation} destLoc={destinationLocation} />
-
-            {/* Only draw route if it exists */}
-            {routePath && routePath.length > 0 && (
-                <Polyline 
-                    positions={routePath} 
-                    color={lineColor} 
-                    weight={6} 
-                    opacity={0.8}
-                />
-            )}
-            <Marker 
-                position={userLocation} 
-                icon={userIcon}
-                draggable={true}
-                eventHandlers={eventHandlers}
-                ref={markerRef}
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); 
+                    setIsDarkMode(!isDarkMode);
+                }}
+                className={`absolute bottom-6 right-4 z-[1000] flex items-center gap-2 px-4 py-2 rounded-full shadow-lg border backdrop-blur-md transition-all active:scale-95 ${
+                    isDarkMode 
+                        ? 'bg-black/50 border-white/20 text-white hover:bg-black/70' 
+                        : 'bg-white/80 border-gray-200 text-gray-800 hover:bg-white'
+                }`}
             >
-                <Popup className="font-sans">
-                    <strong>Your Location</strong><br/>
-                    <span className="text-xs text-gray-500">(Drag to adjust)</span>
-                </Popup>
-            </Marker>
+                <span className="text-lg">{isDarkMode}</span>
+                <span className="text-xs font-bold uppercase tracking-wider">
+                    {isDarkMode ? 'Dark' : 'Light'}
+                </span>
+            </button>
 
-            {/* Only draw destination marker if we have found one */}
-            {destinationLocation && (
-                <Marker position={destinationLocation} icon={destIcon}>
+            <MapContainer
+                center={userLocation}
+                zoom={15}
+                style={{ height: '100%', width: '100%', zIndex: 10 }}
+                zoomControl={false}
+                attributionControl={false} 
+            >
+                <TileLayer
+                    url={isDarkMode ? darkMapURL : lightMapURL}
+                    attribution="" 
+                />
+
+                <MapBounds userLoc={userLocation} destLoc={destinationLocation} />
+
+                {routePath && routePath.length > 0 && (
+                    <Polyline 
+                        positions={routePath} 
+                        color={lineColor} 
+                        weight={6} 
+                        opacity={0.8}
+                    />
+                )}
+                <Marker 
+                    position={userLocation} 
+                    icon={userIcon}
+                    draggable={true}
+                    eventHandlers={eventHandlers}
+                    ref={markerRef}
+                >
                     <Popup className="font-sans">
-                        <strong>{destinationName}</strong><br />
-                        Verified Drop-off
+                        <strong>Your Location</strong><br/>
+                        <span className="text-xs text-gray-500">(Drag to adjust)</span>
                     </Popup>
                 </Marker>
-            )}
-        </MapContainer>
+
+                {destinationLocation && (
+                    <Marker position={destinationLocation} icon={destIcon}>
+                        <Popup className="font-sans">
+                            <strong>{destinationName}</strong><br />
+                            Verified Drop-off
+                        </Popup>
+                    </Marker>
+                )}
+            </MapContainer>
+        </div>
     );
 }

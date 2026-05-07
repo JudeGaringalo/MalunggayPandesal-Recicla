@@ -9,7 +9,7 @@ import dynamic from 'next/dynamic';
 
 const LiveMap = dynamic(() => import('@/app/components/MapComponent'), {
     ssr: false,
-    loading: () => <div className="w-full h-full bg-gray-200 animate-pulse"></div>
+    loading: () => <div className="w-full h-full bg-[#E8EBE4] animate-pulse"></div>
 });
 
 interface DetailedAIResponse {
@@ -46,13 +46,15 @@ const ScanResultCard = ({
     onNewScan,
     distanceKM,
     onGetDirections,
-    destName
+    destName,
+    mobileMapNode 
 }: {
     itemData: DetailedAIResponse,
     onNewScan: () => void,
     distanceKM: string | null,
     onGetDirections: () => void,
-    destName: string
+    destName: string,
+    mobileMapNode: React.ReactNode 
 }) => {
 
     if (!itemData || itemData.objectName === "Invalid") return null;
@@ -66,7 +68,7 @@ const ScanResultCard = ({
     const textColor = isHazard ? 'text-red-600' : 'text-[#6b7a4a]';
 
     return (
-        <div className="w-full h-full flex-1 bg-white flex flex-col h-full">
+        <div className="w-full h-full flex-1 bg-white flex flex-col">
             <div className={`${themeColor} p-6 md:p-8 text-white transition-colors duration-300`}>
                 <p className="text-[10px] tracking-wider uppercase font-semibold mb-1 text-white/80">
                     Scanned Item - {itemData.category}
@@ -120,7 +122,6 @@ const ScanResultCard = ({
                         <h3 className={`text-sm font-bold mb-2 ${isHazard ? 'text-red-500' : 'text-gray-400'}`}>
                             {isHazard ? '⚠️ Safety Warning' : 'Handling Instructions'}
                         </h3>
-
                         <p className="text-sm text-gray-600 leading-relaxed font-medium">
                             {itemData.hazardDetails}
                         </p>
@@ -130,23 +131,12 @@ const ScanResultCard = ({
                         <h3 className="text-sm font-bold text-gray-400 mb-2">
                             Material Description
                         </h3>
-
                         <p className="text-sm text-gray-600 leading-relaxed font-medium">
                             {itemData.description}
                         </p>
                     </div>
 
-                    <div className="mb-6">
-                        <h3 className="text-sm font-bold text-gray-400 mb-2">
-                            Recycling & Processing
-                        </h3>
-
-                        <p className="text-sm text-gray-600 leading-relaxed font-medium">
-                            {itemData.recyclingUses}
-                        </p>
-                    </div>
-
-                    <div className="mb-8">
+                    <div className="mb-6 border-t border-gray-100 pt-6">
                         <h3 className="text-sm font-bold text-gray-400 mb-3">
                             Nearest {isHazard ? 'E-Waste Drop-off' : 'Disposal / Junk Shop'}
                         </h3>
@@ -163,17 +153,25 @@ const ScanResultCard = ({
                                 <p className="font-bold text-gray-800 text-sm">
                                     {destName}
                                 </p>
-
                                 <p className="text-xs text-gray-500 font-medium mt-0.5">
                                     {distanceKM ? `${distanceKM} KM (Driving Distance)` : 'Calculating distance...'}
                                 </p>
                             </div>
                         </div>
+
+                        <p className="mt-4 text-[11px] text-gray-400 font-medium italic">
+                            📍 Is the map not giving you an accurate location? Try searching your location in the map.
+                        </p>
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                {mobileMapNode && (
+                    <div className="block lg:hidden w-full h-[50vh] relative mb-6 rounded-xl overflow-hidden shadow-inner border border-gray-200">
+                        {mobileMapNode}
+                    </div>
+                )}
 
+                <div className="flex flex-col sm:flex-row gap-3 mt-auto">
                     <button
                         onClick={onGetDirections}
                         className={`flex-1 transition-colors text-white font-semibold py-3 px-4 rounded-xl text-sm shadow-sm ${isHazard ? 'bg-red-500 hover:bg-red-600' : 'bg-[#8b9c64] hover:bg-[#788856]'}`}
@@ -187,7 +185,6 @@ const ScanResultCard = ({
                     >
                         Capture or Upload New Photo
                     </button>
-
                 </div>
             </div>
         </div>
@@ -205,10 +202,11 @@ export default function ResultsPage() {
     const [isAnalyzing, setIsAnalyzing] = useState(true);
     const [isLocating, setIsLocating] = useState(true);
 
-   
     const [isMapLoading, setIsMapLoading] = useState(false);
 
     const analysisStarted = useRef(false);
+    const hasFetchedFacility = useRef(false);
+    const dragDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
     const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
     const [destLoc, setDestLoc] = useState<[number, number] | null>(null);
@@ -221,6 +219,9 @@ export default function ResultsPage() {
     const [addressInput, setAddressInput] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
     const isHazard = aiData?.isHazardous ?? false;
 
@@ -262,9 +263,7 @@ export default function ResultsPage() {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
 
-           
             if (!response.ok) {
-                console.warn(`Overpass API error: ${response.status} ${response.statusText}`);
                 return null; 
             }
                   
@@ -272,11 +271,9 @@ export default function ResultsPage() {
             try {
                 data = await response.json();
             } catch (parseError) {
-                console.error("Failed to parse Overpass response. Received XML instead of JSON.");
                 return null; 
             }
 
-           
             if (data && data.elements && data.elements.length > 0) {
                 let closestFacility = null;
                 let minDistance = Infinity;
@@ -304,7 +301,6 @@ export default function ResultsPage() {
             }
             return null;
         } catch (error) {
-            console.error("Failed to fetch real facility:", error);
             return null;
         }
     };
@@ -328,9 +324,77 @@ export default function ResultsPage() {
         if (!userLoc || !destLoc) return;
         const [userLat, userLng] = userLoc;
         const [destLat, destLng] = destLoc;
-        
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
         window.open(mapsUrl, "_blank");
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setAddressInput(value);
+
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        if (value.length < 3) {
+            setSuggestions([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        debounceTimer.current = setTimeout(async () => {
+            try {
+                const response = await fetch(
+                    `https://photon.komoot.io/api/?q=${encodeURIComponent(value + " Philippines")}&limit=5`
+                );
+                
+                const data = await response.json();
+
+                if (data.features) {
+                    const formattedSuggestions = data.features.map((feature: any) => {
+                        const props = feature.properties;
+                        const name = props.name ? `${props.name}` : '';
+                        const street = props.street ? `${props.street}` : '';
+                        const city = props.city || props.state || '';
+                        const displayName = [name, street, city].filter(Boolean).join(', ');
+
+                        return {
+                            display_name: displayName || "Unknown location",
+                            lon: feature.geometry.coordinates[0], 
+                            lat: feature.geometry.coordinates[1]
+                        };
+                    });
+                    
+                    setSuggestions(formattedSuggestions.filter((s: any) => s.display_name.trim() !== ''));
+                    setShowDropdown(true);
+                }
+            } catch (error) {
+                console.error("Photon Autocomplete failed:", error);
+            }
+        }, 300);
+    };
+
+    const handleSelectSuggestion = async (suggestion: any) => {
+        setAddressInput(suggestion.display_name);
+        setShowDropdown(false);
+        setSearchError(null);
+        setIsMapLoading(true);
+        
+        const lat = parseFloat(suggestion.lat);
+        const lon = parseFloat(suggestion.lon);
+
+        setIsManualOverride(true);
+        setUserLoc([lat, lon]);
+        setDestName('Locating legitimate facility...');
+        
+        const realFacility = await findNearestRealFacility(lat, lon, isHazard);
+        if (realFacility) {
+            setDestLoc([realFacility.lat, realFacility.lng]);
+            setDestName(realFacility.name);
+        } else {
+            setDestLoc(generateNearbyDest(lat, lon, isHazard));
+            setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+        }
+        
+        setIsMapLoading(false);
     };
 
     const handleAddressSearch = async (e: React.FormEvent) => {
@@ -340,6 +404,7 @@ export default function ResultsPage() {
         setIsSearching(true);
         setIsMapLoading(true);
         setSearchError(null);
+        setShowDropdown(false);
 
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput)}`);
@@ -361,12 +426,11 @@ export default function ResultsPage() {
                     setDestLoc(generateNearbyDest(lat, lon, isHazard));
                     setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
                 }
-
             } else {
-                setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
+                setSearchError("Address not found.");
             }
         } catch (error) {
-            setSearchError("Error searching for address. Please try again.");
+            setSearchError("Error searching.");
         } finally {
             setIsSearching(false);
             setIsMapLoading(false); 
@@ -388,7 +452,6 @@ export default function ResultsPage() {
                         setDistance((route.distance / 1000).toFixed(2));
                     }
                 } catch (error) {
-                    console.error("Routing failed, falling back to straight line:", error);
                     setRoutePath(null); 
                     setDistance(calculateDistanceKM(userLoc[0], userLoc[1], destLoc[0], destLoc[1]));
                 }
@@ -405,7 +468,6 @@ export default function ResultsPage() {
         const savedResults = localStorage.getItem('lastScanResults');
         
         let watchId: number;
-        let fixedDestLoc: [number, number] | null = null; 
 
         if ("geolocation" in navigator) {
             watchId = navigator.geolocation.watchPosition(
@@ -417,42 +479,44 @@ export default function ResultsPage() {
                     
                     setUserLoc([lat, lng]);
 
-                    if (!fixedDestLoc) {
+                    if (!hasFetchedFacility.current) {
+                        hasFetchedFacility.current = true; 
+                        
                         const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
                         
                         (async () => {
                             const realFacility = await findNearestRealFacility(lat, lng, isHazardousItem);
                             if (realFacility) {
-                                fixedDestLoc = [realFacility.lat, realFacility.lng];
+                                setDestLoc([realFacility.lat, realFacility.lng]);
                                 setDestName(realFacility.name);
                             } else {
-                                fixedDestLoc = generateNearbyDest(lat, lng, isHazardousItem);
+                                setDestLoc(generateNearbyDest(lat, lng, isHazardousItem));
                                 setDestName(isHazardousItem ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
                             }
-                            setDestLoc(fixedDestLoc);
                         })();
                     }
                     setIsLocating(false);
                 },
                 (error) => {
-                    console.warn("Location access denied or unavailable. Falling back to Mandaluyong.");
                     const fallbackUserLat = 14.5776;
                     const fallbackUserLng = 121.0345;
                     setUserLoc([fallbackUserLat, fallbackUserLng]);
 
                     const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
                     
-                    (async () => {
-                        const realFacility = await findNearestRealFacility(fallbackUserLat, fallbackUserLng, isHazardousItem);
-                        if (realFacility) {
-                            setDestLoc([realFacility.lat, realFacility.lng]);
-                            setDestName(realFacility.name);
-                        } else {
-                            setDestLoc(generateNearbyDest(fallbackUserLat, fallbackUserLng, isHazardousItem));
-                            setDestName(isHazardousItem ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
-                        }
-                    })();
-                    
+                    if (!hasFetchedFacility.current) {
+                        hasFetchedFacility.current = true;
+                        (async () => {
+                            const realFacility = await findNearestRealFacility(fallbackUserLat, fallbackUserLng, isHazardousItem);
+                            if (realFacility) {
+                                setDestLoc([realFacility.lat, realFacility.lng]);
+                                setDestName(realFacility.name);
+                            } else {
+                                setDestLoc(generateNearbyDest(fallbackUserLat, fallbackUserLng, isHazardousItem));
+                                setDestName(isHazardousItem ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+                            }
+                        })();
+                    }
                     setIsLocating(false);
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -509,6 +573,102 @@ export default function ResultsPage() {
 
     const isLoadingEverything = isAnalyzing || isLocating;
 
+    const renderMapWithSearch = () => (
+        <>
+           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] md:min-w-[400px] md:max-w-md pointer-events-auto flex flex-col gap-1">
+                <form 
+                    onSubmit={handleAddressSearch} 
+                    className="flex items-center gap-1.5 w-full bg-white/10 backdrop-blur-md p-1.5 md:p-1 rounded-xl shadow-xl border border-white/20 relative z-20"
+                >
+                    <input
+                        type="text"
+                        value={addressInput}
+                        onChange={handleInputChange}
+                        onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+                        placeholder="Search address..."
+                        className="flex-grow px-3 py-2 md:py-1.5 text-xs md:text-sm text-gray-800 outline-none bg-white/40 md:bg-white/30 placeholder:text-gray-600 md:placeholder:text-gray-500 rounded-lg border border-white/10 focus:bg-white/60 md:focus:bg-white/50 transition-all"
+                        disabled={isSearching}
+                    />
+                    <button
+                        type="submit"
+                        disabled={isSearching}
+                        className={`px-4 py-2 md:px-3 md:py-1.5 rounded-lg text-xs md:text-[10px] font-black uppercase tracking-wider md:tracking-tighter text-white transition-all active:scale-90 ${
+                            isHazard ? 'bg-red-500/80 md:bg-red-500/70' : 'bg-[#8b9c64]/80 md:bg-[#8b9c64]/70'
+                        } disabled:opacity-50 backdrop-blur-sm z-20`}
+                    >
+                        {isSearching ? '...' : 'Go'}
+                    </button>
+                </form>
+
+                {showDropdown && suggestions.length > 0 && (
+                    <ul className="w-full bg-white/80 md:bg-white/70 backdrop-blur-xl rounded-xl shadow-2xl border border-white/40 overflow-hidden z-10 animate-in fade-in slide-in-from-top-2">
+                        {suggestions.map((item, index) => (
+                            <li 
+                                key={index}
+                                onClick={() => handleSelectSuggestion(item)}
+                                className="px-4 py-3 md:px-3 md:py-2 text-xs md:text-sm text-gray-800 hover:bg-white/60 cursor-pointer border-b border-white/20 last:border-0 transition-colors"
+                            >
+                                {item.display_name}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                {searchError && (
+                    <div className="bg-red-500/80 backdrop-blur-sm px-3 py-2 md:px-2 md:py-1 rounded-md shadow-lg border border-white/20 inline-block self-center md:self-start">
+                        <p className="text-white text-[10px] md:text-[9px] font-medium leading-none">{searchError}</p>
+                    </div>
+                )}
+            </div>
+
+            {isMapLoading && (
+                <div className="absolute inset-0 z-[2000] bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-300">
+                    <div className="w-12 h-12 border-4 border-[#7C8D58] border-t-transparent rounded-full animate-spin mb-4 shadow-sm"></div>
+                    <p className="text-[#6b7a4a] font-bold text-sm uppercase tracking-widest animate-pulse">Routing to facility...</p>
+                </div>
+            )}
+
+            {userLoc ? (
+                <LiveMap
+                    userLocation={userLoc}
+                    destinationLocation={destLoc}
+                    isHazardous={isHazard}
+                    destinationName={destName}
+                    routePath={routePath} 
+                    onUserLocationChange={(newLoc) => {
+                        setIsManualOverride(true);
+                        setUserLoc(newLoc);
+                        
+                        if (dragDebounceTimer.current) clearTimeout(dragDebounceTimer.current);
+                        
+                        dragDebounceTimer.current = setTimeout(() => {
+                            if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 0.5) {
+                                setIsMapLoading(true); 
+                                (async () => {
+                                    setDestName('Relocating facility...');
+                                    const realFacility = await findNearestRealFacility(newLoc[0], newLoc[1], isHazard);
+                                    if (realFacility) {
+                                        setDestLoc([realFacility.lat, realFacility.lng]);
+                                        setDestName(realFacility.name);
+                                    } else {
+                                        setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
+                                        setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+                                    }
+                                    setIsMapLoading(false); 
+                                })();
+                            }
+                        }, 1500); 
+                    }}
+                />
+            ) : (
+                <div className="absolute inset-0 bg-[#E8EBE4] flex flex-col items-center justify-center z-0">
+                    <div className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-gray-500 font-medium text-sm">Initializing Map Component...</p>
+                </div>
+            )}
+        </>
+    );
+
     return (
         <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
 
@@ -538,8 +698,8 @@ export default function ResultsPage() {
 
                     <section className="relative pt-24 pb-16 px-4 md:px-8">
                         <div className="w-[90%] lg:w-[85%] mx-auto flex flex-col gap-8">
+                            
                             <div className="flex flex-col lg:flex-row shadow-sm rounded-2xl overflow-hidden bg-white border border-gray-100">
-
                                 <div className="w-full lg:w-[45%] flex flex-col items-center justify-center relative min-h-[40vh] lg:min-h-[60vh] bg-black">
                                     {scannedImage ? (
                                         <img src={scannedImage} alt="Scanned Item" className="w-full h-full object-contain transition-opacity duration-500" />
@@ -556,6 +716,7 @@ export default function ResultsPage() {
                                             distanceKM={distance}
                                             onGetDirections={openGoogleMapsDirections}
                                             destName={destName}
+                                            mobileMapNode={renderMapWithSearch()} // MAP PASSED IN HERE FOR MOBILE
                                         />
                                     ) : aiData && aiData.objectName === "Invalid" ? (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
@@ -578,77 +739,9 @@ export default function ResultsPage() {
                                 </div>
                             </div>
 
-                            <div className="w-full h-[60vh] lg:h-[75vh] rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-[#E8EBE4] relative">
-                                
-                                <div className="absolute top-4 left-4 z-[1000] w-full max-w-xs sm:max-w-md pointer-events-auto">
-                                    <form onSubmit={handleAddressSearch} className="flex flex-col sm:flex-row gap-2 w-full bg-white/95 backdrop-blur p-2 rounded-xl shadow-lg border border-gray-200">
-                                        <input
-                                            type="text"
-                                            value={addressInput}
-                                            onChange={(e) => setAddressInput(e.target.value)}
-                                            placeholder="Enter address"
-                                            className="flex-grow px-3 py-2 text-sm text-black outline-none bg-white rounded-lg border border-gray-200 focus:border-[#8b9c64] focus:ring-1 focus:ring-[#8b9c64] transition-all"
-                                            disabled={isSearching}
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={isSearching}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors ${isHazard ? 'bg-red-500 hover:bg-red-600' : 'bg-[#8b9c64] hover:bg-[#788856]'} disabled:opacity-50 whitespace-nowrap`}
-                                        >
-                                            {isSearching ? '...' : 'Search'}
-                                        </button>
-                                    </form>
-                                    {searchError && (
-                                        <div className="mt-2 bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-md border border-red-200 inline-block">
-                                            <p className="text-red-500 text-xs font-semibold">{searchError}</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                
-                                {isMapLoading && (
-                                    <div className="absolute inset-0 z-[2000] bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-300">
-                                        <div className="w-12 h-12 border-4 border-[#7C8D58] border-t-transparent rounded-full animate-spin mb-4 shadow-sm"></div>
-                                        <p className="text-[#6b7a4a] font-bold text-sm uppercase tracking-widest animate-pulse">Routing to facility...</p>
-                                    </div>
-                                )}
-
-                                {userLoc ? (
-                                    <LiveMap
-                                        userLocation={userLoc}
-                                        destinationLocation={destLoc}
-                                        isHazardous={isHazard}
-                                        destinationName={destName}
-                                        routePath={routePath} 
-                                        onUserLocationChange={(newLoc) => {
-                                            setIsManualOverride(true);
-                                            setUserLoc(newLoc);
-                                            
-                                            
-                                            if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 0.5) {
-                                                setIsMapLoading(true); 
-                                                (async () => {
-                                                    setDestName('Relocating facility...');
-                                                    const realFacility = await findNearestRealFacility(newLoc[0], newLoc[1], isHazard);
-                                                    if (realFacility) {
-                                                        setDestLoc([realFacility.lat, realFacility.lng]);
-                                                        setDestName(realFacility.name);
-                                                    } else {
-                                                        setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
-                                                        setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
-                                                    }
-                                                    setIsMapLoading(false); 
-                                                })();
-                                            }
-                                        }}
-                                    />
-                                ) : (
-                                    
-                                    <div className="absolute inset-0 bg-[#E8EBE4] flex flex-col items-center justify-center z-0">
-                                        <div className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full animate-spin mb-4"></div>
-                                        <p className="text-gray-500 font-medium text-sm">Initializing Map Component...</p>
-                                    </div>
-                                )}
+                            {/* THIS MAP ONLY SHOWS ON DESKTOP NOW */}
+                            <div className="hidden lg:block w-full h-[60vh] lg:h-[75vh] rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-[#E8EBE4] relative">
+                                {renderMapWithSearch()}
                             </div>
 
                         </div>
