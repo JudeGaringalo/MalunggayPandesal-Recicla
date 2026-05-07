@@ -1,72 +1,111 @@
-# Recicla
-This is the official repository for the DevKada Hackathon 2026 project by Team Malunggay Pandesal.
+# 🌿 Recicla
 
-> Waste segregation meets AI-verified circular economy.
+### **Recycle from anywhere, Value anything.**
 
-**Domain:** Green Tech & Sustainability
+Recicla is a real-time, AI-driven web application designed to modernize waste management in the Philippines. By combining client-side object detection with cloud-based Vision AI, Recicla empowers users to analyze household waste, estimate its material value in Philippine Pesos (PHP), and locate the nearest verified disposal facility.
 
-## 🌍 The Vision
-Most waste segregation efforts fail because they lack immediate financial incentive or clear localized guidance. Recicla is a real-time web application where users point their camera at their trash, e-waste, or recyclables. 
+---
 
-A lightweight, on-device AI instantly categorizes the item, alerts the user of hazardous materials, and calculates its estimated scrap value. It then connects users directly to the circular economy by routing them to the nearest drop-off bin or verified local junk shop (mangangalakal). 
+# ✨ Key Features
 
-Unlike generic recycling point programs or manual waste booking tools, Recicla takes the strict legal requirement of segregation and masks it behind an engaging, financially motivated tool that actively recovers precious metals from e-waste.
+- ⚡ **Zero-Latency Detection**  
+  Uses TensorFlow.js to run AI models directly in the browser for instant, real-time waste scanning.
 
-## ✨ Key Features (MVP Scope)
-* **Real-Time Client-Side AI:** Detection happens instantly in the browser without server lag, ensuring a smooth, app-like experience without requiring downloads.
-* **Dynamic Value Estimator:** A clean floating UI card snaps to the recognized object, displaying its classification and estimated local scrap value (e.g., Copper wire: ₱300/kg).
-* **Hazard Alerts & Routing:** Special UI states for toxic items (like swollen batteries or CRT monitors) provide safety warnings and specific routing to e-waste bins instead of general junk shops.
+- 💰 **Instant Valuation**  
+  Provides estimated real-world scrap values in Philippine Pesos (PHP).
 
-## 🛠️ The "Zero-Cost" Tech Stack
-Built for speed and immediate deployment using a web-native, zero-cost architecture:
-* **Frontend:** Next.js — Perfect for handling a clean web UI and requesting browser camera access smoothly.
-* **Backend & Database:** Supabase — Handles the item catalog logic, scrap value pricing tables, and hazard warnings securely.
-* **Web Deployment:** Vercel — For fast, accessible hosting.
-* **Action Verification (AI):** Google Teachable Machine exported to TensorFlow.js — Runs entirely on the user's device for zero-cost, zero-latency frame processing.
+- ☣️ **Hazard Detection**  
+  Automatically identifies potentially dangerous materials such as bloated batteries and displays safety handling warnings.
 
-## 🚀 How It Works (The Core Loop)
-1. **The Hook:** Users land on the Recicla web app and click the prominent "Start Scanning" button.
-2. **Method Selection:** Users grant camera permissions and toggle between "Live Camera" for real-time AR-style scanning, or "Upload Photo" for analyzing items from their camera roll.
-3. **The Scan & Inference:** The frontend feeds video frames or image data into TensorFlow.js. The AI instantly categorizes the dominant item in the frame.
-4. **The Results UI:** A dynamic UI card snaps onto the screen displaying the classification, market value, and any necessary hazard alerts.
-5. **Localized Action:** Users click "Find Drop-off" to view a map modal or list view displaying hardcoded local drop-off points (e.g., an SM Cyberzone e-waste bin or a local QC junk shop). 
+- 🗺️ **Geospatial Routing**  
+  Integrated mapping with Leaflet to guide users to nearby junk shops and e-waste disposal facilities.
 
-## 👨‍💻 The Team
-**Team Malunggay Pandesal**
+- 🎨 **Premium UX**  
+  Smooth scrolling, responsive interactions, and dynamic AR-inspired HUD overlays for a modern experience.
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+---
 
-## Getting Started
+# 🛠️ Tech Stack
 
-First, run the development server:
+| Category | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Styling | Tailwind CSS |
+| AI / ML | TensorFlow.js, Teachable Machine, Groq Cloud (Llama-4 Vision) |
+| Backend | Supabase |
+| Maps | Leaflet & React-Leaflet |
+| Animations | React Lenis |
+
+---
+
+# ⚙️ Setup & Installation
+
+## 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/your-username/recicla.git
+cd recicla
+```
+
+---
+
+## 2️⃣ Install Dependencies
+
+```bash
+npm install
+```
+
+---
+
+## 3️⃣ Configure Environment Variables
+
+Create a `.env.local` file in the root directory and add the following:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_key
+GROQ_API_KEY=your_groq_api_key
+```
+
+---
+
+## 4️⃣ Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open your browser and navigate to:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```txt
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+# 📸 Core Workflow
 
-To learn more about Next.js, take a look at the following resources:
+1. Scan waste material using your device camera.
+2. AI identifies the object in real time.
+3. Recicla estimates recyclable value in PHP.
+4. Hazardous items trigger safety warnings.
+5. Users receive directions to the nearest disposal facility.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 👥 The Team
 
-## Deploy on Vercel
+| Member | Role |
+|---|---|
+| Bam | AI Engineer |
+| Jude | Full-Stack Software Developer |
+| Volt | UI / UX Designer |
+| Sai | Project Manager |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 📝 License
+
+Developed for the **CodeKada Online Hackathon 2026**.
+
+---
