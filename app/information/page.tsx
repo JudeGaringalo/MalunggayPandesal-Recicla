@@ -15,6 +15,7 @@ const LiveMap = dynamic(() => import('@/app/components/MapComponent'), {
 interface DetailedAIResponse {
     objectName: string;
     category: string;
+    upcyclingSuggestion: string; // New field
     description: string;
     scrapValuePH: string;
     recyclingUses: string;
@@ -41,6 +42,35 @@ function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: num
     return (R * c).toFixed(2);
 }
 
+// Added Component: SimilarImagesMarquee
+const SimilarImagesMarquee = () => {
+    return (
+        <div className="w-full bg-white py-8 border-y border-gray-100 overflow-hidden mt-12 mb-8 rounded-2xl shadow-sm">
+            <div className="flex flex-col items-center mb-6">
+                <span className="text-[10px] tracking-[0.2em] uppercase font-bold text-gray-400">Visual References</span>
+                <h2 className="text-xl font-bold text-gray-800">Similar Images</h2>
+            </div>
+            <div className="relative flex overflow-x-hidden group">
+                <div className="animate-marquee whitespace-nowrap flex gap-4 pl-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="w-48 h-48 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden border border-gray-200">
+                            <img src={`/api/placeholder/200/200?text=Item+${i}`} alt="Similar" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    ))}
+                </div>
+                {/* Mirroring the list for a seamless loop */}
+                <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex gap-4 ml-8">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={`dup-${i}`} className="w-48 h-48 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden border border-gray-200">
+                            <img src={`/api/placeholder/200/200?text=Item+${i}`} alt="Similar" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ScanResultCard = ({
     itemData,
     onNewScan,
@@ -53,7 +83,7 @@ const ScanResultCard = ({
     onGetDirections: () => void
 }) => {
 
-    if (!itemData) return null;
+    if (!itemData || itemData.objectName === "Invalid") return null;
 
     const isHazard = itemData.isHazardous;
     const isBio = itemData.isBiodegradable;
@@ -104,6 +134,18 @@ const ScanResultCard = ({
                             {itemData.scrapValuePH}
                         </span>
                     </div>
+
+                    {/* NEW: Upcycling Suggestion Section */}
+                    {itemData.upcyclingSuggestion && (
+                        <div className="mb-6 p-4 bg-[#f9faf7] rounded-xl border border-[#edf1e5]">
+                            <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center ${textColor}`}>
+                                <span className="mr-2">💡</span> Household Reuse Suggestion
+                            </h3>
+                            <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
+                                "{itemData.upcyclingSuggestion}"
+                            </p>
+                        </div>
+                    )}
 
                     <div className="mb-6">
                         <h3 className={`text-sm font-bold mb-2 ${isHazard ? 'text-red-500' : 'text-gray-400'}`}>
@@ -242,20 +284,20 @@ export default function ResultsPage() {
                     setUserLoc([lat, lng]);
 
                     const isHazardousItem =
-    savedResults
-        ? JSON.parse(savedResults).aiData?.isHazardous
-        : false;
+                        savedResults
+                            ? JSON.parse(savedResults).aiData?.isHazardous
+                            : false;
 
-let targetLat;
-let targetLng;
+                    let targetLat;
+                    let targetLng;
 
-if (isHazardousItem) {
-    targetLat = 14.6565;
-    targetLng = 121.0313;
-} else {
-    targetLat = 14.6810;
-    targetLng = 121.0450;
-}
+                    if (isHazardousItem) {
+                        targetLat = 14.6565;
+                        targetLng = 121.0313;
+                    } else {
+                        targetLat = 14.6810;
+                        targetLng = 121.0450;
+                    }
 
                     setDestLoc([targetLat, targetLng]);
 
@@ -426,7 +468,7 @@ if (isHazardousItem) {
 
                                 <div className="w-full lg:w-[55%] flex flex-col">
 
-                                    {aiData ? (
+                                    {aiData && aiData.objectName !== "Invalid" ? (
 
                                         <ScanResultCard
                                             itemData={aiData}
@@ -435,6 +477,18 @@ if (isHazardousItem) {
                                             onGetDirections={openGoogleMapsDirections}
                                         />
 
+                                    ) : aiData && aiData.objectName === "Invalid" ? (
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+                                            <div className="text-red-500 font-bold bg-red-50 p-6 rounded-lg border border-red-200">
+                                                <p className="mb-2 uppercase tracking-wider text-xs text-red-400">
+                                                    Invalid Subject Detected
+                                                </p>
+                                                <p>Faces and live animals cannot be processed for waste analysis.</p>
+                                                <button onClick={handleNewScan} className="mt-4 px-6 py-2 bg-red-100 text-red-800 rounded-lg text-sm hover:bg-red-200 transition-colors">
+                                                    Scan Again
+                                                </button>
+                                            </div>
+                                        </div>
                                     ) : (
 
                                         <div className="w-full h-full flex items-center justify-center bg-gray-50 p-6 text-center">
@@ -480,6 +534,11 @@ if (isHazardousItem) {
                                 )}
 
                             </div>
+
+                            {/* Added Similar Images Marquee below Map */}
+                            {aiData && aiData.objectName !== "Invalid" && (
+                                <SimilarImagesMarquee />
+                            )}
 
                         </div>
                     </section>

@@ -12,6 +12,19 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-inter: "Inter", sans-serif; 
+  
+  /* Marquee Animations */
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-marquee2: marquee2 30s linear infinite;
+
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
+  }
+  @keyframes marquee2 {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(0%); }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,16 +43,15 @@ body {
 /* HIDE SCROLLBAR GLOBALLY */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  display: none;
 }
 
 html,
 body {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* You can keep this utility class if you need it for specific inner divs later */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
