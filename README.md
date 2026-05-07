@@ -2,7 +2,7 @@
 
 # ♻️ Recicla
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=24&pause=1000&color=7C8D58&center=true&vCenter=true&width=900&lines=AI-Powered+Waste+Recognition+Platform;Smart+Recycling+for+the+Philippines;Computer+Vision+%2B+Smart+Geolocation;Sustainable+Disposal+Powered+by+Artificial+Intelligence" alt="Typing SVG" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=24&pause=1000&color=7C8D58&center=true&vCenter=true&width=950&lines=AI-Powered+Waste+Recognition+Platform;Smart+Recycling+for+the+Philippines;Computer+Vision+%2B+Smart+Geolocation;Sustainable+Disposal+Powered+by+Artificial+Intelligence" alt="Typing SVG" />
 
 <br/>
 
@@ -13,33 +13,45 @@
 <br/><br/>
 
 <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
-<img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
 <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
-<img src="https://img.shields.io/badge/GSAP-0AE448?style=for-the-badge&logo=greensock&logoColor=black" />
-<img src="https://img.shields.io/badge/React_Lenis-111111?style=for-the-badge" />
-<img src="https://img.shields.io/badge/TensorFlow.js-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" />
 <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" />
-<img src="https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white" />
-<img src="https://img.shields.io/badge/OpenStreetMap-7EBC6F?style=for-the-badge&logo=openstreetmap&logoColor=white" />
+<img src="https://img.shields.io/badge/TensorFlow.js-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" />
+<img src="https://img.shields.io/badge/Teachable_Machine-4285F4?style=for-the-badge&logo=google&logoColor=white" />
+<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
+<img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+<img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" />
 <img src="https://img.shields.io/badge/Groq_API-F55036?style=for-the-badge" />
-<img src="https://img.shields.io/badge/Meta_Llama_3-044EAB?style=for-the-badge&logo=meta&logoColor=white" />
+<img src="https://img.shields.io/badge/Llama_AI-044EAB?style=for-the-badge&logo=meta&logoColor=white" />
+<img src="https://img.shields.io/badge/GSAP-0AE448?style=for-the-badge&logo=greensock&logoColor=black" />
+<img src="https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white" />
 
 <br/><br/>
 
 ### 🌱 Intelligent Waste Recognition & Recycling Platform for the Philippines
 
-Recicla AI is an AI-powered sustainability platform designed to modernize waste management and recycling accessibility through the power of:
+Recicla AI is a next-generation sustainability platform that combines:
 
 🤖 Artificial Intelligence  
 🧠 Computer Vision  
 📍 Smart Geolocation  
 ♻️ Sustainable Disposal Systems  
 
-The platform enables users to identify recyclable materials in real-time, estimate scrap value in Philippine Pesos (₱), detect hazardous waste, and discover nearby recycling facilities with intelligent route navigation — all inside a modern and immersive web experience.
+to modernize waste management and recycling accessibility in the Philippines.
+
+The platform enables users to:
+
+✅ Detect recyclable materials in real-time  
+✅ Estimate recyclable market value in Philippine Pesos (₱)  
+✅ Identify hazardous waste and e-waste  
+✅ Locate nearby recycling centers and junkshops  
+✅ Generate intelligent disposal routes instantly  
+
+—all within a seamless and immersive web experience.
 
 <br/>
 
-<img src="./public/demo.gif" width="900" />
+<img src="./public/demo.gif" width="900"/>
 
 </div>
 
@@ -47,63 +59,64 @@ The platform enables users to identify recyclable materials in real-time, estima
 
 # ✨ Core Features
 
-## 🤖 Real-Time AI Waste Detection
+# 🤖 Real-Time AI Waste Recognition
 
-Recicla combines:
+Recicla AI leverages advanced browser-based AI technologies including:
 
-- **TensorFlow.js**
-- **COCO-SSD**
-- **Teachable Machine**
-- **Meta Llama 3**
-- **Groq API**
+- TensorFlow.js
+- COCO-SSD
+- Teachable Machine
+- Groq API
+- Meta Llama AI
 
-to deliver fast and intelligent browser-based waste recognition.
+to perform intelligent recyclable material recognition directly in the browser.
 
 ### Features:
-- Real-time camera scanning
-- Live object tracking
-- AI-powered material classification
-- Browser-side machine learning
-- Bounding box detection
-- Smart recyclable identification
+- Live camera scanning
+- Real-time object tracking
+- Browser-side AI inference
+- Waste classification system
+- Bounding-box detection
+- Material identification
 
 ---
 
-## 💸 Smart Scrap Valuation
+# 💸 Smart Scrap Valuation System
 
-Recicla intelligently estimates:
+The AI system analyzes recyclable materials and estimates their approximate value in:
 
-### 🇵🇭 Recyclable Market Value in Philippine Pesos (₱)
+## 🇵🇭 Philippine Pesos (₱)
 
-The AI system generates:
-- Material value estimation
-- Recycling recommendations
-- Upcycling suggestions
-- Sustainability insights
+The analysis includes:
+- Material valuation
+- Recycling insights
+- Sustainability suggestions
+- Upcycling recommendations
 - Smart waste analysis
 
 ---
 
-## ⚠️ Hazard Detection System
+# ⚠️ Hazard Detection & Safety Awareness
 
-The platform detects:
+Recicla detects potentially dangerous recyclable materials such as:
+
 - Batteries
-- Toxic waste
+- Toxic containers
 - E-waste
 - Damaged electronics
-- Hazardous recyclable materials
+- Hazardous materials
 
-and provides:
+The platform then provides:
 - Disposal guidance
-- Hazard warnings
-- Environmental safety tips
-- Proper handling instructions
+- Safety instructions
+- Hazard alerts
+- Environmental awareness tips
 
 ---
 
 # 📍 Smart Recycling Locator
 
-Recicla helps users locate nearby:
+Recicla intelligently locates nearby:
 
 - Junkshops
 - Recycling facilities
@@ -111,52 +124,52 @@ Recicla helps users locate nearby:
 - E-waste disposal sites
 
 using:
-- Real-time geolocation
 - OpenStreetMap
 - Overpass API
-- Intelligent distance filtering
+- Smart geolocation
+- Distance-aware filtering
 
 ---
 
-# 🗺️ Interactive Mapping & Navigation
+# 🗺️ Interactive Maps & Navigation
 
-Powered by:
+The navigation system is powered by:
+
 - Leaflet
 - React Leaflet
 - OSRM Routing API
 
-Features include:
-- Live map rendering
-- Route optimization
-- User tracking
-- Smart navigation
-- Distance calculations
-- Real-time route generation
+### Features:
+- Interactive maps
+- Real-time routing
+- User location tracking
+- Smart route generation
+- Disposal navigation system
 
 ---
 
 # 🎨 Modern UI / UX Experience
 
-Recicla delivers an immersive and fluid experience powered by:
+Recicla provides a modern and immersive user experience powered by:
 
 | Technology | Purpose |
 |---|---|
-| **GSAP** | Smooth animations and transitions |
-| **React Lenis** | Fluid smooth-scrolling system |
-| **Tailwind CSS** | Modern responsive styling |
-| **React** | Dynamic UI rendering |
+| **GSAP** | Smooth animations & transitions |
+| **React Lenis** | Fluid scrolling system |
+| **Tailwind CSS** | Responsive UI styling |
+| **Figma** | UI / UX prototyping |
 
 ### UI Highlights:
-- Smooth page transitions
-- Scroll-triggered animations
-- Interactive hover effects
-- Responsive mobile-first design
+- Smooth animations
+- Scroll-triggered effects
+- Interactive hover transitions
+- Mobile-first responsive design
 - Modern glassmorphism aesthetics
-- Fluid user interactions
+- Fluid page interactions
 
 ---
 
-# 🧠 How Recicla Works
+# 🧠 System Workflow
 
 ```mermaid
 flowchart LR
@@ -164,8 +177,8 @@ flowchart LR
     B --> C[🧠 Material Classification]
     C --> D[💸 Scrap Value Estimation]
     D --> E[⚠️ Hazard Detection]
-    E --> F[📍 Locate Recycling Facilities]
-    F --> G[🗺️ Generate Smart Route Navigation]
+    E --> F[📍 Locate Nearby Facilities]
+    F --> G[🗺️ Generate Smart Route]
 ```
 
 ---
@@ -177,11 +190,11 @@ flowchart LR
 | Technology | Description |
 |---|---|
 | **Next.js** | Full-stack React framework |
-| **React.js** | User interface library |
+| **React.js** | Interactive user interfaces |
 | **Tailwind CSS** | Utility-first CSS framework |
-| **GSAP** | Animation engine |
-| **React Lenis** | Smooth scrolling |
-| **Lucide React** | Icon system |
+| **GSAP** | High-performance animation engine |
+| **React Lenis** | Smooth scrolling library |
+| **Figma** | UI / UX design tool |
 
 ---
 
@@ -189,11 +202,11 @@ flowchart LR
 
 | Technology | Description |
 |---|---|
-| **TensorFlow.js** | Browser-based AI inference |
-| **COCO-SSD** | Object detection model |
-| **Teachable Machine** | Custom recyclable classifier |
-| **Meta Llama 3** | AI-powered analysis |
-| **Groq API** | Ultra-fast LLM inference |
+| **TensorFlow.js** | Browser-side machine learning |
+| **COCO-SSD** | Real-time object detection |
+| **Teachable Machine** | Custom waste classification model |
+| **Meta Llama AI** | AI-powered analysis & recommendations |
+| **Groq API** | Ultra-fast AI inference |
 
 ---
 
@@ -202,12 +215,12 @@ flowchart LR
 | Technology | Description |
 |---|---|
 | **Leaflet.js** | Interactive map rendering |
-| **React Leaflet** | React-based map integration |
-| **OpenStreetMap** | Geographic map data |
-| **Overpass API** | Nearby recycling queries |
-| **Photon API** | Address autocomplete |
+| **React Leaflet** | React map integration |
+| **OpenStreetMap** | Open-source geographic data |
+| **Overpass API** | Nearby recycling facility queries |
 | **Nominatim API** | Reverse geocoding |
-| **OSRM API** | Navigation & routing |
+| **Photon API** | Address autocomplete |
+| **OSRM API** | Navigation & route optimization |
 
 ---
 
@@ -225,7 +238,7 @@ flowchart LR
 
 <div align="center">
 
-| AI Detection | Material Analysis |
+| AI Waste Detection | Smart Material Analysis |
 |---|---|
 
 | Smart Recycling Map | Route Navigation |
@@ -277,7 +290,7 @@ GROQ_API_KEY=your_groq_api_key
 
 ---
 
-# 4️⃣ Run Development Server
+# 4️⃣ Start Development Server
 
 ```bash
 npm run dev
@@ -303,6 +316,7 @@ recicla/
 ├── utils/
 ├── styles/
 ├── public/
+│   ├── images/
 │   ├── screenshots/
 │   ├── models/
 │   └── demo/
@@ -317,12 +331,12 @@ recicla/
 
 - ♻️ Nationwide live junkshop database
 - 📱 Progressive Web App (PWA)
-- 🧠 Improved AI waste recognition
-- 🌍 Carbon footprint tracking
-- 🏆 Gamified sustainability system
-- 📊 Recycling analytics dashboard
-- 🔔 Smart recycling reminders
-- 🤝 Community-powered reporting
+- 🧠 Improved AI detection accuracy
+- 🌍 Carbon footprint analytics
+- 🏆 Gamified recycling rewards
+- 📊 Sustainability dashboard
+- 🔔 Recycling reminders
+- 🤝 Community-powered reporting system
 - 📦 Smart waste collection integration
 
 ---
@@ -345,8 +359,8 @@ Recicla AI aims to encourage smarter recycling habits by making waste identifica
 The platform bridges:
 - Sustainability
 - Smart waste management
-- AI-powered recycling
 - Environmental awareness
+- AI-powered recycling systems
 
 to help build greener Filipino communities.
 
@@ -354,7 +368,7 @@ to help build greener Filipino communities.
 
 # 📈 Why Recicla Matters
 
-Millions of tons of recyclable waste are improperly disposed of every year because of:
+Millions of tons of recyclable waste are improperly disposed of every year due to:
 
 - Lack of awareness
 - Poor recycling accessibility
@@ -365,8 +379,8 @@ Recicla AI solves these challenges through:
 
 ✅ Artificial Intelligence  
 ✅ Computer Vision  
-✅ Smart Mapping Systems  
-✅ Real-Time Recycling Guidance  
+✅ Smart Geolocation  
+✅ Real-Time Waste Detection  
 ✅ Intelligent Disposal Navigation  
 
 ---
