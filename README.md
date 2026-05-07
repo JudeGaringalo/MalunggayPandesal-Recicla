@@ -396,6 +396,29 @@ Recicla solves these challenges through:
 
 ---
 
+> ⚠️ **Disclaimer**
+>
+> Recicla is an experimental academic and sustainability-focused platform developed for the **CodeKada Online Hackathon 2026**.  
+>
+> The AI-powered waste detection, material classification, price estimation, and recycling recommendations provided by the system are intended for **educational, research, and informational purposes only**.
+>
+> Please note:
+>
+> - AI predictions and classifications may not always be 100% accurate.
+> - Scrap value estimations are approximate and may vary depending on local market conditions, junkshops, and recycling facilities.
+> - Nearby recycling centers, routes, and geolocation data rely on third-party mapping services and public datasets which may contain incomplete or outdated information.
+> - Users are encouraged to verify hazardous waste handling procedures with official environmental agencies and local authorities before disposal.
+>
+> Recicla and its developers are not liable for:
+>
+> - Incorrect AI detections
+> - Inaccurate pricing estimates
+> - Mapping inaccuracies
+> - Third-party service interruptions
+> - Improper disposal decisions made using the platform
+>
+> By using Recicla, users acknowledge that the platform is provided **“as is”** without warranties of any kind and should be used responsibly to support sustainable waste management practices.
+
 # ⭐ Support The Project
 
 If you found this project useful:
