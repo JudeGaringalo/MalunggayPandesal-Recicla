@@ -84,6 +84,7 @@ export default function ARScannerApp() {
             "Accessories": { category: 'Mixed Material', value: 'No value', hazard: false, minConfidence: 0.75 },
             "Food": { category: 'Organic', value: 'Compostable', hazard: false, minConfidence: 0.85 },
             "Background": { category: 'none', value: 'no value', hazard: false, minConfidence: 0.0 },
+            "Paper": { category: 'Paper', value: '₱4 - ₱8/kg', hazard: false, minConfidence: 0.85 },
         };
         return categories[className] || { category: 'Unknown', value: 'Analyzing...', hazard: false, minConfidence: 0.70 };
     };
