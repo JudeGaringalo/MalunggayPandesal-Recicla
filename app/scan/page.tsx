@@ -465,7 +465,6 @@ export default function ARScannerApp() {
 
         ctx.restore();
     };
-
     if (activeMode === 'selection') {
         return (
             <main className="min-h-screen bg-white text-[#484848] relative flex flex-col font-sans overflow-hidden">

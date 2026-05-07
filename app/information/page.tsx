@@ -267,8 +267,7 @@ export default function ResultsPage() {
                 console.warn(`Overpass API error: ${response.status} ${response.statusText}`);
                 return null; 
             }
-
-          
+                  
             let data;
             try {
                 data = await response.json();

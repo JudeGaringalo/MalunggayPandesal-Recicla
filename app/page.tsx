@@ -502,7 +502,6 @@ export default function LandingPage(): React.JSX.Element {
                     <Image src={feature.image} alt={feature.title} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover unzoomable" />
                   </div>
                 ))}
-
                 <div className="absolute inset-0 z-20 flex items-end">
                   {FEATURES.map((feature, index) => (
                     <div

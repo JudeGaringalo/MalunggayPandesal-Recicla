@@ -69,7 +69,6 @@ STRUCTURE:
   "isBiodegradable": false,
   "isRecyclable": true
 }
-
 Final Instruction: Ensure the output is strictly formatted JSON.`
               },
               {

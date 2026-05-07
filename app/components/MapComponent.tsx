@@ -96,7 +96,6 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
                     opacity={0.8}
                 />
             )}
-
             <Marker 
                 position={userLocation} 
                 icon={userIcon}
