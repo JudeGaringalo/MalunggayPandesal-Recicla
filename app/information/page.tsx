@@ -26,10 +26,10 @@ interface DetailedAIResponse {
 }
 
 const VERIFIED_LOCAL_SHOPS = [
-    { name: "RTC Junkshop", lat: 14.58104313204275, lng: 121.02906823534498, type: "general" },
-    { name: "Bubot's Junkshop", lat: 14.578706517944507, lng: 121.02835544750437, type: "general" },
+    { name: "RTC Junkshop", lat: 14.5815, lng: 121.0335, type: "general" },
+    { name: "Bubot's Junkshop", lat: 14.5775, lng: 121.0345, type: "general" },
     { name: "VGM Junkshop", lat: 14.5650, lng: 121.0400, type: "general" },
-    { name: "E-Waste Zero Bin", lat: 14.582947282392984, lng: 121.05668326432722, type: "hazard" }
+    { name: "SM Megamall E-Waste Drop-off", lat: 14.5844, lng: 121.0565, type: "hazard" }
 ];
 
 function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -205,6 +205,9 @@ export default function ResultsPage() {
     const [isAnalyzing, setIsAnalyzing] = useState(true);
     const [isLocating, setIsLocating] = useState(true);
 
+    // NEW STATE: Specific loading state just for the map
+    const [isMapLoading, setIsMapLoading] = useState(false);
+
     const analysisStarted = useRef(false);
 
     const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
@@ -223,7 +226,6 @@ export default function ResultsPage() {
 
     const findNearestRealFacility = async (lat: number, lng: number, hazard: boolean): Promise<{lat: number, lng: number, name: string} | null> => {
         try {
-            
             const targetType = hazard ? "hazard" : "general";
             let closestLocal = null;
             let minLocalDistance = Infinity;
@@ -250,7 +252,6 @@ export default function ResultsPage() {
                   node["amenity"="waste_disposal"](around:5000, ${lat}, ${lng});
                   node["shop"="scrap"](around:5000, ${lat}, ${lng});
                   node["industrial"="scrap_yard"](around:5000, ${lat}, ${lng});
-                  
                   node["name"~"junk shop|junkshop|scrap|recycling", i](around:5000, ${lat}, ${lng});
                   way["name"~"junk shop|junkshop|scrap|recycling", i](around:5000, ${lat}, ${lng});
                 );
@@ -312,12 +313,10 @@ export default function ResultsPage() {
         router.push('/scan');
     };
 
-    
     const openGoogleMapsDirections = () => {
         if (!userLoc || !destLoc) return;
         const [userLat, userLng] = userLoc;
         const [destLat, destLng] = destLoc;
-        
         
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
         window.open(mapsUrl, "_blank");
@@ -328,6 +327,7 @@ export default function ResultsPage() {
         if (!addressInput.trim()) return;
 
         setIsSearching(true);
+        setIsMapLoading(true); // START MAP LOADING
         setSearchError(null);
 
         try {
@@ -337,7 +337,6 @@ export default function ResultsPage() {
             if (data && data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-
                 
                 setIsManualOverride(true);
                 setUserLoc([lat, lon]);
@@ -352,7 +351,6 @@ export default function ResultsPage() {
                     setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
                 }
 
-
             } else {
                 setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
             }
@@ -360,6 +358,7 @@ export default function ResultsPage() {
             setSearchError("Error searching for address. Please try again.");
         } finally {
             setIsSearching(false);
+            setIsMapLoading(false); // END MAP LOADING
         }
     };
 
@@ -568,7 +567,7 @@ export default function ResultsPage() {
                                 </div>
                             </div>
 
-                            <div className="w-full h-[60vh] lg:h-[75vh] rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-gray-200 relative">
+                            <div className="w-full h-[60vh] lg:h-[75vh] rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-[#E8EBE4] relative">
                                 
                                 <div className="absolute top-4 left-4 z-[1000] w-full max-w-xs sm:max-w-md pointer-events-auto">
                                     <form onSubmit={handleAddressSearch} className="flex flex-col sm:flex-row gap-2 w-full bg-white/95 backdrop-blur p-2 rounded-xl shadow-lg border border-gray-200">
@@ -595,6 +594,14 @@ export default function ResultsPage() {
                                     )}
                                 </div>
 
+                                {/* NEW: MAP LOADING OVERLAY */}
+                                {isMapLoading && (
+                                    <div className="absolute inset-0 z-[2000] bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-300">
+                                        <div className="w-12 h-12 border-4 border-[#7C8D58] border-t-transparent rounded-full animate-spin mb-4 shadow-sm"></div>
+                                        <p className="text-[#6b7a4a] font-bold text-sm uppercase tracking-widest animate-pulse">Routing to facility...</p>
+                                    </div>
+                                )}
+
                                 {userLoc && destLoc ? (
                                     <LiveMap
                                         userLocation={userLoc}
@@ -606,7 +613,9 @@ export default function ResultsPage() {
                                             setIsManualOverride(true);
                                             setUserLoc(newLoc);
                                             
+                                            // Trigger map loading state if we drag it far enough to recalculate
                                             if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 0.5) {
+                                                setIsMapLoading(true); // START MAP LOADING
                                                 (async () => {
                                                     setDestName('Relocating facility...');
                                                     const realFacility = await findNearestRealFacility(newLoc[0], newLoc[1], isHazard);
@@ -617,13 +626,16 @@ export default function ResultsPage() {
                                                         setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
                                                         setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
                                                     }
+                                                    setIsMapLoading(false); // END MAP LOADING
                                                 })();
                                             }
                                         }}
                                     />
                                 ) : (
-                                    <div className="absolute inset-0 bg-blue-50/50 flex items-center justify-center z-0">
-                                        <img src="/api/placeholder/1200/800" alt="Map View Placeholder" className="w-full h-full object-cover" />
+                                    // REPLACED THE BROKEN IMAGE WITH A SLEEK LOADING SKELETON
+                                    <div className="absolute inset-0 bg-[#E8EBE4] flex flex-col items-center justify-center z-0">
+                                        <div className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full animate-spin mb-4"></div>
+                                        <p className="text-gray-500 font-medium text-sm">Initializing Map Component...</p>
                                     </div>
                                 )}
                             </div>
