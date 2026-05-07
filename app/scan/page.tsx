@@ -53,7 +53,7 @@ export default function ARScannerApp() {
             "Copperwire": { category: 'High-Value Metal', value: '₱350/kg', hazard: false, minConfidence: 0.75 },
             "Bottle": { category: 'Plastic/Glass', value: '₱12/kg', hazard: false, minConfidence: 0.65 },
             "Plastic Cup": { category: 'Recyclable Plastic', value: '₱6 - ₱10/kg', hazard: false, minConfidence: 0.70 },
-            "Plastic": { category: 'Mixed Plastic', value: '₱8 - ₱12/kg', hazard: false, minConfidence: 0.70 },
+            "Plastic": { category: 'Mixed Plastic', value: '₱8 - ₱12/kg', hazard: false, minConfidence: 0.90 },
             "Tupperware": { category: 'High-Grade Plastic', value: '₱15 - ₱20/kg', hazard: false, minConfidence: 0.75 },
             "Bucket": { category: 'Hard Plastic', value: '₱10 - ₱15/kg', hazard: false, minConfidence: 0.75 },
             "Plastic Spoon": { category: 'Residual Plastic', value: '₱2 - ₱5/kg', hazard: false, minConfidence: 0.70 },
@@ -67,7 +67,7 @@ export default function ARScannerApp() {
             "Tire": { category: 'Special Waste', value: '₱10 - ₱50/unit', hazard: false, minConfidence: 0.85 },
             "Cigarette": { category: 'Residual Waste', value: 'No value', hazard: false, minConfidence: 0.80 },
             "Bulb": { category: 'Hazardous Waste', value: 'No value', hazard: true, minConfidence: 0.85 },
-            "Cloth": { category: 'Textile', value: '₱0 - ₱5/kg (rags)', hazard: false, minConfidence: 0.75 },
+            "Cloth": { category: 'Textile', value: '₱0 - ₱5/kg (rags)', hazard: false, minConfidence: 0.85 },
             "Shoe": { category: 'Textile/Rubber', value: 'No local scrap value', hazard: false, minConfidence: 0.75 },
             "Bag": { category: 'Textile/Plastic', value: 'No value', hazard: false, minConfidence: 0.75 },
             "Hanger": { category: 'Mixed Plastic/Metal', value: '₱5 - ₱10/kg', hazard: false, minConfidence: 0.80 },
@@ -84,7 +84,7 @@ export default function ARScannerApp() {
             "Accessories": { category: 'Mixed Material', value: 'No value', hazard: false, minConfidence: 0.75 },
             "Food": { category: 'Organic', value: 'Compostable', hazard: false, minConfidence: 0.85 },
             "Background": { category: 'none', value: 'no value', hazard: false, minConfidence: 0.0 },
-            "Paper": { category: 'Paper', value: '₱4 - ₱8/kg', hazard: false, minConfidence: 0.85 },
+            "Paper": { category: 'Paper', value: '₱4 - ₱8/kg', hazard: false, minConfidence: 0.90 },
         };
         return categories[className] || { category: 'Unknown', value: 'Analyzing...', hazard: false, minConfidence: 0.70 };
     };
