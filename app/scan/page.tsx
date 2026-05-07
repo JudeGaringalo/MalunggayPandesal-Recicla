@@ -84,8 +84,7 @@ export default function ARScannerApp() {
         const loadModels = async () => {
             try {
                 await tf.ready();
-                // Point the URL to your local public folder instead of the cloud link
-                const URL = "/model/"; 
+                const URL = process.env.NEXT_PUBLIC_TM_URL as string;
                 const loadedTM = await tmImage.load(URL + "model.json", URL + "metadata.json");
                 const loadedCoco = await cocoSsd.load();
                 setModel(loadedTM);
@@ -205,6 +204,12 @@ export default function ARScannerApp() {
 
             localStorage.removeItem('lastScanResults');
             localStorage.setItem('lastCapturedImage', imgData);
+
+            if (trackedObjectsRef.current.length > 0) {
+                localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
+            } else {
+                localStorage.removeItem('lastAnalyzedItem');
+            }
 
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
@@ -374,8 +379,6 @@ export default function ARScannerApp() {
         return () => { if (renderRef.current) cancelAnimationFrame(renderRef.current); };
     }, [activeMode]);
 
-
-    // --- The Multi-Target HUD Renderer ---
     const drawMultiTargetHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, bbox: number[], match: any, mapped: any) => {
         const [x, y, width, height] = bbox;
         const primaryColor = mapped.hazard ? '#ef4444' : '#10b981';
@@ -430,14 +433,9 @@ export default function ARScannerApp() {
         ctx.restore();
     };
 
-    // ==========================================
-    // RENDER: SELECTION SCREEN
-    // ==========================================
     if (activeMode === 'selection') {
         return (
             <main className="min-h-screen bg-white text-[#484848] relative flex flex-col font-sans overflow-hidden">
-
-                {/* --- NEW LOADING OVERLAY --- */}
                 <div
                     className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md transition-all duration-1000 ease-in-out ${isModelLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                         }`}
@@ -447,7 +445,6 @@ export default function ARScannerApp() {
                     </p>
                     <div className="w-16 h-16 border-4 border-[#7E8C54] border-t-transparent rounded-full animate-spin mb-6"></div>
                 </div>
-                {/* --- END LOADING OVERLAY --- */}
 
                 <nav className="relative z-10 w-full p-6 flex justify-between items-center">
                     <Link href="/" className="text-black hover:text-gray-400 transition-colors text-sm uppercase tracking-widest">&#8592; Back</Link>
