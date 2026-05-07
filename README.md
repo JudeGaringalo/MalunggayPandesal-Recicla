@@ -252,7 +252,7 @@ flowchart LR
 # 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/recicla.git
+git clone https://github.com/JudeGaringalo/recicla.git
 
 cd recicla
 ```
