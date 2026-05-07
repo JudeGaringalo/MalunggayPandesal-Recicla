@@ -34,7 +34,7 @@ Recicla is a real-time, AI-driven web application designed to modernize waste ma
 | AI / ML | TensorFlow.js, Teachable Machine, Groq Cloud (Llama-4 Vision) |
 | Backend | Supabase |
 | Maps | Leaflet & React-Leaflet |
-| Animations | React Lenis |
+| Animations | React Lenis & GSAP Animations |
 
 ---
 
