@@ -25,6 +25,13 @@ interface DetailedAIResponse {
     isRecyclable: boolean;
 }
 
+const VERIFIED_LOCAL_SHOPS = [
+    { name: "RTC Junkshop", lat: 14.58104313204275, lng: 121.02906823534498, type: "general" },
+    { name: "Bubot's Junkshop", lat: 14.578706517944507, lng: 121.02835544750437, type: "general" },
+    { name: "VGM Junkshop", lat: 14.5650, lng: 121.0400, type: "general" },
+    { name: "E-Waste Zero Bin", lat: 14.582947282392984, lng: 121.05668326432722, type: "hazard" }
+];
+
 function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -202,6 +209,7 @@ export default function ResultsPage() {
 
     const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
     const [destLoc, setDestLoc] = useState<[number, number] | null>(null);
+    const [destName, setDestName] = useState<string>('Locating nearest facility...');
     const [distance, setDistance] = useState<string | null>(null);
     const [routePath, setRoutePath] = useState<[number, number][] | null>(null);
 
@@ -212,13 +220,89 @@ export default function ResultsPage() {
     const [searchError, setSearchError] = useState<string | null>(null);
 
     const isHazard = aiData?.isHazardous ?? false;
-    const destName = isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop';
 
-    // Helper to calculate a dynamic, nearby location based on provided coordinates
+    const findNearestRealFacility = async (lat: number, lng: number, hazard: boolean): Promise<{lat: number, lng: number, name: string} | null> => {
+        try {
+            
+            const targetType = hazard ? "hazard" : "general";
+            let closestLocal = null;
+            let minLocalDistance = Infinity;
+
+            for (const shop of VERIFIED_LOCAL_SHOPS) {
+                if (shop.type === targetType || !hazard) { 
+                    const dist = parseFloat(calculateDistanceKM(lat, lng, shop.lat, shop.lng));
+                    if (dist < 5.0 && dist < minLocalDistance) { 
+                        minLocalDistance = dist;
+                        closestLocal = shop;
+                    }
+                }
+            }
+
+            if (closestLocal) {
+                return { lat: closestLocal.lat, lng: closestLocal.lng, name: closestLocal.name };
+            }
+
+            const query = `
+                [out:json];
+                (
+                  node["amenity"="recycling"](around:5000, ${lat}, ${lng});
+                  way["amenity"="recycling"](around:5000, ${lat}, ${lng});
+                  node["amenity"="waste_disposal"](around:5000, ${lat}, ${lng});
+                  node["shop"="scrap"](around:5000, ${lat}, ${lng});
+                  node["industrial"="scrap_yard"](around:5000, ${lat}, ${lng});
+                  
+                  node["name"~"junk shop|junkshop|scrap|recycling", i](around:5000, ${lat}, ${lng});
+                  way["name"~"junk shop|junkshop|scrap|recycling", i](around:5000, ${lat}, ${lng});
+                );
+                out center;
+            `;
+            
+            const response = await fetch(`https://overpass-api.de/api/interpreter`, {
+                method: 'POST',
+                body: "data=" + encodeURIComponent(query),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+            
+            const data = await response.json();
+            
+            if (data && data.elements && data.elements.length > 0) {
+                let closestFacility = null;
+                let minDistance = Infinity;
+
+                for (const element of data.elements) {
+                    const destLat = element.lat || element.center?.lat;
+                    const destLng = element.lon || element.center?.lon;
+                    
+                    if (destLat && destLng) {
+                        const dist = parseFloat(calculateDistanceKM(lat, lng, destLat, destLng));
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            closestFacility = element;
+                        }
+                    }
+                }
+
+                if (closestFacility) {
+                    const destLat = closestFacility.lat || closestFacility.center?.lat;
+                    const destLng = closestFacility.lon || closestFacility.center?.lon;
+                    let name = closestFacility.tags?.name;
+                    if (!name) name = hazard ? 'Registered E-Waste Drop-off' : 'Accredited Recycling Center';
+                    return { lat: destLat, lng: destLng, name };
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error("Failed to fetch real facility:", error);
+            return null;
+        }
+    };
+
     const generateNearbyDest = (lat: number, lng: number, hazard: boolean): [number, number] => {
-        const latOffset = hazard ? 0.005 + (Math.random() * 0.005) : -0.003 - (Math.random() * 0.004);
-        const lngOffset = hazard ? 0.005 + (Math.random() * 0.005) : -0.003 - (Math.random() * 0.004);
-        return [lat + latOffset, lng + lngOffset];
+        const latDir = Math.random() > 0.5 ? 1 : -1;
+        const lngDir = Math.random() > 0.5 ? 1 : -1;
+        const baseOffset = hazard ? 0.002 : 0.001;
+        const randomAdd = Math.random() * 0.001;
+        return [lat + (latDir * (baseOffset + randomAdd)), lng + (lngDir * (baseOffset + randomAdd))];
     };
 
     const handleNewScan = () => {
@@ -228,10 +312,13 @@ export default function ResultsPage() {
         router.push('/scan');
     };
 
+    
     const openGoogleMapsDirections = () => {
         if (!userLoc || !destLoc) return;
         const [userLat, userLng] = userLoc;
         const [destLat, destLng] = destLoc;
+        
+        
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
         window.open(mapsUrl, "_blank");
     };
@@ -250,11 +337,21 @@ export default function ResultsPage() {
             if (data && data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-                const newLoc: [number, number] = [lat, lon];
+
+                
                 setIsManualOverride(true);
                 setUserLoc([lat, lon]);
-                setDestLoc(generateNearbyDest(lat, lon, isHazard));
-                setUserLoc(newLoc);
+                setDestName('Locating legitimate facility...');
+                
+                const realFacility = await findNearestRealFacility(lat, lon, isHazard);
+                if (realFacility) {
+                    setDestLoc([realFacility.lat, realFacility.lng]);
+                    setDestName(realFacility.name);
+                } else {
+                    setDestLoc(generateNearbyDest(lat, lon, isHazard));
+                    setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+                }
+
 
             } else {
                 setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
@@ -312,8 +409,18 @@ export default function ResultsPage() {
 
                     if (!fixedDestLoc) {
                         const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
-                        fixedDestLoc = generateNearbyDest(lat, lng, isHazardousItem);
-                        setDestLoc(fixedDestLoc);
+                        
+                        (async () => {
+                            const realFacility = await findNearestRealFacility(lat, lng, isHazardousItem);
+                            if (realFacility) {
+                                fixedDestLoc = [realFacility.lat, realFacility.lng];
+                                setDestName(realFacility.name);
+                            } else {
+                                fixedDestLoc = generateNearbyDest(lat, lng, isHazardousItem);
+                                setDestName(isHazardousItem ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+                            }
+                            setDestLoc(fixedDestLoc);
+                        })();
                     }
                     setIsLocating(false);
                 },
@@ -324,7 +431,18 @@ export default function ResultsPage() {
                     setUserLoc([fallbackUserLat, fallbackUserLng]);
 
                     const isHazardousItem = savedResults ? JSON.parse(savedResults).aiData?.isHazardous : false;
-                    setDestLoc(generateNearbyDest(fallbackUserLat, fallbackUserLng, isHazardousItem));
+                    
+                    (async () => {
+                        const realFacility = await findNearestRealFacility(fallbackUserLat, fallbackUserLng, isHazardousItem);
+                        if (realFacility) {
+                            setDestLoc([realFacility.lat, realFacility.lng]);
+                            setDestName(realFacility.name);
+                        } else {
+                            setDestLoc(generateNearbyDest(fallbackUserLat, fallbackUserLng, isHazardousItem));
+                            setDestName(isHazardousItem ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+                        }
+                    })();
+                    
                     setIsLocating(false);
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -487,9 +605,19 @@ export default function ResultsPage() {
                                         onUserLocationChange={(newLoc) => {
                                             setIsManualOverride(true);
                                             setUserLoc(newLoc);
-                                            // If you drag the pin far away (more than 3km), bring the junk shop with you!
-                                            if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 3) {
-                                                setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
+                                            
+                                            if (destLoc && parseFloat(calculateDistanceKM(newLoc[0], newLoc[1], destLoc[0], destLoc[1])) > 0.5) {
+                                                (async () => {
+                                                    setDestName('Relocating facility...');
+                                                    const realFacility = await findNearestRealFacility(newLoc[0], newLoc[1], isHazard);
+                                                    if (realFacility) {
+                                                        setDestLoc([realFacility.lat, realFacility.lng]);
+                                                        setDestName(realFacility.name);
+                                                    } else {
+                                                        setDestLoc(generateNearbyDest(newLoc[0], newLoc[1], isHazard));
+                                                        setDestName(isHazard ? 'Local SM Cyberzone E-Waste Bin' : 'Nearby Accredited Junk Shop');
+                                                    }
+                                                })();
                                             }
                                         }}
                                     />
