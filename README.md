@@ -2,6 +2,8 @@
 
 # ♻️ Recicla
 
+https://recicla-devkada.vercel.app/
+
 <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=24&pause=1000&color=7C8D58&center=true&vCenter=true&width=950&lines=AI-Powered+Waste+Recognition+Platform;Smart+Recycling+for+the+Philippines;Computer+Vision+%2B+Smart+Geolocation;Sustainable+Disposal+Powered+by+Artificial+Intelligence" alt="Typing SVG" />
 
 <br/>
