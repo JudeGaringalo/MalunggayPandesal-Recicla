@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation'; 
 import { ReactLenis } from '@studio-freight/react-lenis';
@@ -18,6 +18,8 @@ const techLogos = [
   { name: "Node.js", src: "/images/node.png" },
   { name: "React", src: "/images/react.png" },
   { name: "Figma", src: "/images/figma.png" },
+  { name: "Groq API", src: "/images/groq.png" },
+  { name: "Llama AI", src: "/images/llama.png" },
 ];
 
 const FEATURES = [
@@ -60,6 +62,13 @@ export default function LandingPage(): React.JSX.Element {
   const [activeArea, setActiveArea] = useState(0); 
   const [isSucked, setIsSucked] = useState(false); 
 
+  // Marquee State & Refs
+  const marqueeRef = useRef<HTMLDivElement>(null);
+  const scrollPos = useRef<number>(0);
+  const [isDraggingMarquee, setIsDraggingMarquee] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
   // --- ADDED: Wipe memory when landing page loads ---
   useEffect(() => {
     localStorage.removeItem('lastCapturedImage');
@@ -76,12 +85,81 @@ export default function LandingPage(): React.JSX.Element {
     return () => clearInterval(timer);
   }, [activeArea]);
 
+  // Frame-rate independent auto-scrolling for Marquee
+  useEffect(() => {
+    let animationFrameId: number;
+    let lastTime = 0;
+    const speed = 0.05; // Adjust this for scroll speed
+
+    const scroll = (time: number) => {
+      if (!lastTime) lastTime = time;
+      const delta = time - lastTime;
+      lastTime = time;
+
+      if (marqueeRef.current && !isDraggingMarquee) {
+        scrollPos.current += speed * delta;
+        const halfWidth = marqueeRef.current.scrollWidth / 2;
+        
+        // Wrap logically
+        if (scrollPos.current >= halfWidth) {
+          scrollPos.current -= halfWidth;
+        } else if (scrollPos.current <= 0) {
+          scrollPos.current += halfWidth;
+        }
+        
+        marqueeRef.current.scrollLeft = scrollPos.current;
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+    
+    animationFrameId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isDraggingMarquee]);
+
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault(); 
     setIsSucked(true);  
     setTimeout(() => {
       router.push('/scan');
     }, 800);
+  };
+
+  // Marquee Pointer Event Handlers
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!marqueeRef.current) return;
+    setIsDraggingMarquee(true);
+    setStartX(e.pageX - marqueeRef.current.offsetLeft);
+    setScrollLeft(marqueeRef.current.scrollLeft);
+    scrollPos.current = marqueeRef.current.scrollLeft;
+  };
+
+  const handlePointerLeaveOrUp = () => {
+    setIsDraggingMarquee(false);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingMarquee || !marqueeRef.current) return;
+    e.preventDefault();
+    
+    const x = e.pageX - marqueeRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Drag sensitivity multiplier
+    let newScrollLeft = scrollLeft - walk;
+    
+    const halfWidth = marqueeRef.current.scrollWidth / 2;
+
+    // Wrap dragging seamlessly in bounds
+    if (newScrollLeft >= halfWidth) {
+      newScrollLeft -= halfWidth;
+      setStartX(e.pageX - marqueeRef.current.offsetLeft);
+      setScrollLeft(newScrollLeft);
+    } else if (newScrollLeft <= 0) {
+      newScrollLeft += halfWidth;
+      setStartX(e.pageX - marqueeRef.current.offsetLeft);
+      setScrollLeft(newScrollLeft);
+    }
+    
+    marqueeRef.current.scrollLeft = newScrollLeft;
+    scrollPos.current = newScrollLeft; // Keep animation accumulator in sync
   };
 
   return (
@@ -103,14 +181,8 @@ export default function LandingPage(): React.JSX.Element {
               to { transform: translate(-50%, -50%) rotate(0deg); }
             }
 
-            @keyframes marquee {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-
             .spin-inner { animation: spin 100s linear infinite; }
             .spin-outer { animation: spin-reverse 140s linear infinite; }
-            .animate-marquee { animation: marquee 30s linear infinite; }
 
             .unzoomable {
               user-select: none;
@@ -293,7 +365,7 @@ export default function LandingPage(): React.JSX.Element {
           <section className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             <div className="container mx-auto px-2 sm:px-6 text-center">
               <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
-              <h3 className="text-[12px] sm:text-2xl md:text-3xl font-semibold mb-6 md:mb-20 text-gray-800">Malunggay Pandesal</h3>
+              <h3 className="text-[12px] sm:text-2xl md:text-3xl font-semibold mb-6 md:mb-20 text-gray-900">Malunggay Pandesal</h3>
               <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
@@ -318,13 +390,30 @@ export default function LandingPage(): React.JSX.Element {
               <h2 className="text-[12px] sm:text-xl md:text-4xl font-bold text-[#4A4A4A]">Built Fast With A Zero-Latency, Zero-Cost Architecture</h2>
             </div>
             <div className="relative flex overflow-hidden group" style={{ maskImage: 'linear-gradient(to right, transparent, black 40%, black 60%, transparent)' }}>
-              <div className="flex animate-marquee whitespace-nowrap items-center py-2 md:py-4">
-                {[...techLogos, ...techLogos].map((logo, index) => (
+              
+              <div 
+                ref={marqueeRef}
+                onPointerDown={handlePointerDown}
+                onPointerUp={handlePointerLeaveOrUp}
+                onPointerLeave={handlePointerLeaveOrUp}
+                onPointerCancel={handlePointerLeaveOrUp}
+                onPointerMove={handlePointerMove}
+                className={`flex whitespace-nowrap items-center py-2 md:py-4 overflow-x-hidden no-scrollbar w-full ${isDraggingMarquee ? 'cursor-grabbing' : 'cursor-grab'}`}
+                style={{ touchAction: 'pan-y' }} // Allows native vertical scrolling while sliding sideways
+              >
+                {/* Quadrupled logos array ensures wide desktop screens never run out of items before wrap triggers */}
+                {[...techLogos, ...techLogos, ...techLogos, ...techLogos].map((logo, index) => (
                   <div key={index} className="mx-3 sm:mx-6 md:mx-10 flex-shrink-0 flex items-center justify-center">
-                    <img src={logo.src} alt={logo.name} className="h-15 w-25 sm:h-10 sm:w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable" />
+                    <img 
+                      src={logo.src} 
+                      alt={logo.name} 
+                      className="h-15 w-25 sm:h-10 sm:w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable" 
+                      draggable="false" 
+                    />
                   </div>
                 ))}
               </div>
+
             </div>
           </section>
 
