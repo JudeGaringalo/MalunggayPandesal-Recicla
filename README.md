@@ -396,6 +396,29 @@ Recicla solves these challenges through:
 
 ---
 
+# ⭐ Support The Project
+
+If you found this project useful:
+
+🌟 Star the repository  
+🍴 Fork the project  
+🛠️ Contribute improvements  
+♻️ Promote sustainable technology  
+
+---
+
+# 📄 License
+
+This project is licensed for CodeKada Online Hackathon 2026.
+
+---
+
+<div align="center">
+
+### Made with ♻️, AI, and Sustainability in Mind
+
+</div>
+
 > ⚠️ **Disclaimer**
 >
 > Recicla is an experimental academic and sustainability-focused platform developed for the **CodeKada Online Hackathon 2026**.  
@@ -419,25 +442,3 @@ Recicla solves these challenges through:
 >
 > By using Recicla, users acknowledge that the platform is provided **“as is”** without warranties of any kind and should be used responsibly to support sustainable waste management practices.
 
-# ⭐ Support The Project
-
-If you found this project useful:
-
-🌟 Star the repository  
-🍴 Fork the project  
-🛠️ Contribute improvements  
-♻️ Promote sustainable technology  
-
----
-
-# 📄 License
-
-This project is licensed for CodeKada Online Hackathon 2026.
-
----
-
-<div align="center">
-
-### Made with ♻️, AI, and Sustainability in Mind
-
-</div>
