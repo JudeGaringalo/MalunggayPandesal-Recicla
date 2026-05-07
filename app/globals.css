@@ -46,3 +46,21 @@ body {
   -ms-overflow-style: none;  
   scrollbar-width: none;  
 }
+
+@layer utilities {
+
+  @keyframes riseUp {
+    0% {
+      opacity: 0;
+      transform: translateY(40px); /* Start 40 pixels lower */
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0); /* Move to its normal position */
+    }
+  }
+
+  .animate-rise {
+    animation: riseUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}

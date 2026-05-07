@@ -89,7 +89,7 @@ export default function LandingPage(): React.JSX.Element {
       <VineScrollbar />
       <BackToTop />
 
-      <div className="bg-white">
+      <div className="bg-white animate-rise">
         <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
 
           <style>{`
@@ -164,8 +164,8 @@ export default function LandingPage(): React.JSX.Element {
             <div 
             className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-opacity duration-500 z-20 pointer-events-none
               ${isSucked ? 'opacity-0' : 'opacity-100'}
-            `}
-          >
+            `} >
+
             <span className="text-[12px] md:text-xs uppercase tracking-[0.25em] text-[#4A4A4A]/90 font-bold">
               Scroll
             </span>
@@ -178,7 +178,7 @@ export default function LandingPage(): React.JSX.Element {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
-          </div>
+            </div>
           </section>
           
           <section className="relative z-10 w-full">
@@ -269,8 +269,8 @@ export default function LandingPage(): React.JSX.Element {
 
             <div className="w-7/12 flex flex-col gap-6 sm:gap-16 md:gap-32 md:pb-[10vh]">
               {[
-                { num: "01", title: "Capture the Item", desc: "Open the Recicla web app and choose your preferred input. You can use the Live Camera for an instant real-time scan or Upload from Photos to analyze items you’ve already set aside.", img: "/images/step1.png" },
-                { num: "02", title: "Instant Analysis", desc: "In the blink of an eye, our on-device AI identifies the object and automatically classifies the material type and checking for hazards.", img: "/images/step2.png" },
+                { num: "01", title: "Capture the Item", desc: "Open the Recicla web app and choose your preferred input. You can use the Live Camera for an instant real-time scan or Upload from Photos to analyze items you’ve already set aside.", img: "/images/step-1.png" },
+                { num: "02", title: "Instant Analysis", desc: "In the blink of an eye, our on-device AI identifies the object and automatically classifies the material type and checking for hazards.", img: "/images/step-2.png" },
                 { num: "03", title: "Review Results", desc: "Review the item's detailed profile and get directions to the nearest verified junk shop or specialized e-waste bin.", img: "/images/step3.png" }
               ].map((step, idx) => (
                 <div key={idx} className="reveal-up group">
