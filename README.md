@@ -93,7 +93,7 @@ http://localhost:3000
 
 ---
 
-# 👥 The Team
+# 👥 The Team - Malunggay Pandesal
 
 | Member | Role |
 |---|---|
