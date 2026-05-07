@@ -250,20 +250,12 @@ export default function ResultsPage() {
             if (data && data.length > 0) {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
-                
-<<<<<<< Updated upstream
                 const newLoc: [number, number] = [lat, lon];
-=======
->>>>>>> Stashed changes
                 setIsManualOverride(true);
                 setUserLoc([lat, lon]);
-                
-                // NEW: Calculate a fresh destination near the newly searched address!
                 setDestLoc(generateNearbyDest(lat, lon, isHazard));
-<<<<<<< Updated upstream
                 setUserLoc(newLoc);
-=======
->>>>>>> Stashed changes
+
             } else {
                 setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
             }
