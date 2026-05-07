@@ -18,13 +18,13 @@ export async function POST(request: Request) {
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
     const fileName = `scan_${Date.now()}.jpg`;
-    
+
     const { error: uploadError } = await supabase.storage
       .from('scans')
       .upload(fileName, buffer, { contentType: 'image/jpeg' });
 
     if (uploadError) throw new Error(`Supabase: ${uploadError.message}`);
-    
+
     const { data: { publicUrl } } = supabase.storage.from('scans').getPublicUrl(fileName);
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -34,18 +34,42 @@ export async function POST(request: Request) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-4-scout-17b-16e-instruct", 
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [
           {
             role: "user",
             content: [
-              { 
-                type: "text", 
-                text: "You are an expert waste management and materials science AI. Analyze the provided image and strictly identify the primary object in the center of the frame. Estimate accurate, real-world data regarding this material's economic scrap value specifically in the Philippines (in PHP), its chemical biodegradability, and exact recycling methods. Do not guess blindly; base the value on real Philippine junk shop and recycling rates. If a value fluctuates, provide the current market range. Return ONLY a valid, raw JSON object matching this exact structure: {\"objectName\": \"Exact name of the object seen\", \"category\": \"Broad material category (e.g., High-Value Metal, E-Waste)\", \"description\": \"A highly accurate visual description of what you see and what the material is made of.\", \"scrapValuePH\": \"Exact current scrap value in Philippine Peso (e.g., '₱350 - ₱400 per kg') or 'No commercial scrap value'\", \"recyclingUses\": \"Specific industrial or local ways this material is recycled or repurposed in the Philippines.\", \"isHazardous\": true, \"hazardDetails\": \"Specific toxic properties or handling warnings. Write 'Safe to handle' if non-hazardous.\", \"isBiodegradable\": false, \"isRecyclable\": true}"
+              {
+                type: "text",
+                text: `You are an expert waste management and materials science AI. 
+          
+          CORE TASK: Analyze the provided image and identify the primary inanimate object in the center. 
+          Estimate real-world data regarding scrap value in the Philippines (PHP), biodegradability, and recycling methods.
+
+          SAFETY & PRIVACY GUARDRAIL: 
+          If the image contains a person, a human face, human limbs, or any animal, you MUST NOT provide an analysis. 
+          Instead, return the JSON structure with "objectName" set to "Invalid" and all other string fields set to "N/A".
+
+          REQUIREMENTS:
+          - Use real Philippine junk shop rates.
+          - Return ONLY a valid, raw JSON object.
+
+          STRUCTURE:
+          {
+            "objectName": "Exact name of the object (or 'Invalid' if person/animal)",
+            "category": "Broad category (e.g., E-Waste, Metal)",
+            "description": "Visual description of material composition.",
+            "scrapValuePH": "Current price in PHP or 'No commercial value'",
+            "recyclingUses": "Local industrial uses in PH.",
+            "isHazardous": false,
+            "hazardDetails": "Handling warnings or 'Safe to handle'",
+            "isBiodegradable": false,
+            "isRecyclable": true
+          }`
               },
-              { 
-                type: "image_url", 
-                image_url: { url: image } 
+              {
+                type: "image_url",
+                image_url: { url: image }
               }
             ]
           }
@@ -63,17 +87,17 @@ export async function POST(request: Request) {
     const data = await response.json();
     const aiData = JSON.parse(data.choices[0].message.content);
 
-    return NextResponse.json({ 
-      success: true, 
-      imageUrl: publicUrl, 
-      aiData 
+    return NextResponse.json({
+      success: true,
+      imageUrl: publicUrl,
+      aiData
     });
 
   } catch (error: any) {
     console.error("API ROUTE ERROR:", error.message);
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message 
+    return NextResponse.json({
+      success: false,
+      error: error.message
     }, { status: 500 });
   }
 }
