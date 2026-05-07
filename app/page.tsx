@@ -154,8 +154,6 @@ const TextScrollReveal = ({ text }: { text: string }) => {
 export default function LandingPage(): React.JSX.Element {
   const router = useRouter(); 
   const [activeArea, setActiveArea] = useState(0); 
-  
-  const [isLoading, setIsLoading] = useState(true);
   const [isSucked, setIsSucked] = useState(true); 
 
   const marqueeRef = useRef<HTMLDivElement>(null);
@@ -171,12 +169,14 @@ export default function LandingPage(): React.JSX.Element {
     document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   }, []);
 
-  const handleLoadingComplete = () => {
-    setIsLoading(false);
-    setTimeout(() => {
+  // Timer to spit out the hero section on load
+  useEffect(() => {
+    const loadTimer = setTimeout(() => {
       setIsSucked(false);
-    }, 150); 
-  };
+    }, 150);
+
+    return () => clearTimeout(loadTimer);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -211,12 +211,9 @@ export default function LandingPage(): React.JSX.Element {
       animationFrameId = requestAnimationFrame(scroll);
     };
     
-    if (!isLoading) {
-      animationFrameId = requestAnimationFrame(scroll);
-    }
-    
+    animationFrameId = requestAnimationFrame(scroll);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isDraggingMarquee, isLoading]);
+  }, [isDraggingMarquee]);
 
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault(); 
@@ -268,6 +265,7 @@ export default function LandingPage(): React.JSX.Element {
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
       <VineScrollbar />
       <BackToTop />
+
       <div className="bg-white animate-rise">
         <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
 
@@ -488,7 +486,6 @@ export default function LandingPage(): React.JSX.Element {
                 <h3 className="text-[#E8E6D9] text-[12px] sm:text-2xl md:text-3xl font-medium mb-8 md:mb-24 tracking-wide">Malunggay Pandesal</h3>
               </FadeIn>
               
-              {/* Force the 2-column grid format for all screen sizes with a max-width so it doesn't stretch too wide on desktop */}
               <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-10 max-w-4xl mx-auto">
                 {[
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
