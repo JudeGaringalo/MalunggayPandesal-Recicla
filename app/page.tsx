@@ -570,28 +570,28 @@ export default function LandingPage(): React.JSX.Element {
             </div>
           </section>
 
-          <section id="team" className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
-            <div className="container mx-auto px-2 sm:px-6 text-center">
-              <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
-              <h3 className="text-[12px] sm:text-2xl md:text-2xl font-semi mb-6 md:mb-20 text-gray-200">Malunggay Pandesal</h3>
-              <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
-                {[
-                  { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
-                  { name: "Jude", role: "Full-Stack Software Developer", img: "/images/Team/Jude.jpg" },
-                  { name: "Volt", role: "UI / UX Designer", img: "/images/Team/Ruy.jpg" },
-                  { name: "Sai", role: "QA Engineer", img: "/images/Team/Sai.jpg" }
-                ].map((member, idx) => (
-                  <div key={idx} className="flex flex-col items-center group">
-                    <div className="w-14 h-14 sm:w-24 sm:h-24 md:w-56 md:h-56 bg-[#D9D9D9] rounded-full mb-2 md:mb-6 overflow-hidden relative shadow-lg">
-                      <Image src={member.img} alt={member.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-                    </div>
-                    <h3 className="text-white text-[10px] sm:text-sm md:text-2xl font-bold mb-0.5 md:mb-1">{member.name}</h3>
-                    <p className="text-white/90 text-[8px] sm:text-xs md:text-lg font-light leading-tight px-1">{member.role}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          <section id="team" className="relative z-20 bg-black/60 bg-blend-multiply bg-[url('/images/team_cover.png')] bg-cover bg-center bg-no-repeat py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
+  <div className="container mx-auto px-2 sm:px-6 text-center">
+    <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
+    <h3 className="text-[12px] sm:text-2xl md:text-2xl font-semi mb-6 md:mb-20 text-gray-200">Malunggay Pandesal</h3>
+    <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8">
+      {[
+        { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
+        { name: "Jude", role: "Full-Stack Software Developer", img: "/images/Team/Jude.jpg" },
+        { name: "Volt", role: "UI / UX Designer", img: "/images/Team/Ruy.jpg" },
+        { name: "Sai", role: "QA Engineer", img: "/images/Team/Sai.jpg" }
+      ].map((member, idx) => (
+        <div key={idx} className="flex flex-col items-center group">
+          <div className="w-14 h-14 sm:w-24 sm:h-24 md:w-56 md:h-56 bg-[#D9D9D9] rounded-full mb-2 md:mb-6 overflow-hidden relative shadow-lg">
+            <Image src={member.img} alt={member.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+          </div>
+          <h3 className="text-white text-[10px] sm:text-sm md:text-2xl font-bold mb-0.5 md:mb-1">{member.name}</h3>
+          <p className="text-white/90 text-[8px] sm:text-xs md:text-lg font-light leading-tight px-1">{member.role}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
 
           <section id="tech" className="relative z-10 mt-8 md:mt-24 py-10 md:py-32 bg-white overflow-hidden">
             <FadeIn className="container mx-auto px-4 md:px-6 text-center mb-4 md:mb-12">
