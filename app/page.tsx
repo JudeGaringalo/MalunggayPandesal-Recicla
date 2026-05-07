@@ -3,10 +3,132 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 import { ReactLenis } from '@studio-freight/react-lenis';
+import { gsap } from 'gsap';
 import VineScrollbar from './components/VineScrollbar';
-import BackToTop from './components/BackToTop'; 
+import BackToTop from './components/BackToTop';
+
+// --- MAGNETIC NAV ITEM COMPONENT (GSAP) ---
+// Note: Only declared ONCE, with targetId included in the TypeScript type.
+const MagneticNavItem = ({ children, targetId }: { children: React.ReactNode, targetId: string }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLAnchorElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current || !textRef.current) return;
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = ref.current.getBoundingClientRect();
+    const x = clientX - (left + width / 2);
+    const y = clientY - (top + height / 2);
+
+    gsap.to(ref.current, { x: x * 0.2, y: y * 0.2, duration: 1, ease: 'power3.out' });
+    gsap.to(textRef.current, { x: x * 0.1, y: y * 0.1, duration: 1, ease: 'power3.out' });
+  };
+
+  const handleMouseLeave = () => {
+    if (!ref.current || !textRef.current) return;
+    gsap.to(ref.current, { x: 0, y: 0, duration: 1, ease: 'elastic.out(1, 0.3)' });
+    gsap.to(textRef.current, { x: 0, y: 0, duration: 1, ease: 'elastic.out(1, 0.3)' });
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div
+  ref={ref}
+  onMouseMove={handleMouseMove}
+  onMouseLeave={handleMouseLeave}
+  className="p-1 md:p-2 cursor-pointer flex items-center justify-center text-inherit"
+>
+      <a
+        ref={textRef}
+        href={`#${targetId}`}
+        onClick={handleClick}
+        className="text-[10px] md:text-xs font-semi uppercase tracking-widest transition-all duration-300 hover:opacity-70"
+      >
+        {children}
+      </a>
+    </div>
+  );
+};
+const Navbar = () => {
+  const navRef = useRef<HTMLElement>(null);
+  const [isDarkSection, setIsDarkSection] = useState(false);
+
+  useEffect(() => {
+    gsap.fromTo(
+      navRef.current,
+      { y: -100, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1.5, ease: 'expo.out', delay: 0.8 }
+    );
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+
+      // TEAM section starts here
+      const teamSection = document.getElementById("team");
+
+      if (teamSection) {
+        const teamTop = teamSection.offsetTop;
+        const teamBottom = teamTop + teamSection.offsetHeight;
+
+        // Change navbar color while inside dark/image sections
+        if (scrollY >= teamTop - 100 && scrollY <= teamBottom) {
+          setIsDarkSection(true);
+        } else {
+          setIsDarkSection(false);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <header
+      ref={navRef}
+      className="fixed top-0 left-0 w-full z-[100] flex justify-between items-center px-6 md:px-12 py-4 pointer-events-none opacity-0 -translate-y-[100px]"
+    >
+      <div className="group cursor-pointer pointer-events-auto">
+        <img
+          src="/images/icon.png"
+          alt="Recicla Icon"
+          className="w-8 h-8 md:w-10 md:h-10 object-contain transition-transform duration-500 group-hover:rotate-90 group-hover:scale-110"
+        />
+      </div>
+
+      <nav className="flex items-center gap-2 md:gap-4 pointer-events-auto">
+        <div className={isDarkSection ? "text-white" : "text-black"}>
+          <MagneticNavItem targetId="about">About</MagneticNavItem>
+        </div>
+
+        <div className={isDarkSection ? "text-white" : "text-black"}>
+          <MagneticNavItem targetId="instructions">
+            Instructions
+          </MagneticNavItem>
+        </div>
+
+        <div className={isDarkSection ? "text-white" : "text-black"}>
+          <MagneticNavItem targetId="team">Team</MagneticNavItem>
+        </div>
+
+        <div className={isDarkSection ? "text-white" : "text-black"}>
+          <MagneticNavItem targetId="tech">Tech Stack</MagneticNavItem>
+        </div>
+      </nav>
+    </header>
+  );
+};
 
 const techLogos = [
   { name: "Next.js", src: "/images/next.png" },
@@ -56,18 +178,18 @@ const FEATURES = [
     description: "No app store downloads required. Users can transition from curiosity to a live scan in under three clicks.",
     image: "/images/feature-4.png"
   }
-]; 
+];
 
-const FadeIn = ({ 
-  children, 
-  delay = 0, 
-  className = "", 
-  style = {} 
-}: { 
-  children: React.ReactNode, 
-  delay?: number, 
-  className?: string, 
-  style?: React.CSSProperties 
+const FadeIn = ({
+  children,
+  delay = 0,
+  className = "",
+  style = {}
+}: {
+  children: React.ReactNode,
+  delay?: number,
+  className?: string,
+  style?: React.CSSProperties
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -86,10 +208,9 @@ const FadeIn = ({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-1000 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95'
-      } ${className}`}
-      style={{ transitionDelay: `${delay}ms`, ...style }} 
+      className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95'
+        } ${className}`}
+      style={{ transitionDelay: `${delay}ms`, ...style }}
     >
       {children}
     </div>
@@ -105,33 +226,33 @@ const TextScrollReveal = ({ text }: { text: string }) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      
-      const startReveal = windowHeight * 0.85; 
+
+      const startReveal = windowHeight * 0.85;
       const endReveal = windowHeight * 0.35;
-      
+
       let currentProgress = (startReveal - rect.top) / (startReveal - endReveal);
       currentProgress = Math.max(0, Math.min(1, currentProgress));
       setProgress(currentProgress);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); 
-    
+    handleScroll();
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const words = text.split(" ");
 
   return (
-    <p 
-      ref={containerRef} 
+    <p
+      ref={containerRef}
       className="text-[#4A4A4A] text-[16px] sm:text-xl md:text-3xl leading-relaxed font-medium text-center"
     >
       {words.map((word, i) => {
         const start = i / words.length;
         const end = start + (1 / words.length);
-        
-        let opacity = 0.15; 
+
+        let opacity = 0.15;
         if (progress >= end) {
           opacity = 1;
         } else if (progress > start) {
@@ -139,9 +260,9 @@ const TextScrollReveal = ({ text }: { text: string }) => {
         }
 
         return (
-          <span 
-            key={i} 
-            style={{ opacity }} 
+          <span
+            key={i}
+            style={{ opacity }}
             className="transition-opacity duration-75 inline-block mr-[0.25em]"
           >
             {word}
@@ -152,10 +273,11 @@ const TextScrollReveal = ({ text }: { text: string }) => {
   );
 };
 
+// --- MAIN PAGE EXPORT ---
 export default function LandingPage(): React.JSX.Element {
-  const router = useRouter(); 
-  const [activeArea, setActiveArea] = useState(0); 
-  const [isSucked, setIsSucked] = useState(true); 
+  const router = useRouter();
+  const [activeArea, setActiveArea] = useState(0);
+  const [isSucked, setIsSucked] = useState(true);
 
   const marqueeRef = useRef<HTMLDivElement>(null);
   const scrollPos = useRef<number>(0);
@@ -170,12 +292,10 @@ export default function LandingPage(): React.JSX.Element {
     document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   }, []);
 
-  // Timer to spit out the hero section on load
   useEffect(() => {
     const loadTimer = setTimeout(() => {
       setIsSucked(false);
     }, 150);
-
     return () => clearTimeout(loadTimer);
   }, []);
 
@@ -183,14 +303,13 @@ export default function LandingPage(): React.JSX.Element {
     const timer = setInterval(() => {
       setActiveArea((prevArea) => (prevArea + 1) % FEATURES.length);
     }, 8000);
-
     return () => clearInterval(timer);
   }, [activeArea]);
 
   useEffect(() => {
     let animationFrameId: number;
     let lastTime = 0;
-    const speed = 0.05; 
+    const speed = 0.05;
 
     const scroll = (time: number) => {
       if (!lastTime) lastTime = time;
@@ -200,25 +319,25 @@ export default function LandingPage(): React.JSX.Element {
       if (marqueeRef.current && !isDraggingMarquee) {
         scrollPos.current += speed * delta;
         const halfWidth = marqueeRef.current.scrollWidth / 2;
-        
+
         if (scrollPos.current >= halfWidth) {
           scrollPos.current -= halfWidth;
         } else if (scrollPos.current <= 0) {
           scrollPos.current += halfWidth;
         }
-        
+
         marqueeRef.current.scrollLeft = scrollPos.current;
       }
       animationFrameId = requestAnimationFrame(scroll);
     };
-    
+
     animationFrameId = requestAnimationFrame(scroll);
     return () => cancelAnimationFrame(animationFrameId);
   }, [isDraggingMarquee]);
 
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault(); 
-    setIsSucked(true);  
+    e.preventDefault();
+    setIsSucked(true);
     setTimeout(() => {
       router.push('/scan');
     }, 800);
@@ -239,11 +358,9 @@ export default function LandingPage(): React.JSX.Element {
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingMarquee || !marqueeRef.current) return;
     e.preventDefault();
-    
     const x = e.pageX - marqueeRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; 
+    const walk = (x - startX) * 1.5;
     let newScrollLeft = scrollLeft - walk;
-    
     const halfWidth = marqueeRef.current.scrollWidth / 2;
 
     if (newScrollLeft >= halfWidth) {
@@ -255,9 +372,8 @@ export default function LandingPage(): React.JSX.Element {
       setStartX(e.pageX - marqueeRef.current.offsetLeft);
       setScrollLeft(newScrollLeft);
     }
-    
     marqueeRef.current.scrollLeft = newScrollLeft;
-    scrollPos.current = newScrollLeft; 
+    scrollPos.current = newScrollLeft;
   };
 
   const aboutReciclaText = "Recicla is a real-time, AI-driven web application that transforms the way you approach household waste and intentional decluttering. By leveraging high-speed, client-side object detection, Recicla empowers you to instantly analyze everyday items especially aging electronics to understand their material composition and proper disposal methods. We take the guesswork out of waste segregation, turning the simple act of cleaning out your home into a meaningful contribution to environmental sustainability.";
@@ -267,6 +383,8 @@ export default function LandingPage(): React.JSX.Element {
       <VineScrollbar />
       <BackToTop />
 
+      <Navbar />
+
       <div className="bg-white animate-rise">
         <main className="relative bg-white text-[#4A4A4A] font-sans no-scrollbar">
 
@@ -275,15 +393,12 @@ export default function LandingPage(): React.JSX.Element {
               from { transform: rotate(0deg); }
               to { transform: rotate(360deg); }
             }
-            
             @keyframes spin-reverse {
               from { transform: rotate(360deg); }
               to { transform: rotate(0deg); }
             }
-
             .spin-inner { animation: spin 100s linear infinite; }
             .spin-outer { animation: spin-reverse 140s linear infinite; }
-
             .unzoomable {
               user-select: none;
               -webkit-user-drag: none;
@@ -293,8 +408,8 @@ export default function LandingPage(): React.JSX.Element {
           `}</style>
 
           <section className="relative w-full min-h-screen overflow-hidden flex items-center justify-center">
-            
-            <div 
+
+            <div
               className={`absolute inset-0 flex items-center justify-center pointer-events-none z-0 transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] origin-center
                 ${isSucked ? 'scale-[0.05] opacity-0 translate-y-40 blur-2xl' : 'scale-100 opacity-100 translate-y-0 blur-0'}
               `}
@@ -306,18 +421,8 @@ export default function LandingPage(): React.JSX.Element {
                   filter: 'blur(100px)'
                 }}
               ></div>
-
-              <img
-                src="/images/Group 8.png"
-                alt="Outer floating items"
-                className="absolute w-[180vw] max-w-[1800px] object-contain spin-outer unzoomable"
-              />
-
-              <img
-                src="/images/Group 7.png"
-                alt="Inner floating items"
-                className="absolute w-[120vw] max-w-[900px] object-contain spin-inner unzoomable"
-              />
+              <img src="/images/Group 8.png" alt="Outer floating items" className="absolute w-[180vw] max-w-[1800px] object-contain spin-outer unzoomable" />
+              <img src="/images/Group 7.png" alt="Inner floating items" className="absolute w-[120vw] max-w-[900px] object-contain spin-inner unzoomable" />
             </div>
 
             <FadeIn delay={300} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center text-center gap-6 px-6">
@@ -327,36 +432,30 @@ export default function LandingPage(): React.JSX.Element {
               </h1>
               <Link
                 href="/scan"
-                onClick={handleGetStarted} 
-                className={`mt-2 bg-white/70 backdrop-blur-md text-[#4A4A4A] border border-gray-200 font-bold tracking-wide rounded-[30px] px-8 py-3 md:px-10 md:py-[15px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:bg-[#7C8D58] hover:text-white hover:border-[#7C8D58] active:scale-95
-                  ${isSucked ? 'scale-95 bg-[#6a794b] pointer-events-none opacity-0' : 'hover:-translate-y-1 opacity-100'}
+                onClick={handleGetStarted}
+                className={`mt-2 bg-[#7C8D58] text-white border border-[#7C8D58] font-bold tracking-wide rounded-[30px] px-8 py-3 md:px-10 md:py-[15px] shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-500 hover:bg-[#3c4529] hover:border-[#3c4529] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C8D58] focus-visible:ring-offset-4 active:scale-95
+                  ${isSucked ? 'scale-95 pointer-events-none opacity-0' : 'hover:-translate-y-1 opacity-100'}
                 `}
               >
                 Get Started
               </Link>
             </FadeIn>
 
-            <div 
+            <div
               className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-opacity duration-500 z-20 pointer-events-none
                 ${isSucked ? 'opacity-0' : 'opacity-100'}
-              `} 
+              `}
             >
               <span className="text-[12px] md:text-xs uppercase tracking-[0.25em] text-[#4A4A4A]/90 font-bold">
                 Scroll
               </span>
-              <svg 
-                className="w-4 h-4 text-[#7C8D58] animate-bounce" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                strokeWidth="2"
-              >
+              <svg className="w-4 h-4 text-[#7C8D58] animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
           </section>
-          
-          <section className="relative z-10 w-full mb-10 md:mb-20">
+
+          <section id="about" className="relative z-10 w-full mb-10 md:mb-20">
             <FadeIn className="relative w-full flex items-center justify-center overflow-hidden">
               <img src="/images/Rectangle 50.png" alt="Header" className="w-full md:w-[110%] scale-110 md:scale-100 max-w-none h-auto drop-shadow-xl unzoomable object-cover" />
               <h2 className="absolute inset-0 flex items-center justify-center text-white text-xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-2 md:mb-4 px-4 text-center mix-blend-overlay">
@@ -367,7 +466,7 @@ export default function LandingPage(): React.JSX.Element {
               <TextScrollReveal text={aboutReciclaText} />
             </div>
           </section>
-          
+
           <section className="relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-32 max-w-6xl">
             <FadeIn className="flex flex-col-reverse lg:flex-row overflow-hidden rounded-[20px] md:rounded-[40px] shadow-2xl border border-gray-100/50 bg-white/30 backdrop-blur-lg">
               <div className="w-full lg:w-1/2 flex flex-col" role="tablist">
@@ -379,7 +478,7 @@ export default function LandingPage(): React.JSX.Element {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setActiveArea(index)}
-                      className={`flex-1 flex flex-col items-center justify-center text-center gap-1 md:gap-4 py-6 px-4 border-b border-r border-white/20 last:border-b-0 transition-all duration-500 outline-none group 
+                      className={`flex-1 flex flex-col items-center justify-center text-center gap-1 md:gap-4 py-6 px-4 border-b border-r border-white/20 last:border-b-0 transition-all duration-500 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white group 
                         ${isActive ? 'bg-[#81915A]/90 backdrop-blur-md z-10 scale-[1.02] shadow-[0_0_30px_rgba(0,0,0,0.1)]' : 'bg-[#404828]/80 backdrop-blur-md hover:bg-[#404828]/90'}
                       `}
                     >
@@ -392,13 +491,13 @@ export default function LandingPage(): React.JSX.Element {
                 })}
               </div>
 
-              <div className="w-full lg:w-1/2 relative bg-[#E8E6D9]/50 backdrop-blur-sm min-h-[450px] sm:min-h-[500px] md:min-h-[600px] overflow-hidden">
+              <div className="w-full lg:w-1/2 relative bg-white backdrop-blur-sm min-h-[450px] sm:min-h-[500px] md:min-h-[600px] overflow-hidden">
                 {FEATURES.map((feature, index) => (
                   <div
                     key={`img-${feature.id}`}
                     className={`absolute inset-0 transition-all duration-[1200ms] ease-in-out 
-            ${activeArea === index ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-125 z-0'}
-          `}
+                      ${activeArea === index ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-125 z-0'}
+                    `}
                   >
                     <Image src={feature.image} alt={feature.title} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover unzoomable" />
                   </div>
@@ -415,12 +514,9 @@ export default function LandingPage(): React.JSX.Element {
                       <div className="relative w-full pt-40 pb-8 md:pb-16 px-6 md:px-12 flex justify-center">
                         <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/60 to-transparent pointer-events-none z-0"></div>
 
-                        <div 
-                          className="absolute inset-0 backdrop-blur-md pointer-events-none z-0" 
-                          style={{ 
-                            maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)',
-                            WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)'
-                          }}
+                        <div
+                          className="absolute inset-0 backdrop-blur-md pointer-events-none z-0"
+                          style={{ maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)', WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)' }}
                         ></div>
 
                         <p className="relative z-10 text-[#2A2A2A] text-[13px] sm:text-base md:text-[22px] font-medium leading-relaxed max-w-lg mx-auto capitalize">
@@ -434,7 +530,7 @@ export default function LandingPage(): React.JSX.Element {
             </FadeIn>
           </section>
 
-          <section className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-12 py-10 md:py-32 flex flex-row gap-4 sm:gap-12 md:gap-20 relative items-start perspective-[1000px]">
+          <section id="instructions" className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-12 py-10 md:py-32 flex flex-row gap-4 sm:gap-12 md:gap-20 relative items-start perspective-[1000px] pt-20">
             <div className="absolute top-1/4 right-[10%] w-64 h-64 bg-[#7C8D58]/15 rounded-full blur-[80px] pointer-events-none"></div>
             <div className="absolute bottom-1/4 left-[10%] w-80 h-80 bg-[#81915A]/15 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -463,7 +559,7 @@ export default function LandingPage(): React.JSX.Element {
                   <div className="p-4 sm:p-6 md:p-8 rounded-[20px] md:rounded-[40px] bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/60 transition-colors duration-500">
                     <div className="aspect-[4/3] bg-gray-100 rounded-[10px] md:rounded-[20px] mb-4 md:mb-8 relative overflow-hidden cursor-pointer shadow-md">
                       <Image src={step.img} alt={step.title} fill className="rounded-[10px] md:rounded-[20px] object-cover transition-transform duration-700 group-hover:scale-105 unzoomable border-4 border-[#7E8C54]/20" />
-                      <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
+                      <div className="absolute inset-0 bg-transparent group-hover:bg-white/40 transition-colors duration-500"></div>
                     </div>
                     <div className="flex gap-2 sm:gap-4 md:gap-8 items-start pb-2 md:pb-4">
                       <div className="text-lg sm:text-3xl md:text-4xl font-bold text-[#7C8D58] drop-shadow-sm">{step.num}</div>
@@ -478,7 +574,7 @@ export default function LandingPage(): React.JSX.Element {
             </div>
           </section>
 
-          <section className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
+          <section id="team" className="relative z-20 bg-[#76864C] py-10 md:py-32 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
             <div className="container mx-auto px-2 sm:px-6 text-center">
               <h2 className="text-white text-2xl sm:text-4xl md:text-6xl font-bold md:mb-4 tracking-tight">Meet Our Team</h2>
               <h3 className="text-[12px] sm:text-2xl md:text-2xl font-semi mb-6 md:mb-20 text-gray-200">Malunggay Pandesal</h3>
@@ -501,12 +597,12 @@ export default function LandingPage(): React.JSX.Element {
             </div>
           </section>
 
-          <section className="relative z-10 mt-8 md:mt-24 py-10 md:py-32 bg-white overflow-hidden">
+          <section id="tech" className="relative z-10 mt-8 md:mt-24 py-10 md:py-32 bg-white overflow-hidden">
             <FadeIn className="container mx-auto px-4 md:px-6 text-center mb-4 md:mb-12">
               <h2 className="text-[12px] sm:text-xl md:text-4xl font-bold text-[#4A4A4A]">Built Fast With A Zero-Latency, Zero-Cost Architecture</h2>
             </FadeIn>
             <FadeIn delay={200} className="relative flex overflow-hidden group" style={{ maskImage: 'linear-gradient(to right, transparent, black 40%, black 60%, transparent)' }}>
-              <div 
+              <div
                 ref={marqueeRef}
                 onPointerDown={handlePointerDown}
                 onPointerUp={handlePointerLeaveOrUp}
@@ -518,12 +614,7 @@ export default function LandingPage(): React.JSX.Element {
               >
                 {[...techLogos, ...techLogos, ...techLogos, ...techLogos].map((logo, index) => (
                   <div key={index} className="mx-3 sm:mx-6 md:mx-10 flex-shrink-0 flex items-center justify-center">
-                    <img 
-                      src={logo.src} 
-                      alt={logo.name} 
-                      className="h-15 w-25 sm:h-10 sm:w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable" 
-                      draggable="false" 
-                    />
+                    <img src={logo.src} alt={logo.name} className="h-15 w-25 sm:h-10 sm:w-28 md:h-14 md:w-40 object-contain transition-transform duration-300 hover:scale-110 unzoomable" draggable="false" />
                   </div>
                 ))}
               </div>
@@ -541,7 +632,7 @@ export default function LandingPage(): React.JSX.Element {
                     <feComposite operator="over" in="shadow" in2="SourceGraphic" />
                   </filter>
                 </defs>
-                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#E8EBE4" className="font-inter font-bold uppercase" style={{ fontSize: '250px', letterSpacing: '14px' }} filter="url(#innerShadow)">RECICLA</text>
+                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#E8EBE4" className="font-display font-bold uppercase" style={{ fontSize: '250px', letterSpacing: '14px' }} filter="url(#innerShadow)">RECICLA</text>
               </svg>
             </div>
             <img src="/images/footer.png" alt="Tropical Leaves" className="relative z-10 w-full h-[40vh] md:h-[85vh] object-cover object-bottom pointer-events-none unzoomable drop-shadow-2xl" />

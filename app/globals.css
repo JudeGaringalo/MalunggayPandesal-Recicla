@@ -1,17 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+/* Import the premium agency combo from Fontshare */
+@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@100,200,300,400,500,700,800,900&f[]=general-sans@200,300,400,500,600,700&display=swap');
 @import "tailwindcss";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-inter: "Inter", sans-serif; 
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,13 +14,37 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Inter", Arial, Helvetica, sans-serif;
+/* 
+  Tailwind v4 Inline Theme
+  Setting General Sans as default body, Cabinet Grotesk as the display/heading font
+*/
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "General Sans", sans-serif; 
+  --font-display: "Cabinet Grotesk", sans-serif; 
 }
 
-/* HIDE SCROLLBAR GLOBALLY */
+/* GLOBAL BASE STYLES */
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    
+    /* Crucial for the GSAP/Premium look: Butter-smooth text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Force all native headings to use the aggressive display font */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+/* HIDE SCROLLBAR GLOBALLY (Since you are using Lenis for smooth scrolling anyway!) */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;
@@ -47,16 +64,16 @@ body {
   scrollbar-width: none;  
 }
 
+/* CUSTOM UTILITIES & ANIMATIONS */
 @layer utilities {
-
   @keyframes riseUp {
     0% {
       opacity: 0;
-      transform: translateY(40px); /* Start 40 pixels lower */
+      transform: translateY(40px);
     }
     100% {
       opacity: 1;
-      transform: translateY(0); /* Move to its normal position */
+      transform: translateY(0);
     }
   }
 
