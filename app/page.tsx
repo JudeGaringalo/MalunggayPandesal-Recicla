@@ -447,7 +447,7 @@ export default function LandingPage(): React.JSX.Element {
                   Three Simple Steps to <br />
                   <span className="text-[#7C8D58]">Responsible Disposal for a Cleaner Planet</span>
                 </h2>
-                <p className="text-[12px] sm:text-base md:text-xl text-gray-800 font-light leading-relaxed max-w-md">
+                <p className="text-[12px] sm:text-base md:text-lg text-gray-800 font-light leading-relaxed max-w-md">
                   Recicla simplifies the path from waste to resource.
                 </p>
               </FadeIn>
