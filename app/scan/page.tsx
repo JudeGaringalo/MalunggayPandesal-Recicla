@@ -473,48 +473,48 @@ export default function ARScannerApp() {
    
                 {showDisclaimer && !isModelLoading && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-        <div className="bg-white text-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 relative">
-            <h2 className="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2 justify-center">
-                Disclaimer
-            </h2>
-            <div className="text-base space-y-4">
-                <p>
-                    Recicla is an experimental academic and sustainability-focused platform developed for the <strong>CodeKada Online Hackathon 2026</strong>.
-                </p>
-                <p>
-                    The AI-powered waste detection, material classification, price estimation, and recycling recommendations provided by the system are intended for <strong>educational, research, and informational purposes only</strong>.
-                </p>
-                <div>
-                    <p className="font-semibold mb-1">Please note:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                        <li>AI predictions and classifications may not always be 100% accurate.</li>
-                        <li>Scrap value estimations are approximate and may vary depending on local market conditions, junkshops, and recycling facilities.</li>
-                        <li>Nearby recycling centers, routes, and geolocation data rely on third-party mapping services and public datasets which may contain incomplete or outdated information.</li>
-                        <li>Users are encouraged to verify hazardous waste handling procedures with official environmental agencies and local authorities before disposal.</li>
-                    </ul>
-                </div>
-                <div>
-                    <p className="font-semibold mb-1">Recicla and its developers are not liable for:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                        <li>Incorrect AI detections</li>
-                        <li>Inaccurate pricing estimates</li>
-                        <li>Mapping inaccuracies</li>
-                        <li>Third-party service interruptions</li>
-                        <li>Improper disposal decisions made using the platform</li>
-                    </ul>
-                </div>
-                <p className="font-medium mt-4 text-gray-900 border-t pt-4">
-                    By using Recicla, users acknowledge that the platform is provided <strong>“as is”</strong> without warranties of any kind and should be used responsibly to support sustainable waste management practices.
-                </p>
+    <div className="bg-white text-gray-800 rounded-2xl w-[85%] md:w-full max-w-sm md:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-4 md:p-8 relative">
+        <h2 className="text-lg md:text-2xl font-bold text-red-600 mb-2 md:mb-4 flex items-center gap-2 justify-center">
+            Disclaimer
+        </h2>
+        <div className="text-xs md:text-base space-y-2 md:space-y-4">
+            <p>
+                Recicla is an experimental academic and sustainability-focused platform developed for the <strong>CodeKada Online Hackathon 2026</strong>.
+            </p>
+            <p>
+                The AI-powered waste detection, material classification, price estimation, and recycling recommendations provided by the system are intended for <strong>educational, research, and informational purposes only</strong>.
+            </p>
+            <div>
+                <p className="font-semibold mb-1">Please note:</p>
+                <ul className="list-disc pl-4 md:pl-5 space-y-0.5 md:space-y-1 text-gray-600">
+                    <li>AI predictions and classifications may not always be 100% accurate.</li>
+                    <li>Scrap value estimations are approximate and may vary depending on local market conditions, junkshops, and recycling facilities.</li>
+                    <li>Nearby recycling centers, routes, and geolocation data rely on third-party mapping services and public datasets which may contain incomplete or outdated information.</li>
+                    <li>Users are encouraged to verify hazardous waste handling procedures with official environmental agencies and local authorities before disposal.</li>
+                </ul>
             </div>
-            <button
-                onClick={() => setShowDisclaimer(false)}
-                className="mt-6 w-full py-3.5 bg-[#7E8C54] hover:bg-[#6b7747] text-white text-lg rounded-xl font-bold transition-colors shadow-md active:scale-[0.98]"
-            >
-                I Acknowledge
-            </button>
+            <div>
+                <p className="font-semibold mb-1">Recicla and its developers are not liable for:</p>
+                <ul className="list-disc pl-4 md:pl-5 space-y-0.5 md:space-y-1 text-gray-600">
+                    <li>Incorrect AI detections</li>
+                    <li>Inaccurate pricing estimates</li>
+                    <li>Mapping inaccuracies</li>
+                    <li>Third-party service interruptions</li>
+                    <li>Improper disposal decisions made using the platform</li>
+                </ul>
+            </div>
+            <p className="font-medium mt-3 md:mt-4 text-gray-900 border-t pt-2 md:pt-4">
+                By using Recicla, users acknowledge that the platform is provided <strong>“as is”</strong> without warranties of any kind and should be used responsibly to support sustainable waste management practices.
+            </p>
         </div>
+        <button
+            onClick={() => setShowDisclaimer(false)}
+            className="mt-4 md:mt-6 w-full py-2 md:py-3.5 bg-[#7E8C54] hover:bg-[#6b7747] text-white text-sm md:text-lg rounded-xl font-bold transition-colors shadow-md active:scale-[0.98]"
+        >
+            I Acknowledge
+        </button>
     </div>
+</div>
 )}
 
                 <div
