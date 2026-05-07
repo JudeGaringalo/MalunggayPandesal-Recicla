@@ -579,7 +579,7 @@ export default function LandingPage(): React.JSX.Element {
                   { name: "Bam", role: "AI Engineer", img: "/images/Team/Bam.jpg" },
                   { name: "Jude", role: "Full-Stack Software Developer", img: "/images/Team/Jude.jpg" },
                   { name: "Volt", role: "UI / UX Designer", img: "/images/Team/Ruy.jpg" },
-                  { name: "Sai", role: "Project Manager", img: "/images/Team/Sai.jpg" }
+                  { name: "Sai", role: "QA Engineer", img: "/images/Team/Sai.jpg" }
                 ].map((member, idx) => (
                   <div key={idx} className="flex flex-col items-center group">
                     <div className="w-14 h-14 sm:w-24 sm:h-24 md:w-56 md:h-56 bg-[#D9D9D9] rounded-full mb-2 md:mb-6 overflow-hidden relative shadow-lg">
