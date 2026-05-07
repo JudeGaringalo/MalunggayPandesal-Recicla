@@ -9,8 +9,6 @@ import { gsap } from 'gsap';
 import VineScrollbar from './components/VineScrollbar';
 import BackToTop from './components/BackToTop';
 
-// --- MAGNETIC NAV ITEM COMPONENT (GSAP) ---
-// Note: Only declared ONCE, with targetId included in the TypeScript type.
 const MagneticNavItem = ({ children, targetId }: { children: React.ReactNode, targetId: string }) => {
   const ref = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLAnchorElement>(null);
@@ -72,14 +70,12 @@ const Navbar = () => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
 
-      // TEAM section starts here
       const teamSection = document.getElementById("team");
 
       if (teamSection) {
         const teamTop = teamSection.offsetTop;
         const teamBottom = teamTop + teamSection.offsetHeight;
 
-        // Change navbar color while inside dark/image sections
         if (scrollY >= teamTop - 100 && scrollY <= teamBottom) {
           setIsDarkSection(true);
         } else {
@@ -143,6 +139,7 @@ const techLogos = [
   { name: "Groq API", src: "/images/groq.png" },
   { name: "Llama AI", src: "/images/llama.png" },
   { name: "Gsap", src: "/images/gsap.jpg" },
+  { name: "Leaflet", src: "/images/leaflet.png" },
 ];
 
 const FEATURES = [
