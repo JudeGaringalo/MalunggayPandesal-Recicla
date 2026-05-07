@@ -25,7 +25,6 @@ interface DetailedAIResponse {
     isRecyclable: boolean;
 }
 
-// Keep this as a fallback just in case the routing API fails
 function calculateDistanceKM(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -245,10 +244,8 @@ export default function ResultsPage() {
                 const lat = parseFloat(data[0].lat);
                 const lon = parseFloat(data[0].lon);
                 const newLoc: [number, number] = [lat, lon];
-
                 setIsManualOverride(true);
                 setUserLoc(newLoc);
-                // Note: the Route effect below will automatically recalculate the path and distance when userLoc changes!
             } else {
                 setSearchError("Address not found. Try adding the city name (e.g., Mandaluyong).");
             }
@@ -259,28 +256,22 @@ export default function ResultsPage() {
         }
     };
 
-    // NEW EFFECT: Fetch realistic street route whenever locations change
     useEffect(() => {
         if (userLoc && destLoc) {
             const fetchRoute = async () => {
                 try {
-                    // OSRM requires coordinates in longitude,latitude format
                     const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${userLoc[1]},${userLoc[0]};${destLoc[1]},${destLoc[0]}?overview=full&geometries=geojson`);
                     const data = await response.json();
                     
                     if (data.routes && data.routes.length > 0) {
                         const route = data.routes[0];
-                        // Convert [lng, lat] back to Leaflet's [lat, lng]
                         const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-                        
                         setRoutePath(coordinates);
-                        
-                        // OSRM gives us true driving distance in meters, convert to KM!
                         setDistance((route.distance / 1000).toFixed(2));
                     }
                 } catch (error) {
                     console.error("Routing failed, falling back to straight line:", error);
-                    setRoutePath(null); // MapComponent will fall back to straight line
+                    setRoutePath(null); 
                     setDistance(calculateDistanceKM(userLoc[0], userLoc[1], destLoc[0], destLoc[1]));
                 }
             };
@@ -494,7 +485,7 @@ export default function ResultsPage() {
                                         destinationLocation={destLoc}
                                         isHazardous={isHazard}
                                         destinationName={destName}
-                                        routePath={routePath} // PASSING THE NEW PATH DOWN
+                                        routePath={routePath} 
                                         onUserLocationChange={(newLoc) => {
                                             setIsManualOverride(true);
                                             setUserLoc(newLoc);

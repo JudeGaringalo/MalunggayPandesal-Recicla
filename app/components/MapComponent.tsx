@@ -5,7 +5,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Restored Icon Definitions
 const userIcon = L.icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -47,13 +46,13 @@ interface MapProps {
     destinationLocation: [number, number];
     isHazardous: boolean;
     destinationName: string;
-    routePath: [number, number][] | null; // NEW: Array of coordinates for the road path
+    routePath: [number, number][] | null; 
     onUserLocationChange?: (newLoc: [number, number]) => void;
 }
 
 export default function MapComponent({ userLocation, destinationLocation, isHazardous, destinationName, routePath, onUserLocationChange }: MapProps) {
     const destIcon = isHazardous ? hazardIcon : safeIcon;
-    const lineColor = isHazardous ? "#EF4444" : "#4A7c59"; // Darkened the green slightly for better map contrast
+    const lineColor = isHazardous ? "#EF4444" : "#4A7c59"; 
     
     const markerRef = useRef<L.Marker>(null);
 
@@ -70,7 +69,6 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
         [onUserLocationChange]
     );
 
-    // Use the road path if available, otherwise fallback to the straight line
     const positionsToDraw = routePath && routePath.length > 0 
         ? routePath 
         : [userLocation, destinationLocation];
@@ -90,7 +88,6 @@ export default function MapComponent({ userLocation, destinationLocation, isHaza
 
             <MapBounds userLoc={userLocation} destLoc={destinationLocation} />
 
-            {/* Changed to a solid, thicker line to look like a real navigation route */}
             <Polyline 
                 positions={positionsToDraw} 
                 color={lineColor} 
