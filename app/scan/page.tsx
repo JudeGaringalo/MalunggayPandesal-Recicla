@@ -36,6 +36,14 @@ export default function ARScannerApp() {
     const lastHardwareUpdateTime = useRef<number>(0);
     const trackedObjectsRef = useRef<Array<{ bbox: number[], match: any, mapped: any }>>([]);
 
+    // --- ADDED: Wipe memory when scan page loads ---
+    useEffect(() => {
+        localStorage.removeItem('lastCapturedImage');
+        localStorage.removeItem('lastScanResults');
+        localStorage.removeItem('lastAnalyzedItem');
+        document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }, []);
+
     const mapReciclaCategory = (className: string) => {
         const categories: Record<string, { category: string; value: string; hazard: boolean; minConfidence: number }> = {
             "Electronics": { category: 'E-Waste', value: '₱50 - ₱500/unit', hazard: true, minConfidence: 0.70 },
@@ -84,7 +92,7 @@ export default function ARScannerApp() {
         const loadModels = async () => {
             try {
                 await tf.ready();
-                const URL = "/model/"; 
+                const URL = "/model/";
                 const loadedTM = await tmImage.load(URL + "model.json", URL + "metadata.json");
                 const loadedCoco = await cocoSsd.load();
                 setModel(loadedTM);
@@ -107,6 +115,9 @@ export default function ARScannerApp() {
 
             localStorage.setItem('lastCapturedImage', base64);
             localStorage.removeItem('lastScanResults');
+            
+            document.cookie = "scan_in_progress=true; max-age=600; path=/";
+
             router.push('/information');
         };
         reader.readAsDataURL(file);
@@ -204,6 +215,8 @@ export default function ARScannerApp() {
 
             localStorage.removeItem('lastScanResults');
             localStorage.setItem('lastCapturedImage', imgData);
+
+            document.cookie = "scan_in_progress=true; max-age=600; path=/";
 
             if (trackedObjectsRef.current.length > 0) {
                 localStorage.setItem('lastAnalyzedItem', JSON.stringify(trackedObjectsRef.current[0]));
@@ -600,7 +613,6 @@ export default function ARScannerApp() {
                 </div>
 
                 <div className="w-full flex justify-between items-center px-10 max-w-2xl mx-auto">
-                    {/* NEW: Clickable Album feature pointing to /information */}
                     {capturedImages.length > 0 ? (
                         <Link
                             href="/information"

@@ -60,6 +60,14 @@ export default function LandingPage(): React.JSX.Element {
   const [activeArea, setActiveArea] = useState(0); 
   const [isSucked, setIsSucked] = useState(false); 
 
+  // --- ADDED: Wipe memory when landing page loads ---
+  useEffect(() => {
+    localStorage.removeItem('lastCapturedImage');
+    localStorage.removeItem('lastScanResults');
+    localStorage.removeItem('lastAnalyzedItem');
+    document.cookie = "scan_in_progress=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  }, []);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveArea((prevArea) => (prevArea + 1) % FEATURES.length);
