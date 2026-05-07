@@ -587,7 +587,7 @@ export default function ResultsPage() {
                                             type="text"
                                             value={addressInput}
                                             onChange={(e) => setAddressInput(e.target.value)}
-                                            placeholder="Enter address (e.g., Mandaluyong)"
+                                            placeholder="Enter address"
                                             className="flex-grow px-3 py-2 text-sm text-black outline-none bg-white rounded-lg border border-gray-200 focus:border-[#8b9c64] focus:ring-1 focus:ring-[#8b9c64] transition-all"
                                             disabled={isSearching}
                                         />
