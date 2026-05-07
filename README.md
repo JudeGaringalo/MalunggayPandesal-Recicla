@@ -6,7 +6,6 @@
 
 <br/>
 
-<img src="https://img.shields.io/github/license/JudeGaringalo/recicla?style=for-the-badge&color=7C8D58" />
 <img src="https://img.shields.io/github/stars/JudeGaringalo/recicla?style=for-the-badge&color=7C8D58" />
 <img src="https://img.shields.io/github/forks/JudeGaringalo/recicla?style=for-the-badge&color=7C8D58" />
 
