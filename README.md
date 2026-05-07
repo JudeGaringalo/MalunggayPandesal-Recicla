@@ -6,9 +6,8 @@
 
 <br/>
 
-<img src="https://img.shields.io/github/license/your-username/recicla?style=for-the-badge&color=7C8D58" />
-<img src="https://img.shields.io/github/stars/your-username/recicla?style=for-the-badge&color=7C8D58" />
-<img src="https://img.shields.io/github/forks/your-username/recicla?style=for-the-badge&color=7C8D58" />
+<img src="https://img.shields.io/github/stars/JudeGaringalo/recicla?style=for-the-badge&color=7C8D58" />
+<img src="https://img.shields.io/github/forks/JudeGaringalo/recicla?style=for-the-badge&color=7C8D58" />
 
 <br/><br/>
 
@@ -30,7 +29,7 @@
 
 ### 🌱 Intelligent Waste Recognition & Recycling Platform for the Philippines
 
-Recicla AI is a next-generation sustainability platform that combines:
+Recicla is a next-generation sustainability platform that combines:
 
 🤖 Artificial Intelligence  
 🧠 Computer Vision  
@@ -61,7 +60,7 @@ The platform enables users to:
 
 # 🤖 Real-Time AI Waste Recognition
 
-Recicla AI leverages advanced browser-based AI technologies including:
+Recicla leverages advanced browser-based AI technologies including:
 
 - TensorFlow.js
 - COCO-SSD
@@ -253,7 +252,7 @@ flowchart LR
 # 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/recicla.git
+git clone https://github.com/JudeGaringalo/recicla.git
 
 cd recicla
 ```
@@ -354,7 +353,7 @@ recicla/
 
 # 🌱 Vision
 
-Recicla AI aims to encourage smarter recycling habits by making waste identification, valuation, and disposal more accessible through Artificial Intelligence and modern web technologies.
+Recicla aims to encourage smarter recycling habits by making waste identification, valuation, and disposal more accessible through Artificial Intelligence and modern web technologies.
 
 The platform bridges:
 - Sustainability
@@ -375,7 +374,7 @@ Millions of tons of recyclable waste are improperly disposed of every year due t
 - Limited waste identification knowledge
 - Inefficient disposal systems
 
-Recicla AI solves these challenges through:
+Recicla solves these challenges through:
 
 ✅ Artificial Intelligence  
 ✅ Computer Vision  
@@ -419,3 +418,27 @@ This project is licensed for CodeKada Online Hackathon 2026.
 ### Made with ♻️, AI, and Sustainability in Mind
 
 </div>
+
+> ⚠️ **Disclaimer**
+>
+> Recicla is an experimental academic and sustainability-focused platform developed for the **CodeKada Online Hackathon 2026**.  
+>
+> The AI-powered waste detection, material classification, price estimation, and recycling recommendations provided by the system are intended for **educational, research, and informational purposes only**.
+>
+> Please note:
+>
+> - AI predictions and classifications may not always be 100% accurate.
+> - Scrap value estimations are approximate and may vary depending on local market conditions, junkshops, and recycling facilities.
+> - Nearby recycling centers, routes, and geolocation data rely on third-party mapping services and public datasets which may contain incomplete or outdated information.
+> - Users are encouraged to verify hazardous waste handling procedures with official environmental agencies and local authorities before disposal.
+>
+> Recicla and its developers are not liable for:
+>
+> - Incorrect AI detections
+> - Inaccurate pricing estimates
+> - Mapping inaccuracies
+> - Third-party service interruptions
+> - Improper disposal decisions made using the platform
+>
+> By using Recicla, users acknowledge that the platform is provided **“as is”** without warranties of any kind and should be used responsibly to support sustainable waste management practices.
+
