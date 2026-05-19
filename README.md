@@ -86,9 +86,7 @@ to perform intelligent recyclable material recognition directly in the browser.
 
 # Smart Scrap Valuation System
 
-The AI system analyzes recyclable materials and estimates their approximate value in:
-
-## Philippine Pesos (₱)
+The AI system analyzes recyclable materials and estimates their approximate value.
 
 The analysis includes:
 - Material valuation
